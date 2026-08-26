@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.scratch/
+test-results/
+playwright-report/
+blob-report/
+*.tsbuildinfo
+
+# Twenty-four fonts, thirty megabytes, none of them mine. `npm run fonts`
+# downloads them; the manifest of what they declare is committed so the
+# findings can be read without them.
+test/browser/fixtures/fonts/*.ttf
+test/browser/fixtures/fonts/*.woff2

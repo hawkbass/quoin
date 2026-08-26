@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>quoin fixture: prose off the grid</title>
+<style>
+  /* Generic families only. A fixture that depends on Georgia being installed
+     passes on the machine it was written on and nowhere else. */
+  :root { --pitch: 8px; }
+
+  html { font-family: serif; }
+
+  body {
+    margin: 0;
+    padding: 0;
+    /* Deliberately fractional, which is what a fluid type scale produces and
+       exactly the case whose fractional ascents put a page off the grid. */
+    font-size: 17.6px;
+    line-height: 1.618;
+  }
+
+  h1 { font-size: 41.3px; line-height: 1.1; margin: 0 0 21px; }
+  h2 { font-size: 25.9px; line-height: 1.25; margin: 33px 0 13px; }
+  p  { margin: 0 0 19px; }
+
+  .tight   { line-height: 1.2; }
+  .padded  { padding-top: 7px; padding-bottom: 11px; }
+  .bordered { border-top: 3px solid #ccc; padding-top: 5px; }
+  .small   { font-size: 12.5px; }
+  .display { font-size: 64px; line-height: 0.95; margin: 0 0 17px; }
+</style>
+</head>
+<body>
+  <h1>The wedge the printer hammers into the chase</h1>
+
+  <p>Every font reserves a band of empty space above its capitals and another
+  below its baseline for descenders, and those two bands are almost never the
+  same size.</p>
+
+  <p class="tight">The browser measures the font's box, subtracts it from the
+  line height, and splits what is left equally. So it centres the box
+  perfectly.</p>
+
+  <h2>What the letters were doing meanwhile</h2>
+
+  <p class="padded">The letters inside that box were never centred, and no
+  amount of padding fixes it, because the thing you centred is not the thing you
+  are looking at.</p>
+
+  <p class="bordered">Print solved this with the baseline grid: one invisible
+  ruler down the page, and every line of text in every column seated on it.</p>
+
+  <p class="small">It has existed since metal type and it is a checkbox in
+  InDesign.</p>
+
+  <p class="display">Display type</p>
+
+  <p>The web has never had one, because line-height centres text in its box
+  rather than seating it on a line, so the baseline lands wherever a particular
+  typeface's asymmetry puts it.</p>
+</body>
+</html>

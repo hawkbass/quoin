@@ -1,0 +1,66 @@
+/* Quoin: it puts a web page on a baseline grid.
+
+   A quoin is the wedge a printer hammers into the chase to lock the type so
+   nothing shifts on the press. Same job. */
+
+export { VERSION } from "./version.ts";
+
+export {
+  measureFont,
+  measureFontWithCap,
+  fontShorthand,
+  fontSizeFromShorthand,
+  baselineWithinLineBox,
+  capOvershoot,
+  capOvershootFromFontTable,
+  capHeightFromFontTable,
+  canReadFontTableCapHeight,
+  capHeightIsRasterised,
+  fontIsAvailable,
+  descenderSlack,
+  resetMeasurementCache,
+  type FontMetrics,
+  type CapSource,
+} from "./metrics.ts";
+
+export {
+  checkBaseline,
+  snapLineHeight,
+  seatingShift,
+  seatingPadding,
+  summarise,
+  gridConfig,
+  DEFAULT_GRID,
+  type GridConfig,
+  type GridResult,
+  type GridReport,
+} from "./grid.ts";
+
+export {
+  verifyGrid,
+  offGrid,
+  textBlocks,
+  NON_TEXT,
+  type TextNodeResult,
+  type VerifyOptions,
+  type VerifyResult,
+} from "./verify.ts";
+
+export {
+  seatPage,
+  exportCss,
+  type SeatOptions,
+  type SeatMode,
+  type SeatedBlock,
+  type SeatResult,
+  type ExportOptions,
+  type Lever,
+} from "./seat.ts";
+
+export {
+  uniqueSelector,
+  matchesOnly,
+  describe,
+} from "./selector.ts";
+
+export { install, type QuoinConsole } from "./console.ts";

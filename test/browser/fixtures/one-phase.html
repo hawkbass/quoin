@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>quoin fixture: a page with exactly one phase</title>
+<style>
+  /* One font, one size, one leading, every margin a whole number of grid rows.
+
+     That makes every first baseline on this page sit at the same offset inside
+     its own line box, which is what "one phase" means. Move the grid origin and
+     every node moves by the same amount, so the report should read `systematic`
+     and point at the origin rather than at the type scale.
+
+     Its opposite is seated.html, which has a heading at a different size. Two
+     sizes is two ascents is two phases, and no single origin serves both. That
+     is the whole argument in eight lines of CSS, and it is why the two fixtures
+     exist separately. */
+
+  html { font-family: monospace; }
+  body { margin: 0; font-size: 16px; line-height: 24px; }
+  p { margin: 0 0 24px; font-size: 16px; line-height: 24px; }
+</style>
+</head>
+<body>
+  <p>One font, one size, one leading.</p>
+  <p>Every first baseline sits at the same offset inside its own line box.</p>
+  <p>So a page like this has a single phase, and a single origin serves it.</p>
+  <p>Move the origin and every line moves together.</p>
+  <p>That is the one-line-fix case, and it has to be distinguishable from the
+  other one, because in a screenshot they look identical.</p>
+  <p>Scattered drift means the type scale and the spacing scale disagree.</p>
+</body>
+</html>

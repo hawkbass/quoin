@@ -1,0 +1,5790 @@
+{
+  "summary": {
+    "fonts": 26,
+    "sizes": [
+      12,
+      16,
+      18,
+      24,
+      48
+    ],
+    "enginesTested": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "enginesWithTextBoxTrim": [
+      "chromium",
+      "webkit"
+    ],
+    "rows": 130,
+    "comparableRows": 124,
+    "tableAgreeing": 68,
+    "tableWithinTolerance": 124,
+    "worstTableSpread": 0.016,
+    "matchingFile": 109,
+    "matchingFileExactly": 109,
+    "declaredRows": 109,
+    "worstAgainstFile": 0.015,
+    "rasterAgreeing": 1,
+    "rasterWithinTolerance": 85,
+    "worstRasterSpread": 0.864,
+    "comparableRasterRows": 124,
+    "synthesisedRows": 15,
+    "synthesisedAgreeing": 15,
+    "worstSynthesisedSpread": 0.016,
+    "lyingRows": 10,
+    "lyingFollowedTheTable": 10,
+    "lyingDetail": [
+      {
+        "family": "AwkwardLies",
+        "size": 12,
+        "declared": 7.2,
+        "reported": {
+          "chromium": 7.203125,
+          "webkit": 7.1875
+        },
+        "rasterInstead": {
+          "chromium": 8,
+          "firefox": 8.4,
+          "webkit": 8
+        }
+      },
+      {
+        "family": "AwkwardLies",
+        "size": 16,
+        "declared": 9.6,
+        "reported": {
+          "chromium": 9.59375,
+          "webkit": 9.59375
+        },
+        "rasterInstead": {
+          "chromium": 11,
+          "firefox": 11.200001017252603,
+          "webkit": 11
+        }
+      },
+      {
+        "family": "AwkwardLies",
+        "size": 18,
+        "declared": 10.8,
+        "reported": {
+          "chromium": 10.796875,
+          "webkit": 10.796875
+        },
+        "rasterInstead": {
+          "chromium": 12,
+          "firefox": 12.599998982747396,
+          "webkit": 12
+        }
+      },
+      {
+        "family": "AwkwardLies",
+        "size": 24,
+        "declared": 14.4,
+        "reported": {
+          "chromium": 14.40625,
+          "webkit": 14.390625
+        },
+        "rasterInstead": {
+          "chromium": 16,
+          "firefox": 16.8,
+          "webkit": 16
+        }
+      },
+      {
+        "family": "AwkwardLies",
+        "size": 48,
+        "declared": 28.8,
+        "reported": {
+          "chromium": 28.796875,
+          "webkit": 28.796875
+        },
+        "rasterInstead": {
+          "chromium": 34,
+          "firefox": 33.6,
+          "webkit": 34
+        }
+      },
+      {
+        "family": "AwkwardLiesLato",
+        "size": 12,
+        "declared": 7.2,
+        "reported": {
+          "chromium": 7.203125,
+          "webkit": 7.1875
+        },
+        "rasterInstead": {
+          "chromium": 8,
+          "firefox": 8.598000081380208,
+          "webkit": 8
+        }
+      },
+      {
+        "family": "AwkwardLiesLato",
+        "size": 16,
+        "declared": 9.6,
+        "reported": {
+          "chromium": 9.59375,
+          "webkit": 9.59375
+        },
+        "rasterInstead": {
+          "chromium": 11,
+          "firefox": 11.464000447591145,
+          "webkit": 11
+        }
+      },
+      {
+        "family": "AwkwardLiesLato",
+        "size": 18,
+        "declared": 10.8,
+        "reported": {
+          "chromium": 10.796875,
+          "webkit": 10.796875
+        },
+        "rasterInstead": {
+          "chromium": 13,
+          "firefox": 12.896999104817708,
+          "webkit": 13
+        }
+      },
+      {
+        "family": "AwkwardLiesLato",
+        "size": 24,
+        "declared": 14.4,
+        "reported": {
+          "chromium": 14.40625,
+          "webkit": 14.390625
+        },
+        "rasterInstead": {
+          "chromium": 17,
+          "firefox": 17.196000162760416,
+          "webkit": 17
+        }
+      },
+      {
+        "family": "AwkwardLiesLato",
+        "size": 48,
+        "declared": 28.8,
+        "reported": {
+          "chromium": 28.796875,
+          "webkit": 28.796875
+        },
+        "rasterInstead": {
+          "chromium": 35,
+          "firefox": 34.39200032552083,
+          "webkit": 35
+        }
+      }
+    ],
+    "notComparable": [
+      {
+        "family": "Inter",
+        "size": 16
+      },
+      {
+        "family": "Inter",
+        "size": 18
+      },
+      {
+        "family": "Inter",
+        "size": 24
+      },
+      {
+        "family": "Inter",
+        "size": 48
+      },
+      {
+        "family": "Merriweather",
+        "size": 24
+      },
+      {
+        "family": "Merriweather",
+        "size": 48
+      }
+    ]
+  },
+  "fonts": [
+    {
+      "family": "Inter",
+      "file": "Inter.ttf",
+      "why": "variable, two axes, modern metrics",
+      "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/inter/Inter%5Bopsz,wght%5D.ttf",
+      "unitsPerEm": 2048,
+      "os2Version": 4,
+      "sCapHeight": 1490,
+      "sxHeight": 1118,
+      "typoAscender": 1984,
+      "typoDescender": -494,
+      "hheaAscender": 1984,
+      "hheaDescender": -494,
+      "hasFvar": true,
+      "outlines": "truetype"
+    },
+    {
+      "family": "Roboto",
+      "file": "Roboto.ttf",
+      "why": "2048 units per em, variable",
+      "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/roboto/Roboto%5Bwdth,wght%5D.ttf",
+      "unitsPerEm": 2048,
+      "os2Version": 4,
+      "sCapHeight": 1456,
+      "sxHeight": 1082,
+      "typoAscender": 1536,
+      "typoDescender": -512,
+      "hheaAscender": 1900,
+      "hheaDescender": -500,
+      "hasFvar": true,
+      "outlines": "truetype"
+    },
+    {
+      "family": "OpenSans",
+      "file": "OpenSans.ttf",
+      "why": "large x-height, very widely deployed",
+      "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/opensans/OpenSans%5Bwdth,wght%5D.ttf",
+      "unitsPerEm": 2048,
+      "os2Version": 4,
+      "sCapHeight": 1462,
+      "sxHeight": 1096,
+      "typoAscender": 2189,
+      "typoDescender": -600,
+      "hheaAscender": 2189,
+      "hheaDescender": -600,
+      "hasFvar": true,
+      "outlines": "truetype"
+    },
+    {
+      "family": "Lato",
+      "file": "Lato.ttf",
+      "why": "static, humanist",
+      "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/lato/Lato-Regular.ttf",
+      "unitsPerEm": 2000,
+      "os2Version": 4,
+      "sCapHeight": 1433,
+      "sxHeight": 1013,
+      "typoAscender": 1974,
+      "typoDescender": -426,
+      "hheaAscender": 1974,
+      "hheaDescender": -426,
+      "hasFvar": false,
+      "outlines": "truetype"
+    },
+    {
+      "family": "IBMPlexSans",
+      "file": "IBMPlexSans.ttf",
+      "why": "a design system's own face",
+      "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/ibmplexsans/IBMPlexSans%5Bwdth,wght%5D.ttf",
+      "unitsPerEm": 1000,
+      "os2Version": 4,
+      "sCapHeight": 698,
+      "sxHeight": 516,
+      "typoAscender": 1025,
+      "typoDescender": -275,
+      "hheaAscender": 1025,
+      "hheaDescender": -275,
+      "hasFvar": true,
+      "outlines": "truetype"
+    },
+    {
+      "family": "Lora",
+      "file": "Lora.ttf",
+      "why": "serif, moderate contrast",
+      "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/lora/Lora%5Bwght%5D.ttf",
+      "unitsPerEm": 1000,
+      "os2Version": 4,
+      "sCapHeight": 700,
+      "sxHeight": 500,
+      "typoAscender": 1006,
+      "typoDescender": -274,
+      "hheaAscender": 1006,
+      "hheaDescender": -274,
+      "hasFvar": true,
+      "outlines": "truetype"
+    },
+    {
+      "family": "PlayfairDisplay",
+      "file": "PlayfairDisplay.ttf",
+      "why": "very high contrast, tall caps, short descenders",
+      "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/playfairdisplay/PlayfairDisplay%5Bwght%5D.ttf",
+      "unitsPerEm": 1000,
+      "os2Version": 4,
+      "sCapHeight": 708,
+      "sxHeight": 514,
+      "typoAscender": 1082,
+      "typoDescender": -251,
+      "hheaAscender": 1082,
+      "hheaDescender": -251,
+      "hasFvar": true,
+      "outlines": "truetype"
+    },
+    {
+      "family": "EBGaramond",
+      "file": "EBGaramond.ttf",
+      "why": "old-style, small cap height relative to the em",
+      "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/ebgaramond/EBGaramond%5Bwght%5D.ttf",
+      "unitsPerEm": 1000,
+      "os2Version": 4,
+      "sCapHeight": 650,
+      "sxHeight": 400,
+      "typoAscender": 1007,
+      "typoDescender": -298,
+      "hheaAscender": 1007,
+      "hheaDescender": -298,
+      "hasFvar": true,
+      "outlines": "truetype"
+    },
+    {
+      "family": "Merriweather",
+      "file": "Merriweather.ttf",
+      "why": "large x-height serif, three axes",
+      "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/merriweather/Merriweather%5Bopsz,wdth,wght%5D.ttf",
+      "unitsPerEm": 2000,
+      "os2Version": 4,
+      "sCapHeight": 1486,
+      "sxHeight": 1110,
+      "typoAscender": 1968,
+      "typoDescender": -546,
+      "hheaAscender": 1968,
+      "hheaDescender": -546,
+      "hasFvar": true,
+      "outlines": "truetype"
+    },
+    {
+      "family": "JetBrainsMono",
+      "file": "JetBrainsMono.ttf",
+      "why": "monospace, tall ascenders",
+      "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/jetbrainsmono/JetBrainsMono%5Bwght%5D.ttf",
+      "unitsPerEm": 1000,
+      "os2Version": 4,
+      "sCapHeight": 730,
+      "sxHeight": 550,
+      "typoAscender": 1020,
+      "typoDescender": -300,
+      "hheaAscender": 1020,
+      "hheaDescender": -300,
+      "hasFvar": true,
+      "outlines": "truetype"
+    },
+    {
+      "family": "SpaceMono",
+      "file": "SpaceMono.ttf",
+      "why": "monospace, static, older build",
+      "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/spacemono/SpaceMono-Regular.ttf",
+      "unitsPerEm": 1000,
+      "os2Version": 4,
+      "sCapHeight": 700,
+      "sxHeight": 496,
+      "typoAscender": 1120,
+      "typoDescender": -361,
+      "hheaAscender": 1120,
+      "hheaDescender": -361,
+      "hasFvar": false,
+      "outlines": "truetype"
+    },
+    {
+      "family": "Cinzel",
+      "file": "Cinzel.ttf",
+      "why": "all-caps face: cap height IS the x-height",
+      "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/cinzel/Cinzel%5Bwght%5D.ttf",
+      "unitsPerEm": 1000,
+      "os2Version": 4,
+      "sCapHeight": 700,
+      "sxHeight": 500,
+      "typoAscender": 976,
+      "typoDescender": -372,
+      "hheaAscender": 976,
+      "hheaDescender": -372,
+      "hasFvar": true,
+      "outlines": "truetype"
+    },
+    {
+      "family": "Bungee",
+      "file": "Bungee.ttf",
+      "why": "display, extreme vertical metrics",
+      "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/bungee/Bungee-Regular.ttf",
+      "unitsPerEm": 1000,
+      "os2Version": 4,
+      "sCapHeight": 720,
+      "sxHeight": 500,
+      "typoAscender": 1020,
+      "typoDescender": -300,
+      "hheaAscender": 1020,
+      "hheaDescender": -300,
+      "hasFvar": false,
+      "outlines": "truetype"
+    },
+    {
+      "family": "Sacramento",
+      "file": "Sacramento.ttf",
+      "why": "script face, enormous ascenders and descenders",
+      "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/sacramento/Sacramento-Regular.ttf",
+      "unitsPerEm": 2048,
+      "os2Version": 3,
+      "sCapHeight": 1550,
+      "sxHeight": 627,
+      "typoAscender": 1905,
+      "typoDescender": -1084,
+      "hheaAscender": 1905,
+      "hheaDescender": -1084,
+      "hasFvar": false,
+      "outlines": "truetype"
+    },
+    {
+      "family": "Anton",
+      "file": "Anton.ttf",
+      "why": "condensed display, very tall caps",
+      "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/anton/Anton-Regular.ttf",
+      "unitsPerEm": 2048,
+      "os2Version": 4,
+      "sCapHeight": 1760,
+      "sxHeight": 1500,
+      "typoAscender": 2409,
+      "typoDescender": -674,
+      "hheaAscender": 2409,
+      "hheaDescender": -674,
+      "hasFvar": false,
+      "outlines": "truetype"
+    },
+    {
+      "family": "NotoSansJP",
+      "file": "NotoSansJP.ttf",
+      "why": "CJK: no capitals, so what does cap height mean?",
+      "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/notosansjp/NotoSansJP%5Bwght%5D.ttf",
+      "unitsPerEm": 1000,
+      "os2Version": 4,
+      "sCapHeight": 733,
+      "sxHeight": 543,
+      "typoAscender": 880,
+      "typoDescender": -120,
+      "hheaAscender": 1160,
+      "hheaDescender": -288,
+      "hasFvar": true,
+      "outlines": "truetype"
+    },
+    {
+      "family": "NotoSansArabic",
+      "file": "NotoSansArabic.ttf",
+      "why": "Arabic: no capitals, tall marks",
+      "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/notosansarabic/NotoSansArabic%5Bwdth,wght%5D.ttf",
+      "unitsPerEm": 1000,
+      "os2Version": 4,
+      "sCapHeight": 714,
+      "sxHeight": 536,
+      "typoAscender": 1374,
+      "typoDescender": -738,
+      "hheaAscender": 1374,
+      "hheaDescender": -738,
+      "hasFvar": true,
+      "outlines": "truetype"
+    },
+    {
+      "family": "NotoSansDevanagari",
+      "file": "NotoSansDevanagari.ttf",
+      "why": "Devanagari: headline above the letters",
+      "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/notosansdevanagari/NotoSansDevanagari%5Bwdth,wght%5D.ttf",
+      "unitsPerEm": 1000,
+      "os2Version": 4,
+      "sCapHeight": 622,
+      "sxHeight": 536,
+      "typoAscender": 896,
+      "typoDescender": -408,
+      "hheaAscender": 896,
+      "hheaDescender": -408,
+      "hasFvar": true,
+      "outlines": "truetype"
+    },
+    {
+      "family": "NotoSerifThai",
+      "file": "NotoSerifThai.ttf",
+      "why": "Thai: stacked marks above and below",
+      "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/notoserifthai/NotoSerifThai%5Bwdth,wght%5D.ttf",
+      "unitsPerEm": 1000,
+      "os2Version": 4,
+      "sCapHeight": 714,
+      "sxHeight": 536,
+      "typoAscender": 1064,
+      "typoDescender": -534,
+      "hheaAscender": 1064,
+      "hheaDescender": -534,
+      "hasFvar": true,
+      "outlines": "truetype"
+    },
+    {
+      "family": "PTSans",
+      "file": "PTSans.ttf",
+      "why": "older build, may lack sCapHeight",
+      "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/ptsans/PT_Sans-Web-Regular.ttf",
+      "unitsPerEm": 1000,
+      "os2Version": 3,
+      "sCapHeight": 700,
+      "sxHeight": 500,
+      "typoAscender": 1018,
+      "typoDescender": -276,
+      "hheaAscender": 1018,
+      "hheaDescender": -276,
+      "hasFvar": false,
+      "outlines": "truetype"
+    },
+    {
+      "family": "Ubuntu",
+      "file": "Ubuntu.ttf",
+      "why": "UFL licence, 2010-era build",
+      "source": "https://raw.githubusercontent.com/google/fonts/main/ufl/ubuntu/Ubuntu-Regular.ttf",
+      "unitsPerEm": 1000,
+      "os2Version": 3,
+      "sCapHeight": 693,
+      "sxHeight": 520,
+      "typoAscender": 776,
+      "typoDescender": -185,
+      "hheaAscender": 932,
+      "hheaDescender": -189,
+      "hasFvar": false,
+      "outlines": "truetype"
+    },
+    {
+      "family": "AwkwardAbsent",
+      "file": "AwkwardAbsent.ttf",
+      "why": "OS/2 downgraded to v1: sCapHeight is not there to read",
+      "unitsPerEm": 2000,
+      "sCapHeight": null,
+      "os2Version": 1
+    },
+    {
+      "family": "AwkwardZeroed",
+      "file": "AwkwardZeroed.ttf",
+      "why": "sCapHeight present and set to zero",
+      "unitsPerEm": 2000,
+      "sCapHeight": 0,
+      "os2Version": 4
+    },
+    {
+      "family": "AwkwardHuge",
+      "file": "AwkwardHuge.ttf",
+      "why": "sCapHeight of 1400 on a 1000-unit em: taller than the em box",
+      "unitsPerEm": 1000,
+      "sCapHeight": 1400,
+      "os2Version": 4,
+      "degenerate": true
+    },
+    {
+      "family": "AwkwardLies",
+      "file": "AwkwardLies.ttf",
+      "why": "SpaceMono declaring 600 where its own H is 700: plausible, in range, wrong",
+      "unitsPerEm": 1000,
+      "sCapHeight": 600,
+      "os2Version": 4,
+      "lies": true
+    },
+    {
+      "family": "AwkwardLiesLato",
+      "file": "AwkwardLiesLato.ttf",
+      "why": "Lato declaring 1200 where its own H is 1433, on a 2000-unit em",
+      "unitsPerEm": 2000,
+      "sCapHeight": 1200,
+      "os2Version": 4,
+      "lies": true
+    }
+  ],
+  "rows": [
+    {
+      "family": "Inter",
+      "why": "variable, two axes, modern metrics",
+      "lies": false,
+      "degenerate": false,
+      "size": 12,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 9,
+          "table": 8.734375,
+          "ascent": 12,
+          "descent": 3,
+          "width": 120.9,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 8.73046875,
+          "table": null,
+          "ascent": 12,
+          "descent": 3,
+          "width": 120.88,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 9,
+          "table": 8.71875,
+          "ascent": 12,
+          "descent": 3,
+          "width": 120.9,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 8.73,
+      "rasterSpread": 0.27,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.011,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "Inter",
+      "why": "variable, two axes, modern metrics",
+      "lies": false,
+      "degenerate": false,
+      "size": 16,
+      "sameFont": false,
+      "engines": {
+        "chromium": {
+          "raster": 12,
+          "table": 11.640625,
+          "ascent": 16,
+          "descent": 4,
+          "width": 160.36,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 11.640625,
+          "table": null,
+          "ascent": 16,
+          "descent": 4,
+          "width": 160.37,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 12,
+          "table": 11.640625,
+          "ascent": 16,
+          "descent": 4,
+          "width": 161.2,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 11.641,
+      "rasterSpread": 0.359,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "Inter",
+      "why": "variable, two axes, modern metrics",
+      "lies": false,
+      "degenerate": false,
+      "size": 18,
+      "sameFont": false,
+      "engines": {
+        "chromium": {
+          "raster": 13,
+          "table": 13.09375,
+          "ascent": 17,
+          "descent": 4,
+          "width": 179.46,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 13.095703125,
+          "table": null,
+          "ascent": 17,
+          "descent": 4,
+          "width": 179.47,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 13,
+          "table": 13.09375,
+          "ascent": 17,
+          "descent": 4,
+          "width": 181.34,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 13.096,
+      "rasterSpread": 0.096,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.002,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "Inter",
+      "why": "variable, two axes, modern metrics",
+      "lies": false,
+      "degenerate": false,
+      "size": 24,
+      "sameFont": false,
+      "engines": {
+        "chromium": {
+          "raster": 18,
+          "table": 17.46875,
+          "ascent": 23,
+          "descent": 6,
+          "width": 235.49,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 17.4609375,
+          "table": null,
+          "ascent": 23,
+          "descent": 6,
+          "width": 235.48,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 18,
+          "table": 17.453125,
+          "ascent": 23,
+          "descent": 6,
+          "width": 241.79,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 17.461,
+      "rasterSpread": 0.539,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.008,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "Inter",
+      "why": "variable, two axes, modern metrics",
+      "lies": false,
+      "degenerate": false,
+      "size": 48,
+      "sameFont": false,
+      "engines": {
+        "chromium": {
+          "raster": 35,
+          "table": 34.921875,
+          "ascent": 47,
+          "descent": 12,
+          "width": 460.88,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 34.921875,
+          "table": null,
+          "ascent": 47,
+          "descent": 12,
+          "width": 460.88,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 35,
+          "table": 34.921875,
+          "ascent": 47,
+          "descent": 12,
+          "width": 483.59,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 34.922,
+      "rasterSpread": 0.078,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "Roboto",
+      "why": "2048 units per em, variable",
+      "lies": false,
+      "degenerate": false,
+      "size": 12,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 9,
+          "table": 8.53125,
+          "ascent": 11,
+          "descent": 3,
+          "width": 113.26,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 8.53125,
+          "table": null,
+          "ascent": 11,
+          "descent": 3,
+          "width": 113.28,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 9,
+          "table": 8.53125,
+          "ascent": 11,
+          "descent": 3,
+          "width": 113.26,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 8.531,
+      "rasterSpread": 0.469,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "Roboto",
+      "why": "2048 units per em, variable",
+      "lies": false,
+      "degenerate": false,
+      "size": 16,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 12,
+          "table": 11.375,
+          "ascent": 15,
+          "descent": 4,
+          "width": 151.01,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 11.375,
+          "table": null,
+          "ascent": 15,
+          "descent": 4,
+          "width": 151.02,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 12,
+          "table": 11.375,
+          "ascent": 15,
+          "descent": 4,
+          "width": 151.01,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 11.375,
+      "rasterSpread": 0.625,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "Roboto",
+      "why": "2048 units per em, variable",
+      "lies": false,
+      "degenerate": false,
+      "size": 18,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 13,
+          "table": 12.796875,
+          "ascent": 17,
+          "descent": 5,
+          "width": 169.88,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 12.796875,
+          "table": null,
+          "ascent": 17,
+          "descent": 5,
+          "width": 169.9,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 13,
+          "table": 12.796875,
+          "ascent": 17,
+          "descent": 5,
+          "width": 169.88,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 12.797,
+      "rasterSpread": 0.203,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "Roboto",
+      "why": "2048 units per em, variable",
+      "lies": false,
+      "degenerate": false,
+      "size": 24,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 17,
+          "table": 17.0625,
+          "ascent": 23,
+          "descent": 6,
+          "width": 226.51,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 17.0625,
+          "table": null,
+          "ascent": 23,
+          "descent": 6,
+          "width": 226.5,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 17,
+          "table": 17.0625,
+          "ascent": 23,
+          "descent": 6,
+          "width": 226.51,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 17.063,
+      "rasterSpread": 0.063,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "Roboto",
+      "why": "2048 units per em, variable",
+      "lies": false,
+      "degenerate": false,
+      "size": 48,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 34,
+          "table": 34.125,
+          "ascent": 46,
+          "descent": 12,
+          "width": 453.02,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 34.125,
+          "table": null,
+          "ascent": 46,
+          "descent": 12,
+          "width": 453.03,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 34,
+          "table": 34.125,
+          "ascent": 46,
+          "descent": 12,
+          "width": 453.02,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 34.125,
+      "rasterSpread": 0.125,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "OpenSans",
+      "why": "large x-height, very widely deployed",
+      "lies": false,
+      "degenerate": false,
+      "size": 12,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 9,
+          "table": 8.5625,
+          "ascent": 13,
+          "descent": 4,
+          "width": 114.79,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 8.56640625,
+          "table": null,
+          "ascent": 13,
+          "descent": 4,
+          "width": 114.78,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 9,
+          "table": 8.5625,
+          "ascent": 13,
+          "descent": 4,
+          "width": 114.79,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 8.566,
+      "rasterSpread": 0.434,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.004,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "OpenSans",
+      "why": "large x-height, very widely deployed",
+      "lies": false,
+      "degenerate": false,
+      "size": 16,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 12,
+          "table": 11.421875,
+          "ascent": 17,
+          "descent": 5,
+          "width": 153.05,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 11.421875,
+          "table": null,
+          "ascent": 17,
+          "descent": 5,
+          "width": 153.03,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 12,
+          "table": 11.421875,
+          "ascent": 17,
+          "descent": 5,
+          "width": 153.05,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 11.422,
+      "rasterSpread": 0.578,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "OpenSans",
+      "why": "large x-height, very widely deployed",
+      "lies": false,
+      "degenerate": false,
+      "size": 18,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 13,
+          "table": 12.84375,
+          "ascent": 19,
+          "descent": 5,
+          "width": 172.18,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 12.849609375,
+          "table": null,
+          "ascent": 19,
+          "descent": 5,
+          "width": 172.17,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 13,
+          "table": 12.84375,
+          "ascent": 19,
+          "descent": 5,
+          "width": 172.18,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 12.85,
+      "rasterSpread": 0.15,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.006,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "OpenSans",
+      "why": "large x-height, very widely deployed",
+      "lies": false,
+      "degenerate": false,
+      "size": 24,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 17,
+          "table": 17.140625,
+          "ascent": 26,
+          "descent": 7,
+          "width": 229.57,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 17.1328125,
+          "table": null,
+          "ascent": 26,
+          "descent": 7,
+          "width": 229.58,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 17,
+          "table": 17.125,
+          "ascent": 26,
+          "descent": 7,
+          "width": 229.57,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 17.133,
+      "rasterSpread": 0.133,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.008,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "OpenSans",
+      "why": "large x-height, very widely deployed",
+      "lies": false,
+      "degenerate": false,
+      "size": 48,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 34,
+          "table": 34.265625,
+          "ascent": 51,
+          "descent": 14,
+          "width": 459.14,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 34.265625,
+          "table": null,
+          "ascent": 51,
+          "descent": 14,
+          "width": 459.1,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 34,
+          "table": 34.265625,
+          "ascent": 51,
+          "descent": 14,
+          "width": 459.14,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 34.266,
+      "rasterSpread": 0.266,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "Lato",
+      "why": "static, humanist",
+      "lies": false,
+      "degenerate": false,
+      "size": 12,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 8,
+          "table": 8.59375,
+          "ascent": 12,
+          "descent": 3,
+          "width": 118.7,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 8.598000081380208,
+          "table": null,
+          "ascent": 12,
+          "descent": 3,
+          "width": 118.7,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 8,
+          "table": 8.59375,
+          "ascent": 12,
+          "descent": 3,
+          "width": 118.7,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 8.598,
+      "rasterSpread": 0.598,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.004,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "Lato",
+      "why": "static, humanist",
+      "lies": false,
+      "degenerate": false,
+      "size": 16,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 11,
+          "table": 11.46875,
+          "ascent": 16,
+          "descent": 3,
+          "width": 158.26,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 11.464000447591145,
+          "table": null,
+          "ascent": 16,
+          "descent": 3,
+          "width": 158.27,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 11,
+          "table": 11.453125,
+          "ascent": 16,
+          "descent": 3,
+          "width": 158.26,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 11.464,
+      "rasterSpread": 0.464,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.011,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "Lato",
+      "why": "static, humanist",
+      "lies": false,
+      "degenerate": false,
+      "size": 18,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 13,
+          "table": 12.890625,
+          "ascent": 18,
+          "descent": 4,
+          "width": 178.05,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 12.896999104817708,
+          "table": null,
+          "ascent": 18,
+          "descent": 4,
+          "width": 178.07,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 13,
+          "table": 12.890625,
+          "ascent": 18,
+          "descent": 4,
+          "width": 178.05,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 12.897,
+      "rasterSpread": 0.103,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.006,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "Lato",
+      "why": "static, humanist",
+      "lies": false,
+      "degenerate": false,
+      "size": 24,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 17,
+          "table": 17.203125,
+          "ascent": 24,
+          "descent": 5,
+          "width": 237.4,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 17.196000162760416,
+          "table": null,
+          "ascent": 24,
+          "descent": 5,
+          "width": 237.38,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 17,
+          "table": 17.1875,
+          "ascent": 24,
+          "descent": 5,
+          "width": 237.4,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 17.196,
+      "rasterSpread": 0.196,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.009,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "Lato",
+      "why": "static, humanist",
+      "lies": false,
+      "degenerate": false,
+      "size": 48,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 35,
+          "table": 34.390625,
+          "ascent": 47,
+          "descent": 10,
+          "width": 474.79,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 34.39200032552083,
+          "table": null,
+          "ascent": 47,
+          "descent": 10,
+          "width": 474.78,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 35,
+          "table": 34.390625,
+          "ascent": 47,
+          "descent": 10,
+          "width": 474.79,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 34.392,
+      "rasterSpread": 0.608,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.001,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "IBMPlexSans",
+      "why": "a design system's own face",
+      "lies": false,
+      "degenerate": false,
+      "size": 12,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 8,
+          "table": 8.375,
+          "ascent": 12,
+          "descent": 3,
+          "width": 113.98,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 8.375999959309896,
+          "table": null,
+          "ascent": 12,
+          "descent": 3,
+          "width": 113.98,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 8,
+          "table": 8.375,
+          "ascent": 12,
+          "descent": 3,
+          "width": 113.98,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 8.376,
+      "rasterSpread": 0.376,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.001,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "IBMPlexSans",
+      "why": "a design system's own face",
+      "lies": false,
+      "degenerate": false,
+      "size": 16,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 11,
+          "table": 11.171875,
+          "ascent": 16,
+          "descent": 4,
+          "width": 151.97,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 11.168000284830729,
+          "table": null,
+          "ascent": 16,
+          "descent": 4,
+          "width": 151.98,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 11,
+          "table": 11.15625,
+          "ascent": 16,
+          "descent": 4,
+          "width": 151.97,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 11.168,
+      "rasterSpread": 0.168,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.012,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "IBMPlexSans",
+      "why": "a design system's own face",
+      "lies": false,
+      "degenerate": false,
+      "size": 18,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 13,
+          "table": 12.5625,
+          "ascent": 18,
+          "descent": 5,
+          "width": 170.96,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 12.56399943033854,
+          "table": null,
+          "ascent": 18,
+          "descent": 5,
+          "width": 170.97,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 13,
+          "table": 12.5625,
+          "ascent": 18,
+          "descent": 5,
+          "width": 170.96,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 12.564,
+      "rasterSpread": 0.436,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.002,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "IBMPlexSans",
+      "why": "a design system's own face",
+      "lies": false,
+      "degenerate": false,
+      "size": 24,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 17,
+          "table": 16.75,
+          "ascent": 25,
+          "descent": 7,
+          "width": 227.95,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 16.75199991861979,
+          "table": null,
+          "ascent": 25,
+          "descent": 7,
+          "width": 227.95,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 17,
+          "table": 16.75,
+          "ascent": 25,
+          "descent": 7,
+          "width": 227.95,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 16.752,
+      "rasterSpread": 0.248,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.002,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "IBMPlexSans",
+      "why": "a design system's own face",
+      "lies": false,
+      "degenerate": false,
+      "size": 48,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 34,
+          "table": 33.5,
+          "ascent": 49,
+          "descent": 13,
+          "width": 455.9,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 33.50399983723958,
+          "table": null,
+          "ascent": 49,
+          "descent": 13,
+          "width": 455.92,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 34,
+          "table": 33.5,
+          "ascent": 49,
+          "descent": 13,
+          "width": 455.9,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 33.504,
+      "rasterSpread": 0.496,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.004,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "Lora",
+      "why": "serif, moderate contrast",
+      "lies": false,
+      "degenerate": false,
+      "size": 12,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 9,
+          "table": 8.40625,
+          "ascent": 12,
+          "descent": 3,
+          "width": 119.82,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 8.4,
+          "table": null,
+          "ascent": 12,
+          "descent": 3,
+          "width": 119.83,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 9,
+          "table": 8.390625,
+          "ascent": 12,
+          "descent": 3,
+          "width": 119.82,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 8.4,
+      "rasterSpread": 0.6,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.009,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "Lora",
+      "why": "serif, moderate contrast",
+      "lies": false,
+      "degenerate": false,
+      "size": 16,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 12,
+          "table": 11.203125,
+          "ascent": 16,
+          "descent": 4,
+          "width": 159.76,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 11.200001017252603,
+          "table": null,
+          "ascent": 16,
+          "descent": 4,
+          "width": 159.77,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 12,
+          "table": 11.1875,
+          "ascent": 16,
+          "descent": 4,
+          "width": 159.76,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 11.2,
+      "rasterSpread": 0.8,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.012,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "Lora",
+      "why": "serif, moderate contrast",
+      "lies": false,
+      "degenerate": false,
+      "size": 18,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 13,
+          "table": 12.59375,
+          "ascent": 18,
+          "descent": 5,
+          "width": 179.73,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 12.599998982747396,
+          "table": null,
+          "ascent": 18,
+          "descent": 5,
+          "width": 179.7,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 13,
+          "table": 12.59375,
+          "ascent": 18,
+          "descent": 5,
+          "width": 179.73,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 12.6,
+      "rasterSpread": 0.4,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.006,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "Lora",
+      "why": "serif, moderate contrast",
+      "lies": false,
+      "degenerate": false,
+      "size": 24,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 17,
+          "table": 16.796875,
+          "ascent": 24,
+          "descent": 7,
+          "width": 239.64,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 16.8,
+          "table": null,
+          "ascent": 24,
+          "descent": 7,
+          "width": 239.62,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 17,
+          "table": 16.796875,
+          "ascent": 24,
+          "descent": 7,
+          "width": 239.64,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 16.8,
+      "rasterSpread": 0.2,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.003,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "Lora",
+      "why": "serif, moderate contrast",
+      "lies": false,
+      "degenerate": false,
+      "size": 48,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 34,
+          "table": 33.59375,
+          "ascent": 48,
+          "descent": 13,
+          "width": 479.28,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 33.6,
+          "table": null,
+          "ascent": 48,
+          "descent": 13,
+          "width": 479.3,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 34,
+          "table": 33.59375,
+          "ascent": 48,
+          "descent": 13,
+          "width": 479.28,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 33.6,
+      "rasterSpread": 0.4,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.006,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "PlayfairDisplay",
+      "why": "very high contrast, tall caps, short descenders",
+      "lies": false,
+      "degenerate": false,
+      "size": 12,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 9,
+          "table": 8.5,
+          "ascent": 13,
+          "descent": 3,
+          "width": 115.5,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 8.496000162760417,
+          "table": null,
+          "ascent": 13,
+          "descent": 3,
+          "width": 115.48,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 9,
+          "table": 8.484375,
+          "ascent": 13,
+          "descent": 3,
+          "width": 115.5,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 8.496,
+      "rasterSpread": 0.504,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.012,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "PlayfairDisplay",
+      "why": "very high contrast, tall caps, short descenders",
+      "lies": false,
+      "degenerate": false,
+      "size": 16,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 12,
+          "table": 11.328125,
+          "ascent": 17,
+          "descent": 4,
+          "width": 154,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 11.328000895182292,
+          "table": null,
+          "ascent": 17,
+          "descent": 4,
+          "width": 154.02,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 12,
+          "table": 11.3125,
+          "ascent": 17,
+          "descent": 4,
+          "width": 154,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 11.328,
+      "rasterSpread": 0.672,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.015,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "PlayfairDisplay",
+      "why": "very high contrast, tall caps, short descenders",
+      "lies": false,
+      "degenerate": false,
+      "size": 18,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 13,
+          "table": 12.75,
+          "ascent": 19,
+          "descent": 5,
+          "width": 173.25,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 12.74399922688802,
+          "table": null,
+          "ascent": 19,
+          "descent": 5,
+          "width": 173.27,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 13,
+          "table": 12.734375,
+          "ascent": 19,
+          "descent": 5,
+          "width": 173.25,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 12.744,
+      "rasterSpread": 0.256,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.01,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "PlayfairDisplay",
+      "why": "very high contrast, tall caps, short descenders",
+      "lies": false,
+      "degenerate": false,
+      "size": 24,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 17,
+          "table": 16.984375,
+          "ascent": 26,
+          "descent": 6,
+          "width": 231,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 16.992000325520834,
+          "table": null,
+          "ascent": 26,
+          "descent": 6,
+          "width": 230.98,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 17,
+          "table": 16.984375,
+          "ascent": 26,
+          "descent": 6,
+          "width": 231,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 16.992,
+      "rasterSpread": 0.008,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.008,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "PlayfairDisplay",
+      "why": "very high contrast, tall caps, short descenders",
+      "lies": false,
+      "degenerate": false,
+      "size": 48,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 34,
+          "table": 33.984375,
+          "ascent": 52,
+          "descent": 12,
+          "width": 462,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 33.98400065104167,
+          "table": null,
+          "ascent": 52,
+          "descent": 12,
+          "width": 461.97,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 34,
+          "table": 33.96875,
+          "ascent": 52,
+          "descent": 12,
+          "width": 462,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 33.984,
+      "rasterSpread": 0.016,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.015,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "EBGaramond",
+      "why": "old-style, small cap height relative to the em",
+      "lies": false,
+      "degenerate": false,
+      "size": 12,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 8,
+          "table": 7.796875,
+          "ascent": 12,
+          "descent": 4,
+          "width": 119.38,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 7.836000061035156,
+          "table": null,
+          "ascent": 12,
+          "descent": 4,
+          "width": 119.37,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 8,
+          "table": 7.796875,
+          "ascent": 12,
+          "descent": 4,
+          "width": 119.38,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 7.8,
+      "rasterSpread": 0.164,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.003,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "EBGaramond",
+      "why": "old-style, small cap height relative to the em",
+      "lies": false,
+      "degenerate": false,
+      "size": 16,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 11,
+          "table": 10.40625,
+          "ascent": 16,
+          "descent": 5,
+          "width": 159.17,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 10.448000081380208,
+          "table": null,
+          "ascent": 16,
+          "descent": 5,
+          "width": 159.13,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 11,
+          "table": 10.390625,
+          "ascent": 16,
+          "descent": 5,
+          "width": 159.17,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 10.4,
+      "rasterSpread": 0.552,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.009,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "EBGaramond",
+      "why": "old-style, small cap height relative to the em",
+      "lies": false,
+      "degenerate": false,
+      "size": 18,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 12,
+          "table": 11.703125,
+          "ascent": 18,
+          "descent": 5,
+          "width": 179.06,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 11.753999837239583,
+          "table": null,
+          "ascent": 18,
+          "descent": 5,
+          "width": 179.05,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 12,
+          "table": 11.6875,
+          "ascent": 18,
+          "descent": 5,
+          "width": 179.06,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 11.7,
+      "rasterSpread": 0.246,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.012,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "EBGaramond",
+      "why": "old-style, small cap height relative to the em",
+      "lies": false,
+      "degenerate": false,
+      "size": 24,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 16,
+          "table": 15.59375,
+          "ascent": 24,
+          "descent": 7,
+          "width": 238.75,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 15.672000122070312,
+          "table": null,
+          "ascent": 24,
+          "descent": 7,
+          "width": 238.75,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 16,
+          "table": 15.59375,
+          "ascent": 24,
+          "descent": 7,
+          "width": 238.75,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 15.6,
+      "rasterSpread": 0.328,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.006,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "EBGaramond",
+      "why": "old-style, small cap height relative to the em",
+      "lies": false,
+      "degenerate": false,
+      "size": 48,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 32,
+          "table": 31.203125,
+          "ascent": 48,
+          "descent": 14,
+          "width": 477.5,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 31.344000244140624,
+          "table": null,
+          "ascent": 48,
+          "descent": 14,
+          "width": 477.5,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 32,
+          "table": 31.1875,
+          "ascent": 48,
+          "descent": 14,
+          "width": 477.5,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 31.2,
+      "rasterSpread": 0.656,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.012,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "Merriweather",
+      "why": "large x-height serif, three axes",
+      "lies": false,
+      "degenerate": false,
+      "size": 12,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 9,
+          "table": 8.921875,
+          "ascent": 12,
+          "descent": 3,
+          "width": 124.49,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 8.916000366210938,
+          "table": null,
+          "ascent": 12,
+          "descent": 3,
+          "width": 124.47,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 9,
+          "table": 8.90625,
+          "ascent": 12,
+          "descent": 3,
+          "width": 124.49,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 8.916,
+      "rasterSpread": 0.084,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.01,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "Merriweather",
+      "why": "large x-height serif, three axes",
+      "lies": false,
+      "degenerate": false,
+      "size": 16,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 12,
+          "table": 11.890625,
+          "ascent": 16,
+          "descent": 4,
+          "width": 165.99,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 11.88800048828125,
+          "table": null,
+          "ascent": 16,
+          "descent": 4,
+          "width": 166,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 12,
+          "table": 11.875,
+          "ascent": 16,
+          "descent": 4,
+          "width": 165.99,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 11.888,
+      "rasterSpread": 0.112,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.013,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "Merriweather",
+      "why": "large x-height serif, three axes",
+      "lies": false,
+      "degenerate": false,
+      "size": 18,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 14,
+          "table": 13.375,
+          "ascent": 18,
+          "descent": 5,
+          "width": 186.74,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 13.3739990234375,
+          "table": null,
+          "ascent": 18,
+          "descent": 5,
+          "width": 186.73,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 14,
+          "table": 13.359375,
+          "ascent": 18,
+          "descent": 5,
+          "width": 186.74,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 13.374,
+      "rasterSpread": 0.626,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.015,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "Merriweather",
+      "why": "large x-height serif, three axes",
+      "lies": false,
+      "degenerate": false,
+      "size": 24,
+      "sameFont": false,
+      "engines": {
+        "chromium": {
+          "raster": 18,
+          "table": 17.828125,
+          "ascent": 24,
+          "descent": 7,
+          "width": 248.1,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 17.832000732421875,
+          "table": null,
+          "ascent": 24,
+          "descent": 7,
+          "width": 248.07,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 18,
+          "table": 17.828125,
+          "ascent": 24,
+          "descent": 7,
+          "width": 248.98,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 17.832,
+      "rasterSpread": 0.168,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.004,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "Merriweather",
+      "why": "large x-height serif, three axes",
+      "lies": false,
+      "degenerate": false,
+      "size": 48,
+      "sameFont": false,
+      "engines": {
+        "chromium": {
+          "raster": 36,
+          "table": 35.65625,
+          "ascent": 47,
+          "descent": 13,
+          "width": 489.16,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 35.66400146484375,
+          "table": null,
+          "ascent": 47,
+          "descent": 13,
+          "width": 489.12,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 36,
+          "table": 35.65625,
+          "ascent": 47,
+          "descent": 13,
+          "width": 497.97,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 35.664,
+      "rasterSpread": 0.336,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.008,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "JetBrainsMono",
+      "why": "monospace, tall ascenders",
+      "lies": false,
+      "degenerate": false,
+      "size": 12,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 9,
+          "table": 8.765625,
+          "ascent": 12,
+          "descent": 4,
+          "width": 108,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 8.759999593098959,
+          "table": null,
+          "ascent": 12,
+          "descent": 4,
+          "width": 108,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 9,
+          "table": 8.75,
+          "ascent": 12,
+          "descent": 4,
+          "width": 108,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 8.76,
+      "rasterSpread": 0.24,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.01,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "JetBrainsMono",
+      "why": "monospace, tall ascenders",
+      "lies": false,
+      "degenerate": false,
+      "size": 16,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 12,
+          "table": 11.6875,
+          "ascent": 16,
+          "descent": 5,
+          "width": 144,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 11.680000813802083,
+          "table": null,
+          "ascent": 16,
+          "descent": 5,
+          "width": 144,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 12,
+          "table": 11.671875,
+          "ascent": 16,
+          "descent": 5,
+          "width": 144,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 11.68,
+      "rasterSpread": 0.32,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.008,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "JetBrainsMono",
+      "why": "monospace, tall ascenders",
+      "lies": false,
+      "degenerate": false,
+      "size": 18,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 14,
+          "table": 13.140625,
+          "ascent": 18,
+          "descent": 5,
+          "width": 162,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 13.139999389648438,
+          "table": null,
+          "ascent": 18,
+          "descent": 5,
+          "width": 162,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 14,
+          "table": 13.125,
+          "ascent": 18,
+          "descent": 5,
+          "width": 162,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 13.14,
+      "rasterSpread": 0.86,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.015,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "JetBrainsMono",
+      "why": "monospace, tall ascenders",
+      "lies": false,
+      "degenerate": false,
+      "size": 24,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 18,
+          "table": 17.515625,
+          "ascent": 24,
+          "descent": 7,
+          "width": 216,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 17.519999186197918,
+          "table": null,
+          "ascent": 24,
+          "descent": 7,
+          "width": 216,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 18,
+          "table": 17.515625,
+          "ascent": 24,
+          "descent": 7,
+          "width": 216,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 17.52,
+      "rasterSpread": 0.48,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.004,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "JetBrainsMono",
+      "why": "monospace, tall ascenders",
+      "lies": false,
+      "degenerate": false,
+      "size": 48,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 35,
+          "table": 35.046875,
+          "ascent": 49,
+          "descent": 14,
+          "width": 432,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 35.039998372395836,
+          "table": null,
+          "ascent": 49,
+          "descent": 14,
+          "width": 432,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 35,
+          "table": 35.03125,
+          "ascent": 49,
+          "descent": 14,
+          "width": 432,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 35.04,
+      "rasterSpread": 0.04,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.009,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "SpaceMono",
+      "why": "monospace, static, older build",
+      "lies": false,
+      "degenerate": false,
+      "size": 12,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 8,
+          "table": 8.40625,
+          "ascent": 13,
+          "descent": 4,
+          "width": 110.16,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 8.4,
+          "table": null,
+          "ascent": 13,
+          "descent": 4,
+          "width": 110.25,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 8,
+          "table": 8.390625,
+          "ascent": 13,
+          "descent": 4,
+          "width": 110.16,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 8.4,
+      "rasterSpread": 0.4,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.009,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "SpaceMono",
+      "why": "monospace, static, older build",
+      "lies": false,
+      "degenerate": false,
+      "size": 16,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 11,
+          "table": 11.203125,
+          "ascent": 18,
+          "descent": 6,
+          "width": 146.88,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 11.200001017252603,
+          "table": null,
+          "ascent": 18,
+          "descent": 6,
+          "width": 147,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 11,
+          "table": 11.1875,
+          "ascent": 18,
+          "descent": 6,
+          "width": 146.88,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 11.2,
+      "rasterSpread": 0.2,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.012,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "SpaceMono",
+      "why": "monospace, static, older build",
+      "lies": false,
+      "degenerate": false,
+      "size": 18,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 12,
+          "table": 12.59375,
+          "ascent": 20,
+          "descent": 6,
+          "width": 165.24,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 12.599998982747396,
+          "table": null,
+          "ascent": 20,
+          "descent": 6,
+          "width": 165.25,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 12,
+          "table": 12.59375,
+          "ascent": 20,
+          "descent": 6,
+          "width": 165.24,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 12.6,
+      "rasterSpread": 0.6,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.006,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "SpaceMono",
+      "why": "monospace, static, older build",
+      "lies": false,
+      "degenerate": false,
+      "size": 24,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 16,
+          "table": 16.796875,
+          "ascent": 27,
+          "descent": 9,
+          "width": 220.32,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 16.8,
+          "table": null,
+          "ascent": 27,
+          "descent": 9,
+          "width": 220.25,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 16,
+          "table": 16.796875,
+          "ascent": 27,
+          "descent": 9,
+          "width": 220.32,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 16.8,
+      "rasterSpread": 0.8,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.003,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "SpaceMono",
+      "why": "monospace, static, older build",
+      "lies": false,
+      "degenerate": false,
+      "size": 48,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 34,
+          "table": 33.59375,
+          "ascent": 54,
+          "descent": 17,
+          "width": 440.64,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 33.6,
+          "table": null,
+          "ascent": 54,
+          "descent": 17,
+          "width": 440.75,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 34,
+          "table": 33.59375,
+          "ascent": 54,
+          "descent": 17,
+          "width": 440.64,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 33.6,
+      "rasterSpread": 0.4,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.006,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "Cinzel",
+      "why": "all-caps face: cap height IS the x-height",
+      "lies": false,
+      "degenerate": false,
+      "size": 12,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 9,
+          "table": 8.40625,
+          "ascent": 12,
+          "descent": 4,
+          "width": 121.64,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 8.4,
+          "table": null,
+          "ascent": 12,
+          "descent": 4,
+          "width": 121.65,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 9,
+          "table": 8.390625,
+          "ascent": 12,
+          "descent": 4,
+          "width": 121.64,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 8.4,
+      "rasterSpread": 0.6,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.009,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "Cinzel",
+      "why": "all-caps face: cap height IS the x-height",
+      "lies": false,
+      "degenerate": false,
+      "size": 16,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 12,
+          "table": 11.203125,
+          "ascent": 16,
+          "descent": 6,
+          "width": 162.19,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 11.200001017252603,
+          "table": null,
+          "ascent": 16,
+          "descent": 6,
+          "width": 162.17,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 12,
+          "table": 11.1875,
+          "ascent": 16,
+          "descent": 6,
+          "width": 162.19,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 11.2,
+      "rasterSpread": 0.8,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.012,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "Cinzel",
+      "why": "all-caps face: cap height IS the x-height",
+      "lies": false,
+      "degenerate": false,
+      "size": 18,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 13,
+          "table": 12.59375,
+          "ascent": 18,
+          "descent": 7,
+          "width": 182.47,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 12.599998982747396,
+          "table": null,
+          "ascent": 18,
+          "descent": 7,
+          "width": 182.45,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 13,
+          "table": 12.59375,
+          "ascent": 18,
+          "descent": 7,
+          "width": 182.47,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 12.6,
+      "rasterSpread": 0.4,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.006,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "Cinzel",
+      "why": "all-caps face: cap height IS the x-height",
+      "lies": false,
+      "degenerate": false,
+      "size": 24,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 17,
+          "table": 16.796875,
+          "ascent": 23,
+          "descent": 9,
+          "width": 243.29,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 16.8,
+          "table": null,
+          "ascent": 23,
+          "descent": 9,
+          "width": 243.3,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 17,
+          "table": 16.796875,
+          "ascent": 23,
+          "descent": 9,
+          "width": 243.29,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 16.8,
+      "rasterSpread": 0.2,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.003,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "Cinzel",
+      "why": "all-caps face: cap height IS the x-height",
+      "lies": false,
+      "degenerate": false,
+      "size": 48,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 34,
+          "table": 33.59375,
+          "ascent": 47,
+          "descent": 18,
+          "width": 486.58,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 33.6,
+          "table": null,
+          "ascent": 47,
+          "descent": 18,
+          "width": 486.55,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 34,
+          "table": 33.59375,
+          "ascent": 47,
+          "descent": 18,
+          "width": 486.58,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 33.6,
+      "rasterSpread": 0.4,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.006,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "Bungee",
+      "why": "display, extreme vertical metrics",
+      "lies": false,
+      "degenerate": false,
+      "size": 12,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 9,
+          "table": 8.640625,
+          "ascent": 12,
+          "descent": 4,
+          "width": 127.72,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 8.640000406901041,
+          "table": null,
+          "ascent": 12,
+          "descent": 4,
+          "width": 127.72,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 9,
+          "table": 8.625,
+          "ascent": 12,
+          "descent": 4,
+          "width": 127.72,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 8.64,
+      "rasterSpread": 0.36,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.015,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "Bungee",
+      "why": "display, extreme vertical metrics",
+      "lies": false,
+      "degenerate": false,
+      "size": 16,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 12,
+          "table": 11.515625,
+          "ascent": 16,
+          "descent": 5,
+          "width": 170.29,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 11.52000020345052,
+          "table": null,
+          "ascent": 16,
+          "descent": 5,
+          "width": 170.3,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 12,
+          "table": 11.515625,
+          "ascent": 16,
+          "descent": 5,
+          "width": 170.29,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 11.52,
+      "rasterSpread": 0.48,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.004,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "Bungee",
+      "why": "display, extreme vertical metrics",
+      "lies": false,
+      "degenerate": false,
+      "size": 18,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 13,
+          "table": 12.953125,
+          "ascent": 18,
+          "descent": 5,
+          "width": 191.57,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 12.959999593098958,
+          "table": null,
+          "ascent": 18,
+          "descent": 5,
+          "width": 191.55,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 13,
+          "table": 12.953125,
+          "ascent": 18,
+          "descent": 5,
+          "width": 191.57,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 12.96,
+      "rasterSpread": 0.04,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.007,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "Bungee",
+      "why": "display, extreme vertical metrics",
+      "lies": false,
+      "degenerate": false,
+      "size": 24,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 18,
+          "table": 17.28125,
+          "ascent": 24,
+          "descent": 7,
+          "width": 255.43,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 17.280000813802083,
+          "table": null,
+          "ascent": 24,
+          "descent": 7,
+          "width": 255.45,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 18,
+          "table": 17.265625,
+          "ascent": 24,
+          "descent": 7,
+          "width": 255.43,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 17.28,
+      "rasterSpread": 0.72,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.014,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "Bungee",
+      "why": "display, extreme vertical metrics",
+      "lies": false,
+      "degenerate": false,
+      "size": 48,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 35,
+          "table": 34.5625,
+          "ascent": 49,
+          "descent": 14,
+          "width": 510.86,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 34.560001627604166,
+          "table": null,
+          "ascent": 49,
+          "descent": 14,
+          "width": 510.83,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 35,
+          "table": 34.546875,
+          "ascent": 49,
+          "descent": 14,
+          "width": 510.86,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 34.56,
+      "rasterSpread": 0.44,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.013,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "Sacramento",
+      "why": "script face, enormous ascenders and descenders",
+      "lies": false,
+      "degenerate": false,
+      "size": 12,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 9,
+          "table": 9.078125,
+          "ascent": 11,
+          "descent": 6,
+          "width": 177.29,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 8.923828125,
+          "table": null,
+          "ascent": 11,
+          "descent": 6,
+          "width": 177.3,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 9,
+          "table": 9.078125,
+          "ascent": 11,
+          "descent": 6,
+          "width": 177.29,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 9.082,
+      "rasterSpread": 0.076,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.004,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "Sacramento",
+      "why": "script face, enormous ascenders and descenders",
+      "lies": false,
+      "degenerate": false,
+      "size": 16,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 12,
+          "table": 12.109375,
+          "ascent": 15,
+          "descent": 8,
+          "width": 236.39,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 11.8984375,
+          "table": null,
+          "ascent": 15,
+          "descent": 8,
+          "width": 236.4,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 12,
+          "table": 12.109375,
+          "ascent": 15,
+          "descent": 8,
+          "width": 236.39,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 12.109,
+      "rasterSpread": 0.102,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "Sacramento",
+      "why": "script face, enormous ascenders and descenders",
+      "lies": false,
+      "degenerate": false,
+      "size": 18,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 13,
+          "table": 13.625,
+          "ascent": 17,
+          "descent": 10,
+          "width": 265.94,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 13.3857421875,
+          "table": null,
+          "ascent": 17,
+          "descent": 10,
+          "width": 265.93,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 13,
+          "table": 13.609375,
+          "ascent": 17,
+          "descent": 10,
+          "width": 265.94,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 13.623,
+      "rasterSpread": 0.386,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.014,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "Sacramento",
+      "why": "script face, enormous ascenders and descenders",
+      "lies": false,
+      "degenerate": false,
+      "size": 24,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 18,
+          "table": 18.171875,
+          "ascent": 22,
+          "descent": 13,
+          "width": 354.59,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 17.84765625,
+          "table": null,
+          "ascent": 22,
+          "descent": 13,
+          "width": 354.6,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 18,
+          "table": 18.15625,
+          "ascent": 22,
+          "descent": 13,
+          "width": 354.59,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 18.164,
+      "rasterSpread": 0.152,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.008,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "Sacramento",
+      "why": "script face, enormous ascenders and descenders",
+      "lies": false,
+      "degenerate": false,
+      "size": 48,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 36,
+          "table": 36.328125,
+          "ascent": 45,
+          "descent": 25,
+          "width": 709.17,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 35.6953125,
+          "table": null,
+          "ascent": 45,
+          "descent": 25,
+          "width": 709.17,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 36,
+          "table": 36.328125,
+          "ascent": 45,
+          "descent": 25,
+          "width": 709.17,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 36.328,
+      "rasterSpread": 0.305,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "Anton",
+      "why": "condensed display, very tall caps",
+      "lies": false,
+      "degenerate": false,
+      "size": 12,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 10,
+          "table": 10.3125,
+          "ascent": 14,
+          "descent": 4,
+          "width": 83.9,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 10.3125,
+          "table": null,
+          "ascent": 14,
+          "descent": 4,
+          "width": 83.88,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 10,
+          "table": 10.3125,
+          "ascent": 14,
+          "descent": 4,
+          "width": 83.9,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 10.313,
+      "rasterSpread": 0.313,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.001,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "Anton",
+      "why": "condensed display, very tall caps",
+      "lies": false,
+      "degenerate": false,
+      "size": 16,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 14,
+          "table": 13.75,
+          "ascent": 19,
+          "descent": 5,
+          "width": 111.87,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 13.75,
+          "table": null,
+          "ascent": 19,
+          "descent": 5,
+          "width": 111.87,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 14,
+          "table": 13.75,
+          "ascent": 19,
+          "descent": 5,
+          "width": 111.87,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 13.75,
+      "rasterSpread": 0.25,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "Anton",
+      "why": "condensed display, very tall caps",
+      "lies": false,
+      "degenerate": false,
+      "size": 18,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 15,
+          "table": 15.46875,
+          "ascent": 21,
+          "descent": 6,
+          "width": 125.85,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 15.46875,
+          "table": null,
+          "ascent": 21,
+          "descent": 6,
+          "width": 125.88,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 15,
+          "table": 15.46875,
+          "ascent": 21,
+          "descent": 6,
+          "width": 125.85,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 15.469,
+      "rasterSpread": 0.469,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "Anton",
+      "why": "condensed display, very tall caps",
+      "lies": false,
+      "degenerate": false,
+      "size": 24,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 21,
+          "table": 20.625,
+          "ascent": 28,
+          "descent": 8,
+          "width": 167.8,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 20.625,
+          "table": null,
+          "ascent": 28,
+          "descent": 8,
+          "width": 167.78,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 21,
+          "table": 20.625,
+          "ascent": 28,
+          "descent": 8,
+          "width": 167.8,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 20.625,
+      "rasterSpread": 0.375,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "Anton",
+      "why": "condensed display, very tall caps",
+      "lies": false,
+      "degenerate": false,
+      "size": 48,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 42,
+          "table": 41.25,
+          "ascent": 56,
+          "descent": 16,
+          "width": 335.6,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 41.25,
+          "table": null,
+          "ascent": 56,
+          "descent": 16,
+          "width": 335.6,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 42,
+          "table": 41.25,
+          "ascent": 56,
+          "descent": 16,
+          "width": 335.6,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 41.25,
+      "rasterSpread": 0.75,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "NotoSansJP",
+      "why": "CJK: no capitals, so what does cap height mean?",
+      "lies": false,
+      "degenerate": false,
+      "size": 12,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 9,
+          "table": 8.796875,
+          "ascent": 14,
+          "descent": 3,
+          "width": 113.76,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 8.796000162760416,
+          "table": null,
+          "ascent": 14,
+          "descent": 3,
+          "width": 113.75,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 9,
+          "table": 8.78125,
+          "ascent": 14,
+          "descent": 3,
+          "width": 113.76,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 8.796,
+      "rasterSpread": 0.204,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.015,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "NotoSansJP",
+      "why": "CJK: no capitals, so what does cap height mean?",
+      "lies": false,
+      "degenerate": false,
+      "size": 16,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 12,
+          "table": 11.734375,
+          "ascent": 19,
+          "descent": 5,
+          "width": 151.68,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 11.72800089518229,
+          "table": null,
+          "ascent": 19,
+          "descent": 5,
+          "width": 151.67,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 12,
+          "table": 11.71875,
+          "ascent": 19,
+          "descent": 5,
+          "width": 151.68,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 11.728,
+      "rasterSpread": 0.272,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.009,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "NotoSansJP",
+      "why": "CJK: no capitals, so what does cap height mean?",
+      "lies": false,
+      "degenerate": false,
+      "size": 18,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 14,
+          "table": 13.1875,
+          "ascent": 21,
+          "descent": 5,
+          "width": 170.64,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 13.193999226888021,
+          "table": null,
+          "ascent": 21,
+          "descent": 5,
+          "width": 170.65,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 14,
+          "table": 13.1875,
+          "ascent": 21,
+          "descent": 5,
+          "width": 170.64,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 13.194,
+      "rasterSpread": 0.806,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.007,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "NotoSansJP",
+      "why": "CJK: no capitals, so what does cap height mean?",
+      "lies": false,
+      "degenerate": false,
+      "size": 24,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 18,
+          "table": 17.59375,
+          "ascent": 28,
+          "descent": 7,
+          "width": 227.51,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 17.592000325520832,
+          "table": null,
+          "ascent": 28,
+          "descent": 7,
+          "width": 227.5,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 18,
+          "table": 17.578125,
+          "ascent": 28,
+          "descent": 7,
+          "width": 227.51,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 17.592,
+      "rasterSpread": 0.408,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.014,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "NotoSansJP",
+      "why": "CJK: no capitals, so what does cap height mean?",
+      "lies": false,
+      "degenerate": false,
+      "size": 48,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 36,
+          "table": 35.1875,
+          "ascent": 56,
+          "descent": 14,
+          "width": 455.03,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 35.184000651041664,
+          "table": null,
+          "ascent": 56,
+          "descent": 14,
+          "width": 455.02,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 36,
+          "table": 35.171875,
+          "ascent": 56,
+          "descent": 14,
+          "width": 455.03,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 35.184,
+      "rasterSpread": 0.816,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.012,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "NotoSansArabic",
+      "why": "Arabic: no capitals, tall marks",
+      "lies": false,
+      "degenerate": false,
+      "size": 12,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 9,
+          "table": 8.5625,
+          "ascent": 16,
+          "descent": 9,
+          "width": 116.14,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 8.56800028483073,
+          "table": null,
+          "ascent": 16,
+          "descent": 9,
+          "width": 116.12,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 9,
+          "table": 8.5625,
+          "ascent": 16,
+          "descent": 9,
+          "width": 116.14,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 8.568,
+      "rasterSpread": 0.432,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.005,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "NotoSansArabic",
+      "why": "Arabic: no capitals, tall marks",
+      "lies": false,
+      "degenerate": false,
+      "size": 16,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 12,
+          "table": 11.421875,
+          "ascent": 22,
+          "descent": 12,
+          "width": 154.85,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 11.424000040690103,
+          "table": null,
+          "ascent": 22,
+          "descent": 12,
+          "width": 154.85,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 12,
+          "table": 11.421875,
+          "ascent": 22,
+          "descent": 12,
+          "width": 154.85,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 11.424,
+      "rasterSpread": 0.576,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.002,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "NotoSansArabic",
+      "why": "Arabic: no capitals, tall marks",
+      "lies": false,
+      "degenerate": false,
+      "size": 18,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 13,
+          "table": 12.859375,
+          "ascent": 25,
+          "descent": 13,
+          "width": 174.2,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 12.851999918619791,
+          "table": null,
+          "ascent": 25,
+          "descent": 13,
+          "width": 174.18,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 13,
+          "table": 12.84375,
+          "ascent": 25,
+          "descent": 13,
+          "width": 174.2,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 12.852,
+      "rasterSpread": 0.148,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.008,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "NotoSansArabic",
+      "why": "Arabic: no capitals, tall marks",
+      "lies": false,
+      "degenerate": false,
+      "size": 24,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 18,
+          "table": 17.140625,
+          "ascent": 33,
+          "descent": 18,
+          "width": 232.27,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 17.13600056966146,
+          "table": null,
+          "ascent": 33,
+          "descent": 18,
+          "width": 232.28,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 18,
+          "table": 17.125,
+          "ascent": 33,
+          "descent": 18,
+          "width": 232.27,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 17.136,
+      "rasterSpread": 0.864,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.011,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "NotoSansArabic",
+      "why": "Arabic: no capitals, tall marks",
+      "lies": false,
+      "degenerate": false,
+      "size": 48,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 35,
+          "table": 34.265625,
+          "ascent": 66,
+          "descent": 35,
+          "width": 464.54,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 34.27200113932292,
+          "table": null,
+          "ascent": 66,
+          "descent": 35,
+          "width": 464.52,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 35,
+          "table": 34.265625,
+          "ascent": 66,
+          "descent": 35,
+          "width": 464.54,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 34.272,
+      "rasterSpread": 0.728,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.006,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "NotoSansDevanagari",
+      "why": "Devanagari: headline above the letters",
+      "lies": false,
+      "degenerate": false,
+      "size": 12,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 9,
+          "table": 7.46875,
+          "ascent": 11,
+          "descent": 5,
+          "width": 116.14,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 8.56800028483073,
+          "table": null,
+          "ascent": 11,
+          "descent": 5,
+          "width": 116.12,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 9,
+          "table": 7.453125,
+          "ascent": 11,
+          "descent": 5,
+          "width": 116.14,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 7.464,
+      "rasterSpread": 0.432,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.011,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "NotoSansDevanagari",
+      "why": "Devanagari: headline above the letters",
+      "lies": false,
+      "degenerate": false,
+      "size": 16,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 12,
+          "table": 9.953125,
+          "ascent": 14,
+          "descent": 7,
+          "width": 154.85,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 11.424000040690103,
+          "table": null,
+          "ascent": 14,
+          "descent": 7,
+          "width": 154.85,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 12,
+          "table": 9.9375,
+          "ascent": 14,
+          "descent": 7,
+          "width": 154.85,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 9.952,
+      "rasterSpread": 0.576,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.014,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "NotoSansDevanagari",
+      "why": "Devanagari: headline above the letters",
+      "lies": false,
+      "degenerate": false,
+      "size": 18,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 13,
+          "table": 11.203125,
+          "ascent": 16,
+          "descent": 7,
+          "width": 174.2,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 12.851999918619791,
+          "table": null,
+          "ascent": 16,
+          "descent": 7,
+          "width": 174.18,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 13,
+          "table": 11.1875,
+          "ascent": 16,
+          "descent": 7,
+          "width": 174.2,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 11.196,
+      "rasterSpread": 0.148,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.008,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "NotoSansDevanagari",
+      "why": "Devanagari: headline above the letters",
+      "lies": false,
+      "degenerate": false,
+      "size": 24,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 18,
+          "table": 14.921875,
+          "ascent": 22,
+          "descent": 10,
+          "width": 232.27,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 17.13600056966146,
+          "table": null,
+          "ascent": 22,
+          "descent": 10,
+          "width": 232.28,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 18,
+          "table": 14.921875,
+          "ascent": 22,
+          "descent": 10,
+          "width": 232.27,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 14.928,
+      "rasterSpread": 0.864,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.006,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "NotoSansDevanagari",
+      "why": "Devanagari: headline above the letters",
+      "lies": false,
+      "degenerate": false,
+      "size": 48,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 35,
+          "table": 29.859375,
+          "ascent": 43,
+          "descent": 20,
+          "width": 464.54,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 34.27200113932292,
+          "table": null,
+          "ascent": 43,
+          "descent": 20,
+          "width": 464.52,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 35,
+          "table": 29.84375,
+          "ascent": 43,
+          "descent": 20,
+          "width": 464.54,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 29.856,
+      "rasterSpread": 0.728,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.012,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "NotoSerifThai",
+      "why": "Thai: stacked marks above and below",
+      "lies": false,
+      "degenerate": false,
+      "size": 12,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 9,
+          "table": 8.5625,
+          "ascent": 13,
+          "descent": 6,
+          "width": 120.65,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 8.56800028483073,
+          "table": null,
+          "ascent": 13,
+          "descent": 6,
+          "width": 120.63,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 9,
+          "table": 8.5625,
+          "ascent": 13,
+          "descent": 6,
+          "width": 120.65,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 8.568,
+      "rasterSpread": 0.432,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.005,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "NotoSerifThai",
+      "why": "Thai: stacked marks above and below",
+      "lies": false,
+      "degenerate": false,
+      "size": 16,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 12,
+          "table": 11.421875,
+          "ascent": 17,
+          "descent": 9,
+          "width": 160.86,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 11.424000040690103,
+          "table": null,
+          "ascent": 17,
+          "descent": 9,
+          "width": 160.82,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 12,
+          "table": 11.421875,
+          "ascent": 17,
+          "descent": 9,
+          "width": 160.86,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 11.424,
+      "rasterSpread": 0.576,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.002,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "NotoSerifThai",
+      "why": "Thai: stacked marks above and below",
+      "lies": false,
+      "degenerate": false,
+      "size": 18,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 13,
+          "table": 12.859375,
+          "ascent": 19,
+          "descent": 10,
+          "width": 180.97,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 12.851999918619791,
+          "table": null,
+          "ascent": 19,
+          "descent": 10,
+          "width": 180.93,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 13,
+          "table": 12.84375,
+          "ascent": 19,
+          "descent": 10,
+          "width": 180.97,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 12.852,
+      "rasterSpread": 0.148,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.008,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "NotoSerifThai",
+      "why": "Thai: stacked marks above and below",
+      "lies": false,
+      "degenerate": false,
+      "size": 24,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 18,
+          "table": 17.140625,
+          "ascent": 26,
+          "descent": 13,
+          "width": 241.3,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 17.13600056966146,
+          "table": null,
+          "ascent": 26,
+          "descent": 13,
+          "width": 241.3,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 18,
+          "table": 17.125,
+          "ascent": 26,
+          "descent": 13,
+          "width": 241.3,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 17.136,
+      "rasterSpread": 0.864,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.011,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "NotoSerifThai",
+      "why": "Thai: stacked marks above and below",
+      "lies": false,
+      "degenerate": false,
+      "size": 48,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 35,
+          "table": 34.265625,
+          "ascent": 51,
+          "descent": 26,
+          "width": 482.59,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 34.27200113932292,
+          "table": null,
+          "ascent": 51,
+          "descent": 26,
+          "width": 482.57,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 35,
+          "table": 34.265625,
+          "ascent": 51,
+          "descent": 26,
+          "width": 482.59,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 34.272,
+      "rasterSpread": 0.728,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.006,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "PTSans",
+      "why": "older build, may lack sCapHeight",
+      "lies": false,
+      "degenerate": false,
+      "size": 12,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 8,
+          "table": 8.40625,
+          "ascent": 12,
+          "descent": 3,
+          "width": 105.62,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 8.4,
+          "table": null,
+          "ascent": 12,
+          "descent": 3,
+          "width": 105.63,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 8,
+          "table": 8.390625,
+          "ascent": 12,
+          "descent": 3,
+          "width": 105.62,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 8.4,
+      "rasterSpread": 0.4,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.009,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "PTSans",
+      "why": "older build, may lack sCapHeight",
+      "lies": false,
+      "degenerate": false,
+      "size": 16,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 11,
+          "table": 11.203125,
+          "ascent": 16,
+          "descent": 4,
+          "width": 140.83,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 11.200001017252603,
+          "table": null,
+          "ascent": 16,
+          "descent": 4,
+          "width": 140.85,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 11,
+          "table": 11.1875,
+          "ascent": 16,
+          "descent": 4,
+          "width": 140.83,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 11.2,
+      "rasterSpread": 0.2,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.012,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "PTSans",
+      "why": "older build, may lack sCapHeight",
+      "lies": false,
+      "degenerate": false,
+      "size": 18,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 13,
+          "table": 12.59375,
+          "ascent": 18,
+          "descent": 5,
+          "width": 158.44,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 12.599998982747396,
+          "table": null,
+          "ascent": 18,
+          "descent": 5,
+          "width": 158.42,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 13,
+          "table": 12.59375,
+          "ascent": 18,
+          "descent": 5,
+          "width": 158.44,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 12.6,
+      "rasterSpread": 0.4,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.006,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "PTSans",
+      "why": "older build, may lack sCapHeight",
+      "lies": false,
+      "degenerate": false,
+      "size": 24,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 17,
+          "table": 16.796875,
+          "ascent": 24,
+          "descent": 7,
+          "width": 211.25,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 16.8,
+          "table": null,
+          "ascent": 24,
+          "descent": 7,
+          "width": 211.23,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 17,
+          "table": 16.796875,
+          "ascent": 24,
+          "descent": 7,
+          "width": 211.25,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 16.8,
+      "rasterSpread": 0.2,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.003,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "PTSans",
+      "why": "older build, may lack sCapHeight",
+      "lies": false,
+      "degenerate": false,
+      "size": 48,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 34,
+          "table": 33.59375,
+          "ascent": 49,
+          "descent": 13,
+          "width": 422.5,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 33.6,
+          "table": null,
+          "ascent": 49,
+          "descent": 13,
+          "width": 422.5,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 34,
+          "table": 33.59375,
+          "ascent": 49,
+          "descent": 13,
+          "width": 422.5,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 33.6,
+      "rasterSpread": 0.4,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.006,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "Ubuntu",
+      "why": "UFL licence, 2010-era build",
+      "lies": false,
+      "degenerate": false,
+      "size": 12,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 8,
+          "table": 8.3125,
+          "ascent": 11,
+          "descent": 2,
+          "width": 113.8,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 8.315999857584636,
+          "table": null,
+          "ascent": 11,
+          "descent": 2,
+          "width": 113.78,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 8,
+          "table": 8.3125,
+          "ascent": 11,
+          "descent": 2,
+          "width": 113.8,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 8.316,
+      "rasterSpread": 0.316,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.004,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "Ubuntu",
+      "why": "UFL licence, 2010-era build",
+      "lies": false,
+      "degenerate": false,
+      "size": 16,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 11,
+          "table": 11.09375,
+          "ascent": 15,
+          "descent": 3,
+          "width": 151.73,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 11.08800048828125,
+          "table": null,
+          "ascent": 15,
+          "descent": 3,
+          "width": 151.7,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 11,
+          "table": 11.078125,
+          "ascent": 15,
+          "descent": 3,
+          "width": 151.73,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 11.088,
+      "rasterSpread": 0.088,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.01,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "Ubuntu",
+      "why": "UFL licence, 2010-era build",
+      "lies": false,
+      "degenerate": false,
+      "size": 18,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 12,
+          "table": 12.46875,
+          "ascent": 17,
+          "descent": 3,
+          "width": 170.69,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 12.4739990234375,
+          "table": null,
+          "ascent": 17,
+          "descent": 3,
+          "width": 170.68,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 12,
+          "table": 12.46875,
+          "ascent": 17,
+          "descent": 3,
+          "width": 170.69,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 12.474,
+      "rasterSpread": 0.474,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.005,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "Ubuntu",
+      "why": "UFL licence, 2010-era build",
+      "lies": false,
+      "degenerate": false,
+      "size": 24,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 17,
+          "table": 16.625,
+          "ascent": 22,
+          "descent": 5,
+          "width": 227.59,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 16.631999715169272,
+          "table": null,
+          "ascent": 22,
+          "descent": 5,
+          "width": 227.6,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 17,
+          "table": 16.625,
+          "ascent": 22,
+          "descent": 5,
+          "width": 227.59,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 16.632,
+      "rasterSpread": 0.368,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.007,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "Ubuntu",
+      "why": "UFL licence, 2010-era build",
+      "lies": false,
+      "degenerate": false,
+      "size": 48,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 33,
+          "table": 33.265625,
+          "ascent": 45,
+          "descent": 9,
+          "width": 455.18,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 33.263999430338544,
+          "table": null,
+          "ascent": 45,
+          "descent": 9,
+          "width": 455.15,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 33,
+          "table": 33.25,
+          "ascent": 45,
+          "descent": 9,
+          "width": 455.18,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 33.264,
+      "rasterSpread": 0.264,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.014,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "AwkwardAbsent",
+      "why": "OS/2 downgraded to v1: sCapHeight is not there to read",
+      "lies": false,
+      "degenerate": false,
+      "size": 12,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 8,
+          "table": 8.59375,
+          "ascent": 12,
+          "descent": 3,
+          "width": 118.7,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 8.598000081380208,
+          "table": null,
+          "ascent": 12,
+          "descent": 3,
+          "width": 118.7,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 8,
+          "table": 8.59375,
+          "ascent": 12,
+          "descent": 3,
+          "width": 118.7,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": null,
+      "rasterSpread": 0.598,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": null,
+      "declaresCapHeight": false
+    },
+    {
+      "family": "AwkwardAbsent",
+      "why": "OS/2 downgraded to v1: sCapHeight is not there to read",
+      "lies": false,
+      "degenerate": false,
+      "size": 16,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 11,
+          "table": 11.46875,
+          "ascent": 16,
+          "descent": 3,
+          "width": 158.26,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 11.464000447591145,
+          "table": null,
+          "ascent": 16,
+          "descent": 3,
+          "width": 158.27,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 11,
+          "table": 11.453125,
+          "ascent": 16,
+          "descent": 3,
+          "width": 158.26,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": null,
+      "rasterSpread": 0.464,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": null,
+      "declaresCapHeight": false
+    },
+    {
+      "family": "AwkwardAbsent",
+      "why": "OS/2 downgraded to v1: sCapHeight is not there to read",
+      "lies": false,
+      "degenerate": false,
+      "size": 18,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 13,
+          "table": 12.890625,
+          "ascent": 18,
+          "descent": 4,
+          "width": 178.05,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 12.896999104817708,
+          "table": null,
+          "ascent": 18,
+          "descent": 4,
+          "width": 178.07,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 13,
+          "table": 12.890625,
+          "ascent": 18,
+          "descent": 4,
+          "width": 178.05,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": null,
+      "rasterSpread": 0.103,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": null,
+      "declaresCapHeight": false
+    },
+    {
+      "family": "AwkwardAbsent",
+      "why": "OS/2 downgraded to v1: sCapHeight is not there to read",
+      "lies": false,
+      "degenerate": false,
+      "size": 24,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 17,
+          "table": 17.203125,
+          "ascent": 24,
+          "descent": 5,
+          "width": 237.4,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 17.196000162760416,
+          "table": null,
+          "ascent": 24,
+          "descent": 5,
+          "width": 237.38,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 17,
+          "table": 17.1875,
+          "ascent": 24,
+          "descent": 5,
+          "width": 237.4,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": null,
+      "rasterSpread": 0.196,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": null,
+      "declaresCapHeight": false
+    },
+    {
+      "family": "AwkwardAbsent",
+      "why": "OS/2 downgraded to v1: sCapHeight is not there to read",
+      "lies": false,
+      "degenerate": false,
+      "size": 48,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 35,
+          "table": 34.390625,
+          "ascent": 47,
+          "descent": 10,
+          "width": 474.79,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 34.39200032552083,
+          "table": null,
+          "ascent": 47,
+          "descent": 10,
+          "width": 474.78,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 35,
+          "table": 34.390625,
+          "ascent": 47,
+          "descent": 10,
+          "width": 474.79,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": null,
+      "rasterSpread": 0.608,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": null,
+      "declaresCapHeight": false
+    },
+    {
+      "family": "AwkwardZeroed",
+      "why": "sCapHeight present and set to zero",
+      "lies": false,
+      "degenerate": false,
+      "size": 12,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 8,
+          "table": 8.59375,
+          "ascent": 12,
+          "descent": 3,
+          "width": 118.7,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 8.598000081380208,
+          "table": null,
+          "ascent": 12,
+          "descent": 3,
+          "width": 118.7,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 8,
+          "table": 8.59375,
+          "ascent": 12,
+          "descent": 3,
+          "width": 118.7,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": null,
+      "rasterSpread": 0.598,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": null,
+      "declaresCapHeight": false
+    },
+    {
+      "family": "AwkwardZeroed",
+      "why": "sCapHeight present and set to zero",
+      "lies": false,
+      "degenerate": false,
+      "size": 16,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 11,
+          "table": 11.46875,
+          "ascent": 16,
+          "descent": 3,
+          "width": 158.26,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 11.464000447591145,
+          "table": null,
+          "ascent": 16,
+          "descent": 3,
+          "width": 158.27,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 11,
+          "table": 11.453125,
+          "ascent": 16,
+          "descent": 3,
+          "width": 158.26,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": null,
+      "rasterSpread": 0.464,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": null,
+      "declaresCapHeight": false
+    },
+    {
+      "family": "AwkwardZeroed",
+      "why": "sCapHeight present and set to zero",
+      "lies": false,
+      "degenerate": false,
+      "size": 18,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 13,
+          "table": 12.890625,
+          "ascent": 18,
+          "descent": 4,
+          "width": 178.05,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 12.896999104817708,
+          "table": null,
+          "ascent": 18,
+          "descent": 4,
+          "width": 178.07,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 13,
+          "table": 12.890625,
+          "ascent": 18,
+          "descent": 4,
+          "width": 178.05,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": null,
+      "rasterSpread": 0.103,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": null,
+      "declaresCapHeight": false
+    },
+    {
+      "family": "AwkwardZeroed",
+      "why": "sCapHeight present and set to zero",
+      "lies": false,
+      "degenerate": false,
+      "size": 24,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 17,
+          "table": 17.203125,
+          "ascent": 24,
+          "descent": 5,
+          "width": 237.4,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 17.196000162760416,
+          "table": null,
+          "ascent": 24,
+          "descent": 5,
+          "width": 237.38,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 17,
+          "table": 17.1875,
+          "ascent": 24,
+          "descent": 5,
+          "width": 237.4,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": null,
+      "rasterSpread": 0.196,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": null,
+      "declaresCapHeight": false
+    },
+    {
+      "family": "AwkwardZeroed",
+      "why": "sCapHeight present and set to zero",
+      "lies": false,
+      "degenerate": false,
+      "size": 48,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 35,
+          "table": 34.390625,
+          "ascent": 47,
+          "descent": 10,
+          "width": 474.79,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 34.39200032552083,
+          "table": null,
+          "ascent": 47,
+          "descent": 10,
+          "width": 474.78,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 35,
+          "table": 34.390625,
+          "ascent": 47,
+          "descent": 10,
+          "width": 474.79,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": null,
+      "rasterSpread": 0.608,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": null,
+      "declaresCapHeight": false
+    },
+    {
+      "family": "AwkwardHuge",
+      "why": "sCapHeight of 1400 on a 1000-unit em: taller than the em box",
+      "lies": false,
+      "degenerate": true,
+      "size": 12,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 8,
+          "table": 8.40625,
+          "ascent": 13,
+          "descent": 4,
+          "width": 110.16,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 8.4,
+          "table": null,
+          "ascent": 13,
+          "descent": 4,
+          "width": 110.25,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 8,
+          "table": 8.390625,
+          "ascent": 13,
+          "descent": 4,
+          "width": 110.16,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 16.8,
+      "rasterSpread": 0.4,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 8.409,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "AwkwardHuge",
+      "why": "sCapHeight of 1400 on a 1000-unit em: taller than the em box",
+      "lies": false,
+      "degenerate": true,
+      "size": 16,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 11,
+          "table": 11.203125,
+          "ascent": 18,
+          "descent": 6,
+          "width": 146.88,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 11.200001017252603,
+          "table": null,
+          "ascent": 18,
+          "descent": 6,
+          "width": 147,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 11,
+          "table": 11.1875,
+          "ascent": 18,
+          "descent": 6,
+          "width": 146.88,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 22.4,
+      "rasterSpread": 0.2,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 11.212,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "AwkwardHuge",
+      "why": "sCapHeight of 1400 on a 1000-unit em: taller than the em box",
+      "lies": false,
+      "degenerate": true,
+      "size": 18,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 12,
+          "table": 12.59375,
+          "ascent": 20,
+          "descent": 6,
+          "width": 165.24,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 12.599998982747396,
+          "table": null,
+          "ascent": 20,
+          "descent": 6,
+          "width": 165.25,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 12,
+          "table": 12.59375,
+          "ascent": 20,
+          "descent": 6,
+          "width": 165.24,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 25.2,
+      "rasterSpread": 0.6,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 12.606,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "AwkwardHuge",
+      "why": "sCapHeight of 1400 on a 1000-unit em: taller than the em box",
+      "lies": false,
+      "degenerate": true,
+      "size": 24,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 16,
+          "table": 16.796875,
+          "ascent": 27,
+          "descent": 9,
+          "width": 220.32,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 16.8,
+          "table": null,
+          "ascent": 27,
+          "descent": 9,
+          "width": 220.25,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 16,
+          "table": 16.796875,
+          "ascent": 27,
+          "descent": 9,
+          "width": 220.32,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 33.6,
+      "rasterSpread": 0.8,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 16.803,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "AwkwardHuge",
+      "why": "sCapHeight of 1400 on a 1000-unit em: taller than the em box",
+      "lies": false,
+      "degenerate": true,
+      "size": 48,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 34,
+          "table": 33.59375,
+          "ascent": 54,
+          "descent": 17,
+          "width": 440.64,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 33.6,
+          "table": null,
+          "ascent": 54,
+          "descent": 17,
+          "width": 440.75,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 34,
+          "table": 33.59375,
+          "ascent": 54,
+          "descent": 17,
+          "width": 440.64,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 67.2,
+      "rasterSpread": 0.4,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 33.606,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "AwkwardLies",
+      "why": "SpaceMono declaring 600 where its own H is 700: plausible, in range, wrong",
+      "lies": true,
+      "degenerate": false,
+      "size": 12,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 8,
+          "table": 7.203125,
+          "ascent": 13,
+          "descent": 4,
+          "width": 110.16,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 8.4,
+          "table": null,
+          "ascent": 13,
+          "descent": 4,
+          "width": 110.25,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 8,
+          "table": 7.1875,
+          "ascent": 13,
+          "descent": 4,
+          "width": 110.16,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 7.2,
+      "rasterSpread": 0.4,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.013,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "AwkwardLies",
+      "why": "SpaceMono declaring 600 where its own H is 700: plausible, in range, wrong",
+      "lies": true,
+      "degenerate": false,
+      "size": 16,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 11,
+          "table": 9.59375,
+          "ascent": 18,
+          "descent": 6,
+          "width": 146.88,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 11.200001017252603,
+          "table": null,
+          "ascent": 18,
+          "descent": 6,
+          "width": 147,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 11,
+          "table": 9.59375,
+          "ascent": 18,
+          "descent": 6,
+          "width": 146.88,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 9.6,
+      "rasterSpread": 0.2,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.006,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "AwkwardLies",
+      "why": "SpaceMono declaring 600 where its own H is 700: plausible, in range, wrong",
+      "lies": true,
+      "degenerate": false,
+      "size": 18,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 12,
+          "table": 10.796875,
+          "ascent": 20,
+          "descent": 6,
+          "width": 165.24,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 12.599998982747396,
+          "table": null,
+          "ascent": 20,
+          "descent": 6,
+          "width": 165.25,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 12,
+          "table": 10.796875,
+          "ascent": 20,
+          "descent": 6,
+          "width": 165.24,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 10.8,
+      "rasterSpread": 0.6,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.003,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "AwkwardLies",
+      "why": "SpaceMono declaring 600 where its own H is 700: plausible, in range, wrong",
+      "lies": true,
+      "degenerate": false,
+      "size": 24,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 16,
+          "table": 14.40625,
+          "ascent": 27,
+          "descent": 9,
+          "width": 220.32,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 16.8,
+          "table": null,
+          "ascent": 27,
+          "descent": 9,
+          "width": 220.25,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 16,
+          "table": 14.390625,
+          "ascent": 27,
+          "descent": 9,
+          "width": 220.32,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 14.4,
+      "rasterSpread": 0.8,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.009,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "AwkwardLies",
+      "why": "SpaceMono declaring 600 where its own H is 700: plausible, in range, wrong",
+      "lies": true,
+      "degenerate": false,
+      "size": 48,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 34,
+          "table": 28.796875,
+          "ascent": 54,
+          "descent": 17,
+          "width": 440.64,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 33.6,
+          "table": null,
+          "ascent": 54,
+          "descent": 17,
+          "width": 440.75,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 34,
+          "table": 28.796875,
+          "ascent": 54,
+          "descent": 17,
+          "width": 440.64,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 28.8,
+      "rasterSpread": 0.4,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.003,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "AwkwardLiesLato",
+      "why": "Lato declaring 1200 where its own H is 1433, on a 2000-unit em",
+      "lies": true,
+      "degenerate": false,
+      "size": 12,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 8,
+          "table": 7.203125,
+          "ascent": 12,
+          "descent": 3,
+          "width": 118.7,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 8.598000081380208,
+          "table": null,
+          "ascent": 12,
+          "descent": 3,
+          "width": 118.7,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 8,
+          "table": 7.1875,
+          "ascent": 12,
+          "descent": 3,
+          "width": 118.7,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 7.2,
+      "rasterSpread": 0.598,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.013,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "AwkwardLiesLato",
+      "why": "Lato declaring 1200 where its own H is 1433, on a 2000-unit em",
+      "lies": true,
+      "degenerate": false,
+      "size": 16,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 11,
+          "table": 9.59375,
+          "ascent": 16,
+          "descent": 3,
+          "width": 158.26,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 11.464000447591145,
+          "table": null,
+          "ascent": 16,
+          "descent": 3,
+          "width": 158.27,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 11,
+          "table": 9.59375,
+          "ascent": 16,
+          "descent": 3,
+          "width": 158.26,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 9.6,
+      "rasterSpread": 0.464,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.006,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "AwkwardLiesLato",
+      "why": "Lato declaring 1200 where its own H is 1433, on a 2000-unit em",
+      "lies": true,
+      "degenerate": false,
+      "size": 18,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 13,
+          "table": 10.796875,
+          "ascent": 18,
+          "descent": 4,
+          "width": 178.05,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 12.896999104817708,
+          "table": null,
+          "ascent": 18,
+          "descent": 4,
+          "width": 178.07,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 13,
+          "table": 10.796875,
+          "ascent": 18,
+          "descent": 4,
+          "width": 178.05,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 10.8,
+      "rasterSpread": 0.103,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.003,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "AwkwardLiesLato",
+      "why": "Lato declaring 1200 where its own H is 1433, on a 2000-unit em",
+      "lies": true,
+      "degenerate": false,
+      "size": 24,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 17,
+          "table": 14.40625,
+          "ascent": 24,
+          "descent": 5,
+          "width": 237.4,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 17.196000162760416,
+          "table": null,
+          "ascent": 24,
+          "descent": 5,
+          "width": 237.38,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 17,
+          "table": 14.390625,
+          "ascent": 24,
+          "descent": 5,
+          "width": 237.4,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 14.4,
+      "rasterSpread": 0.196,
+      "tableSpread": 0.016,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.009,
+      "declaresCapHeight": true
+    },
+    {
+      "family": "AwkwardLiesLato",
+      "why": "Lato declaring 1200 where its own H is 1433, on a 2000-unit em",
+      "lies": true,
+      "degenerate": false,
+      "size": 48,
+      "sameFont": true,
+      "engines": {
+        "chromium": {
+          "raster": 35,
+          "table": 28.796875,
+          "ascent": 47,
+          "descent": 10,
+          "width": 474.79,
+          "resolved": true
+        },
+        "firefox": {
+          "raster": 34.39200032552083,
+          "table": null,
+          "ascent": 47,
+          "descent": 10,
+          "width": 474.78,
+          "resolved": true
+        },
+        "webkit": {
+          "raster": 35,
+          "table": 28.796875,
+          "ascent": 47,
+          "descent": 10,
+          "width": 474.79,
+          "resolved": true
+        }
+      },
+      "expectedFromFile": 28.8,
+      "rasterSpread": 0.608,
+      "tableSpread": 0,
+      "tableReadings": 2,
+      "worstAgainstFile": 0.003,
+      "declaresCapHeight": true
+    }
+  ]
+}

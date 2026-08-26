@@ -1,0 +1,73 @@
+{
+  "name": "quoin",
+  "version": "0.9.0",
+  "description": "It puts a web page on a baseline grid. Seats every line of text on a rendered page, re-measures each correction, and exports CSS you can ship without the JavaScript.",
+  "keywords": [
+    "baseline-grid",
+    "typography",
+    "vertical-rhythm",
+    "font-metrics",
+    "textmetrics",
+    "css",
+    "design-systems",
+    "leading",
+    "text-box-trim"
+  ],
+  "license": "MIT",
+  "author": "Craig Hawkes (https://craighawkes.dev)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hawkbass/quoin.git"
+  },
+  "homepage": "https://github.com/hawkbass/quoin#readme",
+  "bugs": "https://github.com/hawkbass/quoin/issues",
+  "type": "module",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=20"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "main": "./dist/quoin.cjs",
+  "module": "./dist/quoin.js",
+  "types": "./dist/index.d.ts",
+  "unpkg": "./dist/quoin.global.js",
+  "jsdelivr": "./dist/quoin.global.js",
+  "bin": {
+    "quoin": "./dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/quoin.js",
+      "require": "./dist/quoin.cjs",
+      "default": "./dist/quoin.js"
+    },
+    "./global": "./dist/quoin.global.js",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "typecheck": "tsc --noEmit",
+    "voice:check": "node scripts/check-voice.mjs",
+    "lint": "tsc --noEmit",
+    "test": "npm run test:unit",
+    "test:unit": "node --test \"test/unit/*.test.ts\"",
+    "test:browser": "playwright test",
+    "test:all": "npm run typecheck && npm run voice:check && npm run test:unit && npm run build && playwright test",
+    "fonts": "node scripts/fetch-fonts.mjs && node scripts/make-awkward-fonts.mjs",
+    "corpus": "node scripts/run-corpus.mjs",
+    "prepublishOnly": "npm run build"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.60.0",
+    "@types/node": "^24.13.3",
+    "esbuild": "^0.28.2",
+    "playwright": "^1.60.0",
+    "typescript": "^5.9.0"
+  }
+}

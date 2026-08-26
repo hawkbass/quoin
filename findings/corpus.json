@@ -1,0 +1,154 @@
+{
+  "method": {
+    "viewport": "1280x900",
+    "pitch": [
+      4,
+      8
+    ],
+    "tolerance": 0.5,
+    "quoin": "0.9.0",
+    "note": "None of these sites claims a baseline grid. Off-grid is not a defect; the table describes the medium. Nodes under a CSS transform are excluded, because their measured position is in a different coordinate space."
+  },
+  "rows": [
+    {
+      "name": "Shopify Polaris",
+      "url": "https://polaris.shopify.com/",
+      "ok": true,
+      "total": 56,
+      "onGrid4": 28,
+      "onGrid8": 17,
+      "worst": 2,
+      "distinctDrifts": 4,
+      "systematic": false,
+      "skippedTransformed": 1
+    },
+    {
+      "name": "Atlassian Design",
+      "url": "https://atlassian.design/",
+      "ok": true,
+      "total": 70,
+      "onGrid4": 33,
+      "onGrid8": 10,
+      "worst": 2,
+      "distinctDrifts": 16,
+      "systematic": false,
+      "skippedTransformed": 68
+    },
+    {
+      "name": "Ant Design",
+      "url": "https://ant.design/",
+      "ok": true,
+      "total": 222,
+      "onGrid4": 81,
+      "onGrid8": 44,
+      "worst": 1.796875,
+      "distinctDrifts": 19,
+      "systematic": false,
+      "skippedTransformed": 32
+    },
+    {
+      "name": "GOV.UK Design System",
+      "url": "https://design-system.service.gov.uk/",
+      "ok": true,
+      "total": 76,
+      "onGrid4": 23,
+      "onGrid8": 15,
+      "worst": 2,
+      "distinctDrifts": 5,
+      "systematic": false,
+      "skippedTransformed": 0
+    },
+    {
+      "name": "Material Design 3",
+      "url": "https://m3.material.io/",
+      "ok": true,
+      "total": 130,
+      "onGrid4": 39,
+      "onGrid8": 21,
+      "worst": 2,
+      "distinctDrifts": 5,
+      "systematic": false,
+      "skippedTransformed": 4
+    },
+    {
+      "name": "craighawkes.dev",
+      "url": "https://craighawkes.dev/",
+      "ok": true,
+      "total": 108,
+      "onGrid4": 24,
+      "onGrid8": 7,
+      "worst": 2,
+      "distinctDrifts": 11,
+      "systematic": false,
+      "skippedTransformed": 213
+    },
+    {
+      "name": "Tailwind CSS",
+      "url": "https://tailwindcss.com/",
+      "ok": true,
+      "total": 193,
+      "onGrid4": 38,
+      "onGrid8": 22,
+      "worst": 1.859375,
+      "distinctDrifts": 18,
+      "systematic": false,
+      "skippedTransformed": 0
+    },
+    {
+      "name": "IBM Carbon",
+      "url": "https://carbondesignsystem.com/",
+      "ok": true,
+      "total": 52,
+      "onGrid4": 10,
+      "onGrid8": 8,
+      "worst": 2,
+      "distinctDrifts": 23,
+      "systematic": false,
+      "skippedTransformed": 32
+    },
+    {
+      "name": "Salesforce Lightning",
+      "url": "https://www.lightningdesignsystem.com/",
+      "ok": true,
+      "total": 58,
+      "onGrid4": 10,
+      "onGrid8": 2,
+      "worst": 2,
+      "distinctDrifts": 23,
+      "systematic": false,
+      "skippedTransformed": 1
+    },
+    {
+      "name": "Adobe Spectrum",
+      "url": "https://spectrum.adobe.com/",
+      "ok": false,
+      "note": "only 21 text nodes rendered; too thin to characterise",
+      "total": 21,
+      "onGrid4": 1,
+      "onGrid8": 1,
+      "worst": 1.875,
+      "distinctDrifts": 5,
+      "systematic": false,
+      "skippedTransformed": 0
+    },
+    {
+      "name": "GitHub Primer",
+      "url": "https://primer.style/",
+      "ok": false,
+      "note": "only 36 text nodes rendered; too thin to characterise",
+      "total": 36,
+      "onGrid4": 13,
+      "onGrid8": 10,
+      "worst": 2,
+      "distinctDrifts": 13,
+      "systematic": false,
+      "skippedTransformed": 0
+    },
+    {
+      "name": "Stripe",
+      "url": "https://stripe.com/gb",
+      "ok": false,
+      "note": "refuses injected scripts, which is a correct policy and a real limit on this method"
+    }
+  ]
+}

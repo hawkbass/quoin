@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>quoin fixture: the cases where padding is the wrong lever</title>
+<style>
+  /* Each block here defeats `padding-top` in a different way, which is why the
+     seater applies a correction and then measures again rather than trusting
+     it. A corrector that trusts its own corrections is the verifier with extra
+     steps. */
+
+  html { font-family: sans-serif; }
+  body { margin: 0; font-size: 15.5px; line-height: 1.55; }
+
+  section { margin: 0 0 13px; padding: 5px 0; }
+
+  /* Padding grows the box and the container re-centres the bigger box, so the
+     text moves half as far as it was sent. */
+  .centred {
+    display: flex;
+    align-items: center;
+    height: 101px;
+    background: #f6f6f6;
+  }
+
+  /* Padding grows the box downward from a fixed bottom edge, so the text does
+     not move at all. */
+  .end {
+    display: flex;
+    align-items: flex-end;
+    height: 97px;
+    background: #f0f0f0;
+  }
+  .end > * { margin: 0; }
+
+  /* An inline box ignores vertical padding for layout entirely. */
+  .inline-host { line-height: 2.1; }
+  .inline-host span { display: inline; padding-top: 0; }
+
+  /* A grid row that stretches, so the child cannot grow its own way out. */
+  .stretched {
+    display: grid;
+    grid-template-rows: 89px;
+    align-items: stretch;
+  }
+
+  /* Absolutely positioned: padding moves the text, but the box is placed by
+     `top`, so the two levers interact. */
+  .anchored { position: relative; height: 71px; }
+  .anchored > p { position: absolute; top: 13px; left: 0; margin: 0; }
+</style>
+</head>
+<body>
+  <section class="centred">
+    <p>Centred in a flex line, so padding moves this half as far as asked.</p>
+  </section>
+
+  <section class="end">
+    <p>End-aligned in a flex line, so padding does not move this at all.</p>
+  </section>
+
+  <section class="inline-host">
+    <span>An inline box, which ignores vertical padding for layout.</span>
+  </section>
+
+  <section class="stretched">
+    <p>Stretched to fill a fixed grid row.</p>
+  </section>
+
+  <section class="anchored">
+    <p>Positioned absolutely, thirteen pixels down.</p>
+  </section>
+
+  <section>
+    <p>An ordinary block, which padding moves exactly as far as asked.</p>
+  </section>
+</body>
+</html>

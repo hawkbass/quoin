@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>quoin fixture: a page that is already on the grid</title>
+<style>
+  /* A correct page, so the seater can be shown not to churn one.
+
+     Everything here is a whole number of grid rows: the leading is a multiple
+     of the pitch, and so is every margin. What that gives you is rhythm. It
+     does not give you phase, because the first baseline inside each box still lands
+     wherever the font's asymmetry puts it, so this fixture is on the grid only
+     because the origin is swept to find where its baselines actually sit. That
+     distinction is the entire thesis, and having a fixture that demonstrates it
+     is worth more than one that is trivially perfect. */
+
+  html { font-family: monospace; }
+  body { margin: 0; font-size: 16px; line-height: 24px; }
+
+  h1 { font-size: 32px; line-height: 48px; margin: 0 0 24px; }
+  p  { margin: 0 0 24px; font-size: 16px; line-height: 24px; }
+</style>
+</head>
+<body>
+  <h1>Rhythm without phase</h1>
+  <p>Every vertical distance on this page is a whole number of grid rows.</p>
+  <p>Quantising your CSS gives you rhythm exactly, and nothing for phase.</p>
+  <p>Phase is half-leading plus ascent, and ascent belongs to the typeface.</p>
+  <p>So every font-and-size pair starts at its own offset, and there is no
+  single number you can write down once.</p>
+</body>
+</html>
