@@ -49,11 +49,16 @@ export {
 export {
   seatPage,
   exportCss,
+  exportCssVerified,
+  checkExport,
   type SeatOptions,
   type SeatMode,
   type SeatedBlock,
   type SeatResult,
   type ExportOptions,
+  type ExportCheck,
+  type LostDeclaration,
+  type VerifiedExport,
   type Lever,
 } from "./seat.ts";
 

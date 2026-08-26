@@ -137,6 +137,47 @@ The test that replaced the old one seats the page, exports, **undoes everything*
 injects the stylesheet on its own, and re-measures. If the CSS does not reproduce
 the seating without the JavaScript, it fails.
 
+### The export has to be checked too, and that took a real page to find out
+
+Fixtures prove the seater handles the cases it was built to handle, which is
+necessary and is also grading your own homework. So the round trip was run
+against five design system homepages: seat, export, undo everything, inject the
+stylesheet on its own, measure again.
+
+Four of the five reproduced the seating. Material Design 3 went from 123 of 123
+with the script to **18 of 123** with the stylesheet.
+
+Every rule matched. Every rule matched exactly one element. No padding
+declaration was overruled. **Nine `line-height` declarations lost the cascade**,
+to a rule of the page's own with higher specificity: Angular emits
+`.title[_ngcontent-hfd-c28] .description[_ngcontent-hfd-c28]`, which is four
+components of specificity against the two a class-based selector can offer.
+
+Nine of 106 rules costing 105 of 123 blocks is not a rounding error, and the
+reason is the constraint that makes seating a page hard in the first place. A
+block whose leading stays 2px short is 2px short, so everything below it moves up
+by 2px. One overruled declaration near the top of a document desynchronises every
+block after it. The corrections are a chain and the stylesheet applies them all
+at once.
+
+So `exportCssVerified()` applies the sheet, measures every declaration against
+what was asked for, adds `!important` to **exactly** the ones measured to have
+lost, and checks again:
+
+| | Before | Seated | Stylesheet alone | Escalated |
+|---|---|---|---|---|
+| GOV.UK Design System | 16% | 100% | **100%** | 0 |
+| Shopify Polaris | 29% | 100% | **100%** | 1 |
+| Tailwind CSS | 11% | 100% | **99%** | 0 |
+| Material Design 3 | 17% | 100% | **100%** | 9 |
+| Ant Design | 21% | 98% | **98%** | 5 |
+
+`npm run wild` reproduces it. Raw output in `findings/wild.json`.
+
+`!important` is a blunt instrument and it is applied here with a scalpel: only
+where a measurement showed the declaration lost, never pre-emptively. On the two
+pages where nothing lost, the output is byte-for-byte what `exportCss` produces.
+
 ### What it costs
 
 An honest baseline grid quantises your leading and the space between your blocks.
@@ -431,6 +472,8 @@ Playwright, and says so plainly if you have not got it.
 |---|---|
 | `seatPage(options)` | seat the whole page, returns an undo |
 | `exportCss(result, options?)` | the corrections as a stylesheet with real selectors |
+| `exportCssVerified(result, options?)` | the same, applied and re-measured, escalating only what lost |
+| `checkExport(result, css)` | which declarations the page's own CSS overruled |
 | `verifyGrid(options)` | walk a rendered page, report every line |
 | `textBlocks(root, ignore)` | every element that owns rendered words, in document order |
 | `measureFont(shorthand, size?)` | ascent, descent, cap height, x height |
@@ -504,6 +547,7 @@ npm test              # the arithmetic, in Node, no browser
 npm run test:browser  # the walk, the seater, the CSS export, three engines
 npm run fonts         # download the 24-font corpus
 npm run corpus        # measure twelve live design systems
+npm run wild          # seat five of them and check the exported CSS holds
 ```
 
 The unit tests cover the pure maths against hand-computed cases, including the

@@ -54,13 +54,15 @@
     "build": "node scripts/build.mjs",
     "typecheck": "tsc --noEmit",
     "voice:check": "node scripts/check-voice.mjs",
+    "encoding:check": "node scripts/check-encoding.mjs",
     "lint": "tsc --noEmit",
     "test": "npm run test:unit",
     "test:unit": "node --test \"test/unit/*.test.ts\"",
     "test:browser": "playwright test",
-    "test:all": "npm run typecheck && npm run voice:check && npm run test:unit && npm run build && playwright test",
+    "test:all": "npm run typecheck && npm run voice:check && npm run encoding:check && npm run test:unit && npm run build && playwright test",
     "fonts": "node scripts/fetch-fonts.mjs && node scripts/make-awkward-fonts.mjs",
     "corpus": "node scripts/run-corpus.mjs",
+    "wild": "node scripts/run-wild.mjs",
     "prepublishOnly": "npm run build"
   },
   "devDependencies": {

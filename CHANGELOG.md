@@ -43,9 +43,34 @@ dimensions independent of its contents, which is exactly the height being
 measured, so the probe reported "unsupported" in every engine including the two
 that support it.
 
+**The verified export escalated nothing.** A NUL byte got into a template
+literal during an automated edit, so the key `${selector} ${property}` was built
+with a NUL where the space should be while the lookup used a space. Nothing
+matched, no declaration was escalated, and the function reported nine
+escalations because it counted what it intended rather than what it did, which
+is the exact failure this repository exists to argue against. Git flagged the
+file as binary, which is the only reason it surfaced. `npm run encoding:check`
+now fails the build on a NUL byte in any text file.
+
 ### Added
 
-- **A test suite.** 41 unit tests over the arithmetic, run in Node with no
+- **`exportCssVerified()` and `checkExport()`.** The seater has always
+  re-measured its own corrections. The export did not, and on Material Design 3
+  that cost the whole page: 123 of 123 blocks seated with the script, 18 of 123
+  with the stylesheet. Every rule matched exactly one element and no padding
+  declaration was overruled; nine `line-height` declarations lost the cascade to
+  Angular's own `.title[_ngcontent-hfd-c28] .description[_ngcontent-hfd-c28]`,
+  which carries four components of specificity against the two a class selector
+  offers. Nine of 106 rules cost 105 of 123 blocks, because a block whose
+  leading stays 2px short moves everything below it up by 2px. `exportCssVerified`
+  applies the sheet, measures every declaration, adds `!important` to exactly the
+  ones measured to have lost, and checks again. Material Design 3 now round-trips
+  at 100%.
+- **The round trip against five live design systems**, `npm run wild`. Fixtures
+  prove the seater handles the cases it was built for, which is also grading your
+  own homework. After the escalation fix: GOV.UK 100%, Polaris 100%, Tailwind
+  99%, Material Design 3 100%, Ant Design 98%.
+- **A test suite.** 43 unit tests over the arithmetic, run in Node with no
   browser, including swept property tests: that a seating shift never moves text
   upward, never exceeds one pitch, and always lands the baseline on the grid,
   checked across every sub-pixel drift in a whole grid row. The README had

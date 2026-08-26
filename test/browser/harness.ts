@@ -22,6 +22,16 @@ export interface InPage {
   };
   seatPage: (o?: SeatOptions) => SeatResult;
   exportCss: (r: SeatResult, o?: ExportOptions) => string;
+  exportCssVerified: (r: SeatResult, o?: ExportOptions) => {
+    css: string;
+    check: { unmatched: number; lost: unknown[]; clean: boolean };
+    escalated: number;
+  };
+  checkExport: (r: SeatResult, css: string) => {
+    unmatched: number;
+    lost: unknown[];
+    clean: boolean;
+  };
   offGrid: (r: TextNodeResult[], limit?: number) => TextNodeResult[];
   uniqueSelector: (el: Element) => string | null;
   textBlocks: (root?: Element, ignore?: readonly string[]) => Element[];
