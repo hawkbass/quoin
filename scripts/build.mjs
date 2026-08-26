@@ -4,7 +4,7 @@
 import { build } from "esbuild";
 import { execFileSync } from "node:child_process";
 import { createRequire } from "node:module";
-import { rmSync, mkdirSync, statSync, readFileSync } from "node:fs";
+import { rmSync, mkdirSync, statSync, readFileSync, existsSync } from "node:fs";
 
 const { version } = JSON.parse(readFileSync("package.json", "utf8"));
 
@@ -78,9 +78,15 @@ await build({
    warns about and which would break on any path containing a space. */
 execFileSync(
   process.execPath,
-  [createRequire(import.meta.url).resolve("typescript/lib/tsc.js"), "--emitDeclarationOnly", "--outDir", "dist"],
+  [createRequire(import.meta.url).resolve("typescript/lib/tsc.js"), "-p", "tsconfig.build.json"],
   { stdio: "inherit" }
 );
+
+/* The entry `package.json` promises. It has been missing before. */
+if (!existsSync("dist/index.d.ts")) {
+  console.error("  FAIL: dist/index.d.ts was not emitted, so the package ships no types.");
+  process.exit(1);
+}
 
 const sizeKb = (file) => statSync(file).size / 1024;
 const dependencies = Object.keys(global.metafile.inputs).filter((f) =>

@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    /* `rootDir` pinned to src, so declarations land at dist/index.d.ts rather
+       than dist/src/index.d.ts. Without it TypeScript infers the root from the
+       widest common directory of everything it compiled, the tests dragged that
+       up to the project root, and `types` in package.json pointed at a file
+       that did not exist. Nothing failed. TypeScript consumers just got no
+       types at all, which is the quietest kind of broken. */
+    "rootDir": "src",
+    "outDir": "dist",
+    "declaration": true,
+    "declarationMap": true,
+    "emitDeclarationOnly": true
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/cli.ts", "src/global.ts"]
+}
