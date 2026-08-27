@@ -213,3 +213,41 @@ test("a detached element is walked without throwing", async ({ page }) => {
 
   expect(result.threw, "walking a detached tree did not throw").toBe(false);
 });
+
+test("inline boxes are not counted or seated: their line belongs to the parent", async ({
+  page,
+}) => {
+  /*
+     An inline box sits on the line box its parent laid out, so it has no
+     baseline of its own. Counting one counts the parent's line twice, and
+     seating one pushes those words off the line the rest of the sentence is
+     on. That happened on this project's own homepage: a version number in a
+     span, moved seven pixels down by the tool, in the header.
+  */
+  await load(page, "prose.html");
+
+  const result = await page.evaluate(({ grid }) => {
+    const host = document.querySelector("p") as HTMLElement;
+    host.innerHTML =
+      'Words before <strong>a bold run</strong> and <span class="probe">a span</span> after.';
+
+    const blocks = window.quoin.textBlocks(document.body, []);
+    const sawInline = blocks.some((el) => ["STRONG", "SPAN"].includes(el.tagName));
+
+    const seated = window.quoin.seatPage(grid);
+    const css = window.quoin.exportCss(seated);
+    const probe = document.querySelector(".probe") as HTMLElement;
+    const moved = getComputedStyle(probe).position !== "static";
+    seated.undo();
+
+    return {
+      sawInline,
+      moved,
+      cssTouchesSpan: /span\.probe|strong/.test(css),
+    };
+  }, { grid: GRID });
+
+  expect(result.sawInline, "the walk skipped the inline runs").toBe(false);
+  expect(result.moved, "and the seater did not move them").toBe(false);
+  expect(result.cssTouchesSpan, "and the stylesheet does not mention them").toBe(false);
+});

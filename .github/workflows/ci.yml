@@ -41,6 +41,10 @@ jobs:
       # works in the newer headless build that `channel: "chromium"` selects.
       - run: npm run build:extension:test
       - run: npx playwright install --with-deps chromium chromium-headless-shell firefox webkit
+      # Building the site seats it with its own tool and fails below 95% at any
+      # breakpoint, so a change that knocks the page off the grid is caught here
+      # rather than by somebody opening the console on it.
+      - run: npm run build:site
       # Every spec that does not need the network. The manual ones skip
       # themselves; the font study runs in its own job.
       - run: npx playwright test --grep-invert "@network"

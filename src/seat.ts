@@ -23,6 +23,7 @@ import {
   type GridConfig,
 } from "./grid.ts";
 import { walk, inShadowRoot } from "./walk.ts";
+import { verifyGrid } from "./verify.ts";
 import { describe, uniqueSelector } from "./selector.ts";
 
 export type SeatMode = "full" | "first-line";
@@ -88,6 +89,13 @@ export interface SeatResult {
   blocks: SeatedBlock[];
   grid: GridConfig;
   mode: SeatMode;
+  /**
+   * The selectors that were left alone, carried so `checkExport` can measure
+   * the same page the seating measured. Without it the check walks blocks the
+   * seater deliberately skipped, and reports a denominator that never matches
+   * the one in the seat result.
+   */
+  ignored: readonly string[];
   /** How many sweeps it took before the page stopped moving. */
   passes: number;
   /** Blocks neither lever could move. */
@@ -169,6 +177,7 @@ export function seatPage(options: SeatOptions = {}): SeatResult {
     blocks,
     grid,
     mode,
+    ignored: ignore,
     passes,
     missed: blocks.filter((b) => b.lever === "none").length,
     unexportable: blocks.filter((b) => carriesCorrection(b) && b.selector === null).length,
@@ -513,6 +522,23 @@ export interface ExportCheck {
   lost: LostDeclaration[];
   /** True when every declaration took. */
   clean: boolean;
+  /**
+   * Blocks on the grid with the stylesheet applied, and the total.
+   *
+   * The declarations landing is not the same question as the page being
+   * seated, and this reports the second one. An earlier version of this
+   * function checked only the first: every rule matched, every computed value
+   * equalled what was asked for, `clean` came back true, and the page it was
+   * describing sat at 69%. Something above the corrections had changed height
+   * by a pixel, so the right values were applied in the wrong place.
+   *
+   * Verifying the mechanism instead of the outcome is the exact failure this
+   * library exists to argue against, so it now measures.
+   */
+  onGrid: number;
+  total: number;
+  /** True when the stylesheet alone puts the page on the grid. */
+  seats: boolean;
 }
 
 /**
@@ -550,6 +576,8 @@ export function checkExport(result: SeatResult, css: string): ExportCheck {
 
   const lost: LostDeclaration[] = [];
   let unmatched = 0;
+  let onGrid = 0;
+  let total = 0;
 
   try {
     for (const block of result.blocks) {
@@ -609,11 +637,32 @@ export function checkExport(result: SeatResult, css: string): ExportCheck {
         }
       }
     }
+    /* The outcome, not just the mechanism: what the page actually measures
+       with this stylesheet on it and nothing else. */
+    const measured = verifyGrid({
+      pitch: result.grid.pitch,
+      tolerance: result.grid.tolerance,
+      origin: result.grid.origin,
+      ignore: [...result.ignored],
+    });
+    onGrid = measured.report.onGrid;
+    total = measured.report.total;
   } finally {
     style.remove();
   }
 
-  return { unmatched, lost, clean: unmatched === 0 && lost.length === 0 };
+  /* Within one block, because a page can gain or lose a node between the seat
+     and the check and it is not worth failing a build over. */
+  const seats = total > 0 && onGrid >= total - 1;
+
+  return {
+    unmatched,
+    lost,
+    clean: unmatched === 0 && lost.length === 0,
+    onGrid,
+    total,
+    seats,
+  };
 }
 
 export interface VerifiedExport {

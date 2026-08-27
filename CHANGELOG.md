@@ -1,5 +1,56 @@
 # Changelog
 
+## 1.2.0
+
+quoin.dev, and three things building it found in the tool.
+
+### Fixed
+
+**It was seating inline boxes.** An inline box has no baseline of its own: it
+sits on the line box its parent laid out, which is where every `strong`, `em`,
+`code`, `a` and `span` in a sentence lives. Counting one counted the parent's
+line twice, and seating one moved those words off the line the rest of the
+sentence was on. Visible on the first build of quoin.dev, where a version number
+in a span was pushed seven pixels below the words either side of it, by the
+tool, on the tool's own homepage. The walk now skips inline-level elements.
+
+**`checkExport` verified the mechanism and not the outcome.** It confirmed every
+rule matched exactly one element and every computed value equalled what was
+asked for, returned `clean: true`, and the page it was describing sat at 69%.
+Something above the corrections had changed height by a pixel, so the right
+values were applied in the wrong place. It now measures the grid with the
+stylesheet applied and reports `onGrid`, `total` and `seats`.
+
+Checking that a correction was made rather than that it worked is the exact
+failure this library exists to argue against, and it was in the library.
+
+**`SeatResult` now carries the selectors it ignored**, so the check measures the
+same page the seating measured rather than reporting a denominator that never
+matches.
+
+### Added
+
+- **The site**, at `site/`, built with `npm run build:site`. The last step of
+  that build points Quoin at the page and writes the corrections to
+  `baseline.css`, once per breakpoint. The build fails below 95% at any
+  breakpoint, so the page cannot quietly stop being on the grid.
+
+### Two things the site taught the tool
+
+**Every hairline is a pixel in the flow.** Six section borders plus seventeen
+table rows at 32+1 is twenty-three pixels of accumulated offset, and everything
+below drifts by exactly that. Subtracting each border from its own padding keeps
+a bordered box a whole number of grid rows. The same cause the corpus survey
+found on craighawkes.dev, met from the other side.
+
+**A correction is an absolute number of pixels for one layout.** Seated at one
+width and shipped, the site measured 100% at 1280 and 79% at 820. Seated once
+per breakpoint it holds at every width above 1040px, where its layout stops
+reflowing, and degrades between breakpoints below that. More breakpoints narrow
+the gaps and never close them. Static corrections for a layout that has settled;
+the script for one that has not.
+
+
 ## 1.1.0
 
 A browser extension, and the reason it is an extension rather than a website.

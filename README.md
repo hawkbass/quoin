@@ -553,6 +553,30 @@ Playwright, and says so plainly if you have not got it.
 
 ---
 
+## The site
+
+[quoin.dev](https://quoin.dev) is built out of this repository with
+`npm run build:site`, and the last thing that build does is point Quoin at the
+page and write the corrections to `baseline.css`. The claim in its footer is
+true by construction rather than by assertion, and the build fails if seating
+the page drops below 95% at any breakpoint.
+
+Two things that came out of building it, both of which are in the tool now.
+
+**Every hairline is a pixel in the flow.** Six section borders and seventeen
+table rows at 32+1 put twenty-three pixels of accumulated offset into the page,
+and everything below them drifted by exactly that. The site now subtracts each
+border from its own padding, so a bordered box is still a whole number of grid
+rows. This is the same cause the corpus survey found on craighawkes.dev.
+
+**A correction is an absolute number of pixels for one layout.** The site is
+seated once per breakpoint, and above 1040px, where its layout stops reflowing,
+the stylesheet holds at every width. Below that it degrades between
+breakpoints and no number of breakpoints closes the gap. Static corrections for
+a layout that has settled; the script for one that has not.
+
+---
+
 ## The browser extension
 
 The console one-liner works everywhere, and typing it on every page you want to

@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Specimen</title>
+<style>
+  /*
+     The specimen the front page seats, live.
+
+     Nothing here is exaggerated to make the demonstration look better. It is
+     the shape almost every real site has: a fluid type scale, a spacing scale
+     in round numbers, and leading set as a ratio. Every one of those is a
+     sensible decision and the combination has no phase, because ascent belongs
+     to the typeface at its rendered size and a ratio does not know that.
+
+     The line-heights are deliberately left as ratios rather than pixel values,
+     which is the single most common cause of the drift this whole tool exists
+     to correct.
+  */
+
+  :root {
+    --ink: #191512;
+    --soft: #4A4034;
+    --faint: #7C7264;
+    --rule: #D8CFBC;
+    --paper: #F7F3EA;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { font-family: "EB Garamond", Georgia, "Times New Roman", serif; }
+
+  body {
+    margin: 0;
+    padding: 28px 32px 40px;
+    background: var(--paper);
+    color: var(--ink);
+    font-size: 17.5px;
+    line-height: 1.62;
+  }
+
+  .kicker {
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #7A4A20;
+    margin: 0 0 9px;
+  }
+
+  h1 {
+    font-size: 33px;
+    line-height: 1.14;
+    font-weight: 400;
+    margin: 0 0 13px;
+    letter-spacing: -0.008em;
+  }
+
+  h2 {
+    font-size: 21px;
+    line-height: 1.28;
+    font-weight: 600;
+    margin: 26px 0 7px;
+  }
+
+  p { margin: 0 0 15px; max-width: 60ch; }
+
+  .lede { font-size: 19.5px; line-height: 1.52; color: var(--soft); }
+
+  blockquote {
+    margin: 19px 0;
+    padding-left: 17px;
+    border-left: 2px solid var(--rule);
+    font-style: italic;
+    color: var(--soft);
+  }
+
+  .row {
+    display: flex;
+    gap: 22px;
+    align-items: flex-end;
+    border-top: 1px solid var(--rule);
+    margin-top: 21px;
+    padding-top: 11px;
+  }
+  .row div { flex: 1; }
+  .row b {
+    display: block;
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 23px;
+    line-height: 1.2;
+    font-weight: 400;
+    color: #7A4A20;
+  }
+  .row span { font-size: 13.5px; line-height: 1.45; color: var(--faint); }
+
+  .note {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--faint);
+    border-top: 1px solid var(--rule);
+    margin-top: 19px;
+    padding-top: 9px;
+  }
+</style>
+</head>
+<body>
+
+  <p class="kicker">A page like any other</p>
+
+  <h1>Set a line of text in a button and centre it vertically.</h1>
+
+  <p class="lede">It is sitting slightly high, and no amount of padding will fix
+  it, because the thing you centred is not the thing you are looking at.</p>
+
+  <p>Every font reserves a band of empty space above its capitals and another
+  below its baseline for descenders, and those two bands are almost never the
+  same size. The browser measures the font's box, subtracts it from the line
+  height, and splits what is left equally.</p>
+
+  <blockquote>So it centres the box perfectly. The letters inside that box were
+  never centred.</blockquote>
+
+  <h2>Nothing here is a mistake</h2>
+
+  <p>The type on this page is set with a fluid scale, a spacing scale in round
+  numbers, and leading expressed as a ratio. Every one of those is a reasonable
+  decision, and together they produce a page with rhythm and no phase.</p>
+
+  <div class="row">
+    <div><b>17.5px</b><span>Body size</span></div>
+    <div><b>1.62</b><span>Leading, as a ratio</span></div>
+    <div><b>28.35px</b><span>What that resolves to</span></div>
+  </div>
+
+  <p class="note">28.35 is not a whole number of anything. Every line below the
+  first inherits the fraction, and by the fifth it is visible.</p>
+
+</body>
+</html>

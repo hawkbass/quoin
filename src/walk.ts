@@ -109,9 +109,23 @@ function descend(
        horizontal grid has nothing to say about it. */
     if (style.writingMode && style.writingMode !== "horizontal-tb") continue;
 
-    /* Only elements that directly own rendered words. A wrapper inherits its
-       child's text and would otherwise be measured twice. */
-    if (ownsRenderedText(el)) out.blocks.push(el);
+    /*
+       Only elements that directly own rendered words, and only block-level
+       ones.
+
+       An inline box does not have a baseline of its own: it sits on the line
+       box its parent laid out, which is where `strong`, `em`, `code`, `a` and
+       every `span` in a sentence live. Counting one is counting its parent's
+       line twice, and seating one is worse: it moves those words off the line
+       the rest of the sentence is on.
+
+       This was visible on the first build of quoin.dev, where a version number
+       wrapped in a span was pushed seven pixels below the words either side of
+       it, by the tool, on the tool's own homepage.
+    */
+    if (ownsRenderedText(el) && !style.display.startsWith("inline")) {
+      out.blocks.push(el);
+    }
 
     /* The shadow root first: its content renders inside the host, so in
        flattened order it comes before whatever the host's light children are
