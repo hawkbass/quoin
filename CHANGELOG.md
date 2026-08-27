@@ -89,20 +89,20 @@ called off-grid.
 ### Findings
 
 **Not one site in 212 reaches 90% on an 8px grid.** The best is Fonts In Use at
-89.2%. Seven clear 50%. The median is 28.1%.
+89.2%. Seven clear 50%. The median is 28.2%.
 
 **The categories are indistinguishable, and that is the finding.** Best to worst
-runs 32.0% to 24.5%. Type foundries, whose entire trade is typography, land at
-31.9%, which is the same as documentation sites at 30.5%.
+runs 32.0% to 24.4%. Type foundries, whose entire trade is typography, land at
+31.3%, which is the same as documentation sites at 30.5%.
 
 **Except in rhythm, where design systems are eight times better than anyone
-else**: a median of 29.7% against 3.7% for type foundries and 2.2% for
+else**: a median of 29.5% against 3.7% for type foundries and 2.2% for
 institutions. That is the largest gap in the study, it is exactly what a design
 system is for, and it buys them nothing on phase, where they sit mid-table at
-30.7%. Quantising your CSS gives you rhythm, and rhythm is not phase. The whole
+30.8%. Quantising your CSS gives you rhythm, and rhythm is not phase. The whole
 argument of this library, measured across 27 design systems.
 
-**Solving for the origin is worth 14.6 points of median**, and far more on
+**Solving for the origin is worth 14.9 points of median**, and far more on
 individual sites: The Met reads 0.8% against zero and 48.8% against its own
 origin.
 

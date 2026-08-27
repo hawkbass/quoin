@@ -556,18 +556,22 @@ grid origin solved from each page rather than pinned to zero:
 | Category | Sites | On an 8px grid | Pinned to origin 0 | Rhythm | Distinct drifts |
 |---|---|---|---|---|---|
 | Institutions | 9 | 32.0% | 13.6% | 2.2% | 22 |
-| Type foundries | 15 | 31.9% | 11.9% | 3.7% | 21 |
-| Design systems | 27 | 30.7% | 14.3% | **29.7%** | 21 |
+| Type foundries | 15 | 31.3% | 11.9% | 3.7% | 21 |
+| Design systems | 27 | 30.8% | 14.3% | **29.5%** | 21 |
 | Documentation | 39 | 30.5% | 12.8% | 20.9% | 22 |
 | Academic | 7 | 26.9% | 11.5% | 10.0% | 37 |
-| Studios | 11 | 26.5% | 8.8% | 8.1% | 28 |
-| Product | 24 | 25.8% | 11.4% | 24.9% | 45 |
-| Editorial | 20 | 24.5% | 10.6% | 18.8% | 46.5 |
+| Studios | 11 | 26.5% | 9.1% | 8.1% | 28 |
+| Product | 24 | 25.2% | 10.6% | 27.5% | 40.5 |
+| Editorial | 20 | 24.4% | 10.6% | 18.8% | 47 |
 
 Medians, not means: one site at 4% drags an average and tells you nothing about
 the category. 153 sites scored, 59 dropped. `npm run corpus` reproduces it; the
 full table is in `findings/corpus.md` and the raw readings in
 `findings/corpus.json`.
+
+These are the figures from the committed run. A fresh one moves them by a few
+tenths, because it measures live sites and those sites deploy: two runs an hour
+apart scored the same 153, and every median moved by less than half a point.
 
 **None of these sites claims a baseline grid, so being off one is not a defect.**
 The table describes the medium rather than the teams: a convention print has had
@@ -575,25 +579,25 @@ since metal type, which nothing on the web has.
 
 **Not one site in 212 reaches 90%.** The best is Fonts In Use at 89.2%, then
 Bureau Borsche at 82.1%, then a gap to Svelte at 60.7%. Seven sites clear 50%.
-The median is 28.1%.
+The median is 28.2%.
 
 ### The categories are the same, and that is the finding
 
-The spread from best to worst category is 32.0% to 24.5%. Type foundries, whose
+The spread from best to worst category is 32.0% to 24.4%. Type foundries, whose
 entire trade is typography and who sell the fonts everyone else sets, land at
-31.9%, which is not distinguishable from documentation sites at 30.5%. Knowing
+31.3%, which is not distinguishable from documentation sites at 30.5%. Knowing
 more about type does not put a web page on a grid, because the thing standing in
 the way is not knowledge.
 
 ### Except in one column, where design systems are eight times better
 
 Rhythm is whether each box is a whole number of grid rows tall. Design systems
-median **29.7%**, against 3.7% for type foundries and 2.2% for institutions.
+median **29.5%**, against 3.7% for type foundries and 2.2% for institutions.
 That is the largest gap anywhere in the study, and it is exactly what a design
 system is for: an 8px spacing scale, quantised leading, tokens that are multiples
 of a base unit. It works. It shows up in the measurement.
 
-And it buys them nothing in the other column. Design systems sit at 30.7% on
+And it buys them nothing in the other column. Design systems sit at 30.8% on
 phase, in the middle of the table, behind two categories with almost no rhythm at
 all.
 
@@ -605,10 +609,10 @@ the web are doing it correctly and still landing where everyone else lands, and
 the only reason to build this was that the missing half is invisible without
 measuring.
 
-### Solving for the origin is worth 14.6 points
+### Solving for the origin is worth 14.9 points
 
 Every site was measured twice. Pinned to an origin of zero the median is 11.9%;
-solved from the page it is 28.1%. Zero asks whether baselines sit on multiples of
+solved from the page it is 28.2%. Zero asks whether baselines sit on multiples of
 the pitch from the top of the document, and a page with a header answers no
 however carefully it is set, because everything below the header moved by the
 same amount. The Met reads 0.8% against zero and 48.8% against its own origin.
@@ -623,7 +627,7 @@ Of the 153 sites scored, the commonest rhythm defect on 106 of them is leading:
 a `line-height` that is a ratio rather than a number of rows. `1.5` on 17px is
 25.5px, and every extra line in the paragraph carries the half pixel down the
 page. After that, 30 sites are led by replaced elements with no quantised height,
-9 by borders and 8 by padding.
+9 by padding and 8 by borders.
 
 It is the least visible defect available. `line-height: 1.5` looks like a
 decision. It is a decision, and it is also 25.5px.
