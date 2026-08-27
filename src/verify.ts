@@ -10,6 +10,8 @@ import {
   measureFont,
   fontShorthand,
   baselineWithinLineBox,
+  firstBaselineOffset,
+  measureFontWithCap,
   type FontMetrics,
 } from "./metrics.ts";
 import {
@@ -206,7 +208,32 @@ export function verifyGrid(options: VerifyOptions = {}): VerifyResult {
        font that has not loaded can report something unusable. */
     const lineHeight = Number.parseFloat(style.lineHeight) || fontSize * 1.2;
 
-    const within = baselineWithinLineBox(metrics, lineHeight);
+    /*
+       A trimmed box is a different shape and has to be measured as one. Under
+       `text-box-trim`, the leading above the first line is cut away and the box
+       starts at whichever edge `text-box-edge` names, so half-leading plus
+       ascent is the wrong sum by more than two rows of an 8px grid.
+
+       The cap height is re-read from the font table when the edge is `cap`,
+       because that is the measurement that travels: the canvas figure is
+       rasterised and disagreed with the font's own declaration on 40 of 130
+       fonts tested.
+    */
+    const trim = style.textBoxTrim || "none";
+    const edge = style.textBoxEdge || "auto";
+    const trimmed = trim === "trim-both" || trim === "trim-start";
+
+    const forOffset =
+      trimmed && edge.trim().startsWith("cap")
+        ? (metricCache.get(shorthand + "|cap") ??
+           (() => {
+             const withCap = measureFontWithCap(shorthand, fontSize);
+             metricCache.set(shorthand + "|cap", withCap);
+             return withCap;
+           })())
+        : metrics;
+
+    const within = firstBaselineOffset(forOffset, lineHeight, trim, edge);
 
     /* The rect is the BORDER box, and text starts inside both the border and
        the padding. */

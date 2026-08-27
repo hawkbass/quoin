@@ -329,6 +329,44 @@ export function baselineWithinLineBox(
 }
 
 /**
+ * Where the first baseline sits below the top of a block's content box, in px,
+ * accounting for `text-box-trim`.
+ *
+ * `baselineWithinLineBox` answers this for an ordinary block, and was the only
+ * answer this library had until `text-box-trim` reached Baseline in August 2026.
+ * A trimmed box is a different shape: the leading above the first line is cut
+ * away, so the content box starts at whichever edge `text-box-edge` names rather
+ * than at the top of the line box, and half-leading is no longer in the sum at
+ * all.
+ *
+ * Getting this wrong is not a rounding error. Measuring a trimmed 32px serif
+ * block as though it were untrimmed puts the baseline 17.8px too low, which is
+ * more than two rows of an 8px grid, and every block on the page is wrong in the
+ * same direction. The tool would report a page built correctly on the modern
+ * primitive as almost entirely off the grid, and the page would be right.
+ *
+ * `edge` is the computed `text-box-edge`. `auto` behaves as `text`, which is the
+ * ascent, and is what an author gets if they set the trim and nothing else.
+ */
+export function firstBaselineOffset(
+  metrics: Pick<FontMetrics, "ascent" | "descent" | "capHeight" | "xHeight">,
+  lineHeight: number,
+  trim = "none",
+  edge = "auto"
+): number {
+  const trimsStart = trim === "trim-both" || trim === "trim-start";
+  if (!trimsStart) return baselineWithinLineBox(metrics, lineHeight);
+
+  /* The over edge, which the trim has made the top of the box. Only the first
+     keyword matters here: the second names the under edge, which decides where
+     the box ends rather than where the baseline sits. */
+  const over = edge.trim().split(/\s+/)[0] ?? "auto";
+  if (over === "cap" && metrics.capHeight > 0) return metrics.capHeight;
+  if (over === "ex" && metrics.xHeight > 0) return metrics.xHeight;
+  return metrics.ascent;
+}
+
+/**
  * The gap `text-box-trim: trim-start; text-box-edge: cap` removes.
  *
  * Portable when `metrics.capSource` is `"font-table"`. When it is `"raster"`,

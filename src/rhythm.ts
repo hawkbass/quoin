@@ -21,6 +21,7 @@
 import { gridConfig, type GridConfig } from "./grid.ts";
 import { walk } from "./walk.ts";
 import { describe, uniqueSelector } from "./selector.ts";
+import { measureFontWithCap, fontShorthand } from "./metrics.ts";
 
 export type RhythmCause =
   | "border"
@@ -121,7 +122,10 @@ function diagnose(
   style: CSSStyleDeclaration,
   height: number,
   pitch: number,
-  ownsText: boolean
+  ownsText: boolean,
+  /* How much of this box's height belongs to the trim by design. Zero for an
+     ordinary box; the cap height's residue for a trimmed one. */
+  trimResidue = 0
 ): { cause: RhythmCause; detail: string; fix: string } {
   if (REPLACED.has(el.tagName.toUpperCase())) {
     return {
@@ -138,7 +142,18 @@ function diagnose(
 
   const borderOver = remainder(borders, pitch);
   const paddingOver = remainder(padding, pitch);
-  const contentOver = remainder(content, pitch);
+  /*
+     A trimmed box ends at its own baseline rather than at the bottom of a line
+     box, so its height is `(lines - 1) x leading + capHeight` and carrying the
+     cap height's fraction is correct rather than a defect. Subtracting it first
+     asks the question that is actually worth asking, which is whether the
+     leading is a whole number of rows.
+
+     Without this the tool reports a page built the modern way as almost
+     entirely off rhythm and tells the author to fix a leading that is already
+     right, which is worse than saying nothing.
+  */
+  const contentOver = remainder(content - trimResidue, pitch);
   const leadingOver = leading > 0 ? remainder(leading, pitch) : 0;
 
   /*
@@ -265,13 +280,43 @@ export function verifyRhythm(options: RhythmOptions = {}): RhythmReport {
   let accumulated = 0;
   let inherited = 0;
 
+  const capCache = new Map<string, number>();
+
   for (const el of inFlow) {
     const style = getComputedStyle(el);
     const height = el.getBoundingClientRect().height;
-    const over = remainder(height, grid.pitch);
+
+    /*
+       What this box's height is allowed to carry. An ordinary box is expected
+       to be a whole number of rows; a trimmed one is expected to be a whole
+       number of rows plus its own cap height, because that is what the trim
+       leaves behind.
+    */
+    let trimResidue = 0;
+    const trim = style.textBoxTrim || "none";
+    if (
+      textBlocks.has(el) &&
+      (trim === "trim-both" || trim === "trim-end") &&
+      (style.textBoxEdge || "auto").includes("alphabetic")
+    ) {
+      const shorthand = fontShorthand(style);
+      let cap = capCache.get(shorthand);
+      if (cap === undefined) {
+        const metrics = measureFontWithCap(shorthand, Number.parseFloat(style.fontSize));
+        cap = (style.textBoxEdge || "").trim().startsWith("cap")
+          ? metrics.capHeight
+          : metrics.ascent;
+        capCache.set(shorthand, cap);
+      }
+      trimResidue = ((cap % grid.pitch) + grid.pitch) % grid.pitch;
+    }
+
+    const over = remainder(height - trimResidue, grid.pitch);
     if (over === 0) continue;
 
-    const { cause, detail, fix } = diagnose(el, style, height, grid.pitch, textBlocks.has(el));
+    const { cause, detail, fix } = diagnose(
+      el, style, height, grid.pitch, textBlocks.has(el), trimResidue
+    );
     byCause[cause]++;
 
     /* A box that is fractional because its contents are has introduced

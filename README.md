@@ -13,7 +13,7 @@ quoin.css()     // the corrections as a stylesheet you can ship
 
 [![ci](https://github.com/hawkbass/quoin/actions/workflows/ci.yml/badge.svg)](https://github.com/hawkbass/quoin/actions/workflows/ci.yml)
 
-MIT. No dependencies. 24 kB.
+MIT. No dependencies. 26 kB.
 
 ---
 
@@ -778,6 +778,168 @@ page is actually built on.
 
 ---
 
+## Fitting a design, which is what this is actually for
+
+Everything above this line is remedial. It measures a page that is off the grid
+and pushes each block into place, and what you get back is a list of absolute
+pixel corrections. That works, and it has a limit that no amount of care removes:
+the corrections describe one arrangement of line breaks.
+
+Measured across widths, the limit turns out to be sharper than "corrections are
+per-layout". A page seated at 1280 and carried to 375 held at **100%** when only
+the line breaks had moved, because `mode: "full"` snaps the leading to whole rows
+and a page whose leadings are whole rows reflows in whole rows. The same page
+collapsed to **0%** when a media query changed a container's padding by thirteen
+pixels. Corrections survive reflow. They do not survive a layout change, and
+every real site has one.
+
+```
+what changes between widths          carried from 1280 to 375
+reflow only, leading snapped         100%
+reflow only, leading not snapped      25%
+a hairline border                    100%
+an image with an odd height          100%
+font-size changes at a breakpoint     75%
+padding changes at a breakpoint        0%
+```
+
+So the corrections were never the right primitive.
+
+### The arithmetic that removes the problem
+
+Trim the boxes. Under `text-box-trim: trim-both` with
+`text-box-edge: cap alphabetic`, a block's border box starts at its cap height
+and ends at its baseline, so the distance from one baseline to the next across a
+block boundary is
+
+```
+baseline(B) - baseline(A) = (lines(A) - 1) x leading(A) + space(B) + cap(B)
+```
+
+`lines(A)` is the only term that changes with the viewport, and it is multiplied
+by a leading that is already a whole number of rows, so modulo the pitch it
+contributes nothing. What is left is
+
+```
+space(B) + cap(B) = 0   (mod pitch)
+```
+
+and every term in that belongs to block B by itself. **There is no constraint
+relating one size to another.** The sizes are free.
+
+That took three wrong models to arrive at. The first was per-element corrections.
+The second was `gridNativeScale`, which solves sizes whose phase agrees so one
+origin serves the page, and charges about eleven pixels between usable sizes for
+a text face on an 8px grid. The third was fitting several families to one shared
+phase, which is worse again, because each family has its own cap height per em
+and the compromises compound: an early version moved a 17px body to 20.5 and a
+15px mono to 10.5, which is not fitting a design to a grid, it is replacing it.
+
+### What it does instead
+
+```bash
+npx quoin fit --design design.json
+```
+
+```json
+{
+  "pitch": 8,
+  "families": [
+    { "role": "display", "font": "Georgia, serif", "steps": [
+      { "name": "h1", "size": 44, "leading": 48, "space": 56 },
+      { "name": "h2", "size": 27, "ratio": 1.2, "space": 32 }
+    ]},
+    { "role": "body", "font": "Helvetica, Arial, sans-serif", "steps": [
+      { "name": "body", "size": 17, "ratio": 1.5, "space": 24 },
+      { "name": "lead", "size": 21, "ratio": 1.45, "space": 24 }
+    ]},
+    { "role": "mono", "font": "monospace", "steps": [
+      { "name": "code", "size": 15, "ratio": 1.6, "space": 24 }
+    ]}
+  ]
+}
+```
+
+```
+  8px grid, origin 0px
+  3 families, 3.45px of leading moved, no size touched
+
+  display  Georgia, serif
+    name          size      leading   space     cap      moved
+    h1            44px      48px      57.516px  30.484   exact
+    h2            27px      32px      29.297px  18.703   leading -0.4
+
+  body  Helvetica, Arial, sans-serif
+    name          size      leading   space     cap      moved
+    body          17px      24px      27.828px  12.172   leading -1.5
+    lead          21px      32px      24.953px  15.047   leading +1.55
+
+  mono  monospace
+    name          size      leading   space     cap      moved
+    code          15px      24px      22.422px  9.578    exact
+```
+
+**Every size is the size the design asked for.** Nothing was moved to make the
+arithmetic work, because nothing needed to be. The one thing that changes is the
+leading, snapped to the nearest whole number of rows, and it is reported to a
+thousandth of a pixel so the decision to accept it belongs to whoever has to live
+with it. That is also the compromise a typographer already makes: ticking "align
+to baseline grid" in InDesign changes the leading and nothing else.
+
+### It holds at every width
+
+A page built from a fit, with headings that wrap at some widths and not others, a
+list, a blockquote, and paragraphs reflowing from two lines to nine:
+
+```
+chromium: 320px 9/9  375px 9/9  414px 9/9  600px 9/9  768px 9/9  900px 9/9  1024px 9/9  1280px 9/9  1440px 9/9
+webkit:   320px 9/9  375px 9/9  414px 9/9  600px 9/9  768px 9/9  900px 9/9  1024px 9/9  1280px 9/9  1440px 9/9
+```
+
+One stylesheet. No media queries, no corrections, nothing to regenerate when the
+copy changes.
+
+Two controls run beside it, because a suite that only builds pages out of the
+fitter's own numbers proves the arithmetic is self-consistent and nothing else.
+The identical page with the spacing left as the design wrote it, and the identical
+page without the trim, both have to fall below 75%. Both do.
+
+### For agents
+
+`quoin fit --design - --json` reads a design on stdin and writes the whole result
+as JSON, including `leadingWas`, `leadingMoved` and the cap height every figure
+was derived from. An agent working from a Figma file or a screenshot has the same
+problem a person does and no one to ask, so everything the answer rests on is in
+the output rather than in the prose around it.
+
+The contract is small on purpose. Give it a family, a font stack and a list of
+sizes; get back those sizes, a leading, a space, and a record of what moved.
+Seating type to a grid stops being a matter of taste once the pitch is fixed and
+becomes arithmetic, and this is the arithmetic.
+
+```bash
+cat design.json | npx quoin fit --design - --json
+```
+
+### What it needs, and what it does not do
+
+It needs `text-box-trim`, which is Baseline as of Firefox 154 in August 2026. On
+an older engine `fitScale` returns `unavailable: true` rather than quietly
+answering from the line box, because the two give different numbers and a caller
+who asked for one and silently got the other has a stylesheet that does not do
+what they think.
+
+It does not make fluid type work. `clamp()` varies the size continuously, and
+only discrete sizes have a known cap height, so a fluid scale is off the grid
+between its endpoints by construction. Set the sizes at breakpoints instead;
+each one is fitted independently and they do not have to agree with each other.
+
+It does not fix boxes that are not whole rows. Borders, padding and image heights
+still have to be multiples of the pitch, and `quoin rhythm` is what tells you
+which ones are not.
+
+---
+
 ## The command line
 
 ```bash
@@ -786,12 +948,14 @@ npx quoin check  https://example.com --pitch 4 --min 90   # exits 1 below the fl
 npx quoin seat   https://example.com -o baseline.css
 npx quoin rhythm https://example.com
 npx quoin scale  --font "EB Garamond" --sizes 16,28,44
+npx quoin fit    --design design.json
 npx quoin engine --browser firefox
 ```
 
 `check` walks a page and reports. `seat` corrects it and prints the stylesheet.
 `rhythm` says which boxes are not a whole number of rows and why. `scale` solves
-a type scale that needs no correction at all. `engine` tells you whether this
+a type scale that needs no correction at all. `fit` takes a design and returns it
+unchanged with the spacing that puts it on the grid at every width. `engine` tells you whether this
 browser's cap heights come off the rasteriser.
 
 `--origin` takes a number or `auto`, and `auto` is the default.
@@ -817,18 +981,23 @@ and everything below them drifted by exactly that. The site now subtracts each
 border from its own padding, so a bordered box is still a whole number of grid
 rows. This is the same cause the corpus survey found on craighawkes.dev.
 
-**A correction is an absolute number of pixels for one layout.** The site is
-seated once per breakpoint, and above 1040px, where its layout stops reflowing,
-the stylesheet holds at every width. Below that it degrades between
-breakpoints and no number of breakpoints closes the gap. Static corrections for
-a layout that has settled; the script for one that has not.
+**The site is seated once per breakpoint, and it should not have to be.** That
+arrangement predates the fitter and is the clearest demonstration of why the
+fitter exists: quoin.dev changes its layout at six ranges, not merely its line
+breaks, so a correction taken in one range is describing a different page in the
+next. Measured properly, corrections carry across reflow perfectly well and fail
+on a layout change, which is the table further up.
+
+A design fitted rather than corrected needs none of it, because there is nothing
+to carry. Rebuilding the site on a fit is the obvious next thing and is not done
+yet, so this paragraph is a description of the site rather than a recommendation.
 
 ---
 
 ## The browser extension
 
 The console one-liner works everywhere, and typing it on every page you want to
-look at gets old. The extension is the same 17 kB with a panel on it.
+look at gets old. The extension is the same 26 kB with a panel on it.
 
 ```bash
 npm run build:extension     # then load ./dist-extension unpacked
@@ -921,9 +1090,12 @@ everything after it, and it shifts it by a different amount at every viewport,
 so no correction above it survives a reflow.
 ```
 
-Corrections are absolute pixel values for one layout, so `widths` takes a list
-and each width is its own reading. A page can be on the grid at one width and off
-it at another, and a single-width gate would not know.
+`widths` takes a list and each width is its own reading, because a page can be on
+the grid at one width and off it at another and a single-width gate would not
+know. That is true of a corrected page whose layout changes at a breakpoint, and
+it is worth measuring even on a fitted one: fitting guarantees the type holds at
+every width, and it guarantees nothing about a container whose padding stops
+being a whole number of rows below 700px.
 
 The action is plain Node against the built bundle, with no dependency tree of its
 own: an action that pulls one is an action that breaks on somebody else's
@@ -956,6 +1128,8 @@ release.
 | `seatingShift(drift, grid)` | how far down to push a baseline to seat it |
 | `seatingPadding(within, blockTop, grid)` | top and bottom padding that sum to one grid row |
 | `gridNativeScale(font, options)` | solve a type scale that needs no correction |
+| `fitScale(families, options)` | fit a design to the grid, keeping every size it asked for |
+| `fittedScaleToCss(fitted)` | that fit as CSS, with the trim it depends on |
 | `scaleToCss(scale)` | that scale as custom properties, with its origin |
 | `uniqueSelector(el)` | a selector verified to match exactly that element, or null |
 | `inShadowRoot(el)` | whether a stylesheet can reach it at all |

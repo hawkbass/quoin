@@ -66,9 +66,11 @@ export interface InPage {
     resolved: boolean;
     phase: number;
     spacing: number;
-    steps: { size: number; leading: number; ratio: number; rows: number; wanted: number; off: number }[];
+    steps: { size: number; leading: number; ratio: number; rows: number; wanted: number; off: number; space: number }[];
     missed: number[];
     available: number[];
+    basis: "line-box" | "cap";
+    basisUnavailable: boolean;
   };
   scaleToCss: (scale: unknown, names?: string[]) => string;
   measureFont: (font: string, size?: number) => Record<string, number | string>;

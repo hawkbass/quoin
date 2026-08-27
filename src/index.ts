@@ -1,93 +1,31 @@
 /* Quoin: it puts a web page on a baseline grid.
 
    A quoin is the wedge a printer hammers into the chase to lock the type so
-   nothing shifts on the press. Same job. */
+   nothing shifts on the press. Same job.
 
-export { VERSION } from "./version.ts";
+   The package entry. Everything that runs in a page comes through `page.ts`,
+   which is what the single-file build imports; the baseline comparison below it
+   runs in Node, against a file somebody committed. */
 
-export {
-  measureFont,
-  measureFontWithCap,
-  fontShorthand,
-  fontSizeFromShorthand,
-  baselineWithinLineBox,
-  capOvershoot,
-  capOvershootFromFontTable,
-  capHeightFromFontTable,
-  canReadFontTableCapHeight,
-  capHeightIsRasterised,
-  fontIsAvailable,
-  descenderSlack,
-  resetMeasurementCache,
-  type FontMetrics,
-  type CapSource,
-} from "./metrics.ts";
+export * from "./page.ts";
 
 export {
-  checkBaseline,
-  snapLineHeight,
-  seatingShift,
-  seatingPadding,
-  summarise,
-  gridConfig,
-  bestOrigin,
-  DEFAULT_GRID,
-  type GridConfig,
-  type GridResult,
-  type GridReport,
-} from "./grid.ts";
+  fitScale,
+  fittedScaleToCss,
+  type FamilyRequest,
+  type FittedFamily,
+  type FittedScale,
+  type FittedStep,
+  type DesignStep,
+} from "./fit.ts";
 
 export {
-  verifyGrid,
-  offGrid,
-  textBlocks,
-  NON_TEXT,
-  inShadowRoot,
-  type TextNodeResult,
-  type VerifyOptions,
-  type VerifyResult,
-  type WalkOptions,
-  type WalkResult,
-} from "./verify.ts";
-
-export { walk } from "./walk.ts";
-
-export {
-  verifyRhythm,
-  type RhythmReport,
-  type RhythmIssue,
-  type RhythmCause,
-  type RhythmOptions,
-} from "./rhythm.ts";
-
-export {
-  gridNativeScale,
-  scaleToCss,
-  type GridScale,
-  type ScaleStep,
-  type ScaleOptions,
-} from "./scale.ts";
-
-export {
-  seatPage,
-  exportCss,
-  exportCssVerified,
-  checkExport,
-  type SeatOptions,
-  type SeatMode,
-  type SeatedBlock,
-  type SeatResult,
-  type ExportOptions,
-  type ExportCheck,
-  type LostDeclaration,
-  type VerifiedExport,
-  type Lever,
-} from "./seat.ts";
-
-export {
-  uniqueSelector,
-  matchesOnly,
-  describe,
-} from "./selector.ts";
-
-export { install, type QuoinConsole } from "./console.ts";
+  makeBaseline,
+  compareToBaseline,
+  comparisonToMarkdown,
+  type Baseline,
+  type BaselineEntry,
+  type Comparison,
+  type CompareResult,
+  type Verdict,
+} from "./baseline.ts";

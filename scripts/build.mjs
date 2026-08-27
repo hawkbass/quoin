@@ -23,8 +23,29 @@ const { version } = JSON.parse(readFileSync("package.json", "utf8"));
    only thing in here that prevents the problem rather than correcting it. It
    stays in the console bundle rather than moving to the CLI because the
    question it answers, what sizes would this font need, is one you ask while
-   looking at a page. */
-const BUDGET_KB = 24;
+   looking at a page.
+
+   Raised a third time, from 24 to 28, for the cap basis and the candidate
+   enumeration the fitter shares with it.
+
+   Recorded as one raise rather than two because it happened in two goes in a
+   single sitting, 24 to 26 and then 26 to 28, and splitting it in the log would
+   make each look smaller than the change actually was. That is precisely the
+   habit this comment exists to prevent, so it is written down the honest way.
+
+   What it buys: the untrimmed basis rests on `fontBoundingBox`, which every
+   engine rounds to whole pixels before handing it over, while the trimmed one
+   rests on the cap height in the font file, which agreed across engines on 130
+   fonts out of 130 with a worst case of 0.022px where the canvas measurement
+   managed 90. It also moves the whole method off per-element corrections, which
+   are bound to one layout, and onto a scale that holds at every width.
+
+   What was kept out: the fitter itself, which solves several families onto one
+   shared phase, is four kilobytes and lives in `dist/quoin.fit.js` instead. It
+   is a build-time question that happens to need a browser for its metrics,
+   rather than something anybody types into devtools, so it does not belong in
+   the bundle whose whole constraint is being small enough to paste. */
+const BUDGET_KB = 28;
 
 rmSync("dist", { recursive: true, force: true });
 mkdirSync("dist", { recursive: true });
@@ -76,6 +97,20 @@ const global = await build({
 
 /* The CLI runs in Node and drives a browser, so it is not bundled with the
    library and it does not bundle its own driver. */
+/* The fitter, as its own single file.
+
+   Not folded into the console bundle: that one has a size budget because it is
+   pasted into devtools, and this is a build-time question that happens to need
+   a browser for its font metrics. Different job, different artefact. */
+await build({
+  entryPoints: ["src/fit-global.ts"],
+  format: "iife",
+  outfile: "dist/quoin.fit.js",
+  bundle: true,
+  target: "es2020",
+  logLevel: "warning",
+});
+
 await build({
   ...shared,
   entryPoints: ["src/cli.ts"],

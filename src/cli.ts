@@ -22,6 +22,7 @@ quoin: it puts a web page on a baseline grid
   quoin engine [url]         what this engine's font metrics do
   quoin scale                solve a type scale that needs no correction
   quoin rhythm <url>         which boxes are not a whole number of rows, and why
+  quoin fit                  fit a whole design to one grid, every family at once
 
 Options
   --pitch <px>               grid pitch                        (default 8)
@@ -37,6 +38,8 @@ Options
   --important                add !important to every rule      (seat only)
   --font <stack>             CSS font family                 (scale only)
   --sizes <a,b,c>            the sizes you want              (scale only)
+  --basis <line-box|cap>     phase from the line box, or from a trimmed cap
+  --design <file|->          a design as JSON, for fit. Use - for stdin
   --near <px>                how far from those is acceptable (default 3)
   --json                     machine-readable output
   -h, --help                 this
@@ -72,6 +75,8 @@ interface Options {
   near: number;
   important: boolean;
   json: boolean;
+  /** Path to a design description for `fit`, or "-" for stdin. */
+  design: string | null;
 }
 
 function fail(message: string): never {
@@ -96,6 +101,7 @@ function parseArgs(argv: string[]): { command: string; url: string | null; optio
     near: 3,
     important: false,
     json: false,
+    design: null,
   };
 
   const positional: string[] = [];
@@ -163,6 +169,7 @@ function parseArgs(argv: string[]): { command: string; url: string | null; optio
       }
       case "--font": options.font = next(); break;
       case "--near": options.near = number(); break;
+      case "--design": options.design = next(); break;
       case "--sizes": {
         const raw = next();
         const parsed = raw.split(",").map((v) => Number.parseFloat(v.trim()));
@@ -185,10 +192,10 @@ function parseArgs(argv: string[]): { command: string; url: string | null; optio
   return { command: positional[0] ?? "", url: positional[1] ?? null, options };
 }
 
-function bundle(): string {
+function bundle(name = "quoin.global.js"): string {
   /* Whatever the build just produced, so the CLI and the console API can never
      be two different versions of the same tool. */
-  for (const candidate of ["quoin.global.js", "../dist/quoin.global.js"]) {
+  for (const candidate of [name, `../dist/${name}`]) {
     try {
       return readFileSync(join(HERE, candidate), "utf8");
     } catch {
@@ -285,9 +292,30 @@ interface InPage {
   version: string;
 }
 
+interface InPageFit {
+  fitScale: (families: unknown, options: unknown) => {
+    grid: { pitch: number; tolerance: number; origin: number };
+    origin: number;
+    cost: number;
+    unavailable: boolean;
+    families: {
+      role: string;
+      font: string;
+      resolved: boolean;
+      steps: {
+        name: string; size: number; leading: number; leadingWas: number;
+        leadingMoved: number; rows: number; space: number; spaceWas: number;
+        spaceMoved: number; cap: number; residue: number;
+      }[];
+    }[];
+  };
+  fittedScaleToCss: (fitted: unknown) => string;
+}
+
 declare global {
   // eslint-disable-next-line no-var
   var quoin: InPage;
+  interface Window { quoinFit: InPageFit }
 }
 
 function percent(part: number, whole: number): number {
@@ -535,6 +563,130 @@ switch (command) {
       console.error(`quoin: ${share}% is below the ${options.min}% floor`);
       process.exit(1);
     }
+    break;
+  }
+
+  case "fit": {
+    /*
+       The agent-facing command, and the one that answers the question a design
+       actually poses: here is what the design says, what is the nearest thing
+       that is genuinely on a grid, and how far did you have to move it.
+
+       JSON in, JSON out, because the caller is as likely to be an agent working
+       from a Figma file or a screenshot as a person at a terminal. Everything
+       the answer rests on is in the output: the sizes, the leadings, the
+       spacing, the shared phase, and a per-size record of the deviation, so the
+       decision to accept a 0.4px shift is made by whoever has to live with it.
+    */
+    const source = options.design ?? fail("fit needs --design <file|->");
+    let design: {
+      pitch?: number;
+      tolerance?: number;
+      families?: {
+        role: string;
+        font: string;
+        steps: { name?: string; size: number; leading?: number; ratio?: number; space?: number }[];
+      }[];
+    };
+
+    try {
+      const raw =
+        source === "-"
+          ? readFileSync(0, "utf8")
+          : readFileSync(source, "utf8");
+      design = JSON.parse(raw);
+    } catch (error) {
+      fail(
+        `could not read the design from ${source === "-" ? "stdin" : source}
+  ` +
+          (error instanceof Error ? error.message : String(error))
+      );
+    }
+
+    if (!design.families?.length) {
+      fail(
+        'the design needs a "families" array, each with a role, a font and steps'
+      );
+    }
+
+    const target = url ?? "about:blank";
+    const { browser, page } = await open(target, options);
+    /* The fitter is its own bundle: it is four kilobytes that the console
+       bundle has no reason to carry. */
+    await page.addScriptTag({ content: bundle("quoin.fit.js") });
+
+    const fitted = await page.evaluate(
+      ({ families, grid }) => {
+        const result = window.quoinFit.fitScale(families, grid);
+        return { result, css: window.quoinFit.fittedScaleToCss(result) };
+      },
+      {
+        families: design.families,
+        grid: {
+          pitch: design.pitch ?? options.pitch,
+          tolerance: design.tolerance ?? options.tolerance,
+        },
+      }
+    );
+
+    await browser.close();
+
+    if (options.out) writeFileSync(options.out, fitted.css, "utf8");
+
+    if (options.json) {
+      console.log(JSON.stringify({ ...fitted.result, css: fitted.css }, null, 2));
+      break;
+    }
+
+    const f = fitted.result;
+    if (f.unavailable) {
+      fail(
+        "fitting reads each size's cap height through a text-box-trim probe,\n" +
+          "  and this browser does not support it. Chrome 133, Safari 18.2\n" +
+          "  or Firefox 154."
+      );
+    }
+
+    console.log(`
+  ${f.grid.pitch}px grid, origin ${f.origin}px`);
+    console.log(
+      `  ${f.families.length} ${f.families.length === 1 ? "family" : "families"}, ` +
+        (f.cost === 0
+          ? "nothing in the design had to move"
+          : `${f.cost}px of leading moved, no size touched`)
+    );
+
+    for (const family of f.families) {
+      console.log(
+        `
+  ${family.role}  ${family.font}` +
+          (family.resolved ? "" : "  (DID NOT RENDER)")
+      );
+      console.log("    name          size      leading   space     cap      moved");
+      for (const step of family.steps) {
+        console.log(
+          "    " + step.name.padEnd(14) +
+            String(step.size + "px").padEnd(10) +
+            String(step.leading + "px").padEnd(10) +
+            String(step.space + "px").padEnd(10) +
+            String(step.cap).padEnd(9) +
+            (step.leadingMoved === 0
+              ? "exact"
+              : `leading ${step.leadingMoved > 0 ? "+" : ""}${step.leadingMoved}`)
+        );
+      }
+    }
+
+    console.log(
+      "\n  Every size is the size the design asked for. Set the spaces as" +
+        "\n  margin-top and the page is on the grid at every width, with no" +
+        "\n  corrections and no media queries."
+    );
+
+    if (options.out) console.log(`
+  CSS written to ${options.out}
+`);
+    else console.log("\n" + fitted.css + "\n");
     break;
   }
 

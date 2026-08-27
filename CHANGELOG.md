@@ -1,5 +1,109 @@
 # Changelog
 
+## 1.5.0
+
+Fitting a design to a grid without changing the design.
+
+Everything before this release was remedial. It measured a page that was off the
+grid and pushed each block into place, and what came back was a list of absolute
+pixel corrections. This release replaces that with arithmetic that does not need
+correcting, and the measurement that made it possible was finding out exactly
+where the corrections fail.
+
+### Added
+
+**`fitScale(families, options)` and `quoin fit`.** Give it a design's own sizes
+and it returns those exact sizes, a leading snapped to whole rows, and the space
+before each block that puts it on the grid. A page built from the result is on
+the grid at every viewport width with one stylesheet, no media queries and no
+corrections, measured at nine widths from 320 to 1440 in Chromium and WebKit.
+
+The arithmetic, for a trimmed box:
+
+```
+baseline(B) - baseline(A) = (lines(A) - 1) x leading(A) + space(B) + cap(B)
+```
+
+`lines(A)` is the only width-dependent term and it is multiplied by a leading
+that is a whole number of rows, so modulo the pitch what remains is
+`space(B) + cap(B) = 0`, in which every term belongs to block B alone. Nothing
+relates one size to another, which is why the sizes are free.
+
+**A JSON contract, for agents.** `quoin fit --design - --json` reads a design on
+stdin and writes the whole result out, including `leadingWas`, `leadingMoved` and
+the cap height each figure came from. An agent working from a Figma file or a
+screenshot has the same problem a person does and nobody to ask, so everything
+the answer rests on is in the output rather than in the prose around it.
+
+**A cap basis for the scale solver**, `basis: "cap"`. The line-box basis rests on
+`fontBoundingBox`, which every engine rounds to whole pixels; the cap basis rests
+on the font's own `sCapHeight`, which agreed across engines on 130 fonts out of
+130 with a worst case of 0.022px where the canvas measurement managed 90. Under
+trim the phase also stops depending on the leading, so any solved size works with
+any leading that is a whole number of rows.
+
+**`dist/quoin.fit.js`**, a separate bundle for the fitter. It is four kilobytes
+and it is a build-time question that happens to need a browser for its metrics,
+so it does not belong in the bundle whose whole constraint is being small enough
+to paste into a console.
+
+### Fixed
+
+**Quoin measured trimmed pages wrongly, in two places.** `text-box-trim` reached
+Baseline in August 2026, so pages built on it are arriving now, and both of these
+would have got worse rather than better.
+
+`verifyGrid` put the first baseline at half-leading plus ascent, which is right
+for an ordinary block and 17.8px too low for a trimmed 32px serif one. That is
+more than two rows of an 8px grid, in the same direction, on every block on the
+page: a page built correctly would have been reported as almost entirely off the
+grid, and the page would have been right.
+
+`verifyRhythm` expected every box to be a whole number of rows. A trimmed box is
+deliberately not one, because it ends at its own baseline, so its height is
+`(lines - 1) x leading + capHeight` by design. Every block would have been
+flagged and the author told to fix a leading that was already correct.
+
+**`makeBaseline` and `compareToBaseline` were documented and not exported.** The
+README's API table listed both for a release in which `import { makeBaseline }
+from "quoin"` was a `TypeError`. Nothing caught it, because every test imports
+from `src/` by path and none of them imported the package the way a reader would.
+`test/unit/documented.test.ts` now reads the README's API table, the CLI's
+commands and the action's inputs, and fails when the prose and the code disagree.
+
+**A font stack resolved on the whole stack.** `fontIsAvailable("Georgia, serif")`
+asks whether a family literally called `Georgia, serif` exists, which nothing is,
+so every realistic design came back marked as not having rendered. A warning that
+fires on every correct input is a warning people learn to ignore.
+
+### Changed
+
+**The README's account of what corrections can do was wrong**, and the correction
+is more useful than the claim. Measured properly, a stylesheet seated at 1280 and
+carried to 375 holds at **100%** when only the line breaks have moved, because
+`mode: "full"` snaps every leading to whole rows and a page whose leadings are
+whole rows reflows in whole rows. It falls to **0%** when a media query changes a
+container's padding by thirteen pixels. Corrections survive reflow and do not
+survive a layout change, which is a sharper statement than "corrections are
+per-layout" and points at exactly what fitting is for.
+
+**The size budget went from 24 kB to 28 kB**, recorded as one raise rather than
+the two it actually happened in, because splitting it in the log would make each
+look smaller than the change was.
+
+### Findings
+
+**A trimmed single-line block's height is exactly the cap height**, measured at
+21.188px against a font table declaring 21.188px in both Chromium and WebKit. A
+four-line block at 29px leading came to 98.25px, which is `3 x 29 + 11.25`
+exactly. Everything in this release rests on that measurement.
+
+**Sizes do not need to share a phase.** A page set at 44, 27, 17 and 13.5, none
+of them solved for anything, sat on the grid at all nine test widths once each
+size's space closed its own cap residue. An earlier version of the fitter
+enforced a shared phase across families and moved a 17px body to 20.5 and a 15px
+mono to 10.5, which is not fitting a design to a grid, it is replacing it.
+
 ## 1.4.0
 
 The GitHub Action, rhythm, and an origin that is solved rather than assumed.
