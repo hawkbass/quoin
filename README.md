@@ -11,6 +11,8 @@ quoin.seat()    // put it on. Call again to lift it back off.
 quoin.css()     // the corrections as a stylesheet you can ship
 ```
 
+[![ci](https://github.com/hawkbass/quoin/actions/workflows/ci.yml/badge.svg)](https://github.com/hawkbass/quoin/actions/workflows/ci.yml)
+
 MIT. No dependencies. 17 kB.
 
 ---
@@ -316,18 +318,23 @@ fallback to within 0.016px.
 
 ### The result
 
-Over 124 comparable font-and-size rows, at 12, 16, 18, 24 and 48px, in three
+Over 130 comparable font-and-size rows, at 12, 16, 18, 24 and 48px, in three
 engines:
 
 | | agree within 0.5px | worst spread |
 |---|---|---|
-| Cap height via `text-box-edge: cap` | **124 / 124** | **0.022px** |
-| Cap height via canvas `actualBoundingBoxAscent` | 85 / 124 | 0.864px |
+| Cap height via `text-box-edge: cap` | **130 / 130** | **0.022px** |
+| Cap height via canvas `actualBoundingBoxAscent` | 90 / 130 | 0.864px |
 
 0.022px is under 1/32 of a pixel, which is layout-unit quantisation rather than
-disagreement. And where the font declares a usable `sCapHeight`, all 109 rows
+disagreement. And where the font declares a usable `sCapHeight`, all 115 rows
 match `sCapHeight / unitsPerEm × size` to within **0.02px**, computed in Node
-straight out of the binary with no browser involved. Agreeing with each other
+straight out of the binary with no browser involved.
+
+The same suite on a Linux CI runner, where Playwright's bundled Firefox predates
+`text-box-trim` so the font-table column is Chromium and WebKit only: 111 of 111
+within 0.5px, worst spread 0.016px, against 87 of 111 and **2px** for the canvas
+route. The gap between the two routes is wider there, not narrower. Agreeing with each other
 would only prove the engines are consistent. Agreeing with the file proves they
 are reading it.
 
@@ -415,6 +422,46 @@ computed in one engine does not describe the other. Not a measurement problem. A
 different font.
 
 It lands on display type, which is where this tool already declines to work.
+
+---
+
+## Finding: Chromium rounds advance widths too, on Linux
+
+Fell out of CI, as a validity check rejecting three quarters of a font corpus
+that had loaded perfectly well.
+
+Advance width looked like the obvious way to ask whether the same font had loaded
+in every engine. On the Linux runner, measuring a fifteen-glyph probe across 24
+webfonts at five sizes:
+
+| | readings landing on a whole pixel |
+|---|---|
+| Chromium | **130 of 130** |
+| Firefox | 9 of 130 |
+| WebKit | 8 of 130 |
+
+Every Chromium width is an integer: 120, 158, 178, 238, 476. It is the same
+behaviour as the cap heights, in the other axis, and it is not present in
+Chromium on Windows, where subpixel text positioning is on.
+
+Two consequences, and the second is the one that cost the afternoon.
+
+A correctly loaded font looks like a substitution, because its widths differ from
+the other engines' by up to 1%. And a genuine substitution can look like a match,
+because **metric-compatible substitutes exist on purpose**: Liberation Sans is
+built to reproduce Arial's advance widths exactly, so on a machine without Arial
+the widths agree perfectly and the vertical metrics do not. Width cannot detect
+the substitution that matters most.
+
+So font identity is fingerprinted on `fontBoundingBox` ascent and descent
+instead: off the font's own tables, unhinted, and independent of the cap height
+being measured. On Windows that also recovers Inter and Merriweather, whose
+widths differ because WebKit picks a different optical size and whose vertical
+metrics do not.
+
+**The general lesson, which is not about fonts.** A validity check that shares a
+failure mode with the thing under test will quietly delete the evidence. This one
+used hinted measurements to decide which unhinted measurements were trustworthy.
 
 ---
 

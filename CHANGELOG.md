@@ -154,6 +154,46 @@ omission, so the parameter went.
 - **An encoding gate**, after a NUL byte in a template literal made a function
   report nine escalations and perform zero.
 
+
+### Findings, from CI
+
+Making the repository public let the Actions run for the first time, and they
+found two tests asserting properties of the machine they were written on. Both
+had one cause, and it is a better finding than the bug.
+
+**Chromium rounds advance widths to whole pixels on Linux.** Measuring a
+fifteen-glyph probe across 24 webfonts at five sizes on the Ubuntu runner:
+Chromium 130 readings of 130 landing on a whole pixel, Firefox 9 of 130, WebKit 8
+of 130. The same hinting behaviour this project measures in cap heights, in the
+other axis, and absent from Chromium on Windows where subpixel text positioning
+is on.
+
+The studies had been using advance width to check whether the same font had
+loaded in every engine, so a correctly loaded font looked like a substitution and
+95 of 130 rows were discarded.
+
+**And metric-compatible substitutes defeat the check from the other side.**
+Liberation Sans is built to reproduce Arial's advance widths exactly, so on a
+machine without Arial the widths agree perfectly and the vertical metrics do not.
+That is why the cross-engine study reported `fontBoundingBox` disagreeing on
+Arial, Times and `system-ui` and blamed the engines for it.
+
+Font identity is now fingerprinted on `fontBoundingBox` ascent and descent: off
+the font's own tables, unhinted, and independent of the cap height being
+measured. On Windows that also recovers Inter and Merriweather, whose widths
+differ because WebKit picks a different optical size and whose vertical metrics do
+not. 124 comparable rows became 130.
+
+The general lesson is not about fonts. **A validity check that shares a failure
+mode with the thing under test will quietly delete the evidence.** This one used
+hinted measurements to decide which unhinted measurements to trust.
+
+The cross-engine study no longer gates on system font stacks at all. A system
+stack is a request rather than a font, and asserting engine agreement over one
+asserts a property of whatever the machine happens to have installed. The
+portability claim lives with the 24 webfonts, where identical bytes make "the
+same font" a property of the setup rather than an inference.
+
 ### Changed, second pass
 
 - The single-file budget went from 16 kB to 20 kB, and it is worth recording that
