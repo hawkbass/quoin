@@ -38,7 +38,11 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npx playwright install --with-deps chromium firefox webkit
-      - run: npx playwright test test/browser/verify.spec.ts test/browser/seat.spec.ts test/browser/export-css.spec.ts
+      # Every spec that does not need the network. The manual ones skip
+      # themselves; the font study runs in its own job.
+      - run: npx playwright test --grep-invert "@network"
+        env:
+          CI: "1"
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

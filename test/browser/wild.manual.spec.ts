@@ -58,7 +58,7 @@ interface Result {
    Pinned to one project; the engines are covered inside the test. */
 test.skip(({ browserName }) => browserName !== "chromium", "drives its own browsers");
 
-test("seat, export, delete the script, stay seated", async ({ browser }) => {
+test("@network seat, export, delete the script, stay seated", async ({ browser }) => {
   test.skip(!process.env.WILD, "set WILD=1 to run against five live sites");
   test.setTimeout(20 * 60_000);
 

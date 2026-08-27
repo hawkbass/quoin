@@ -148,26 +148,53 @@ test("one phase: a uniform offset reads as systematic", async ({ page }) => {
 
 test("two phases: the same nudge does not read as systematic", async ({ page }) => {
   /*
-     The contrast, and the reason the field exists.
+     The contrast, and the reason the field exists. One shared offset is a wrong
+     origin and a one-line fix. Two is a type scale and a spacing scale
+     disagreeing, which is a design problem wearing a CSS costume. They look
+     identical in a screenshot and want completely different responses.
 
-     seated.html is identical to one-phase.html except that it has a heading at
-     a different size. Two sizes is two ascents is two phases, and no single
-     origin serves both. In a screenshot the two pages look equally crooked;
-     one wants a changed origin and the other wants a changed type scale, and
-     `distinctDrifts` is what tells them apart.
+     The second phase is BUILT here rather than borrowed from a fixture, and
+     that is the point of this comment. The first version pointed at a fixture
+     with a heading at twice the body size and asserted that two sizes give two
+     phases. It passed on this machine and failed on the CI runner, because
+     whether two sizes land on different sub-grid offsets depends on the
+     resolved font's ascent and descent ratios, and the runner resolves
+     `monospace` to a different font. The test was asserting a property of one
+     platform's default typeface and calling it a property of type scales.
 
-     The first version of this test pointed the systematic assertion at THIS
-     fixture and failed in all three engines, which was the fixture being right
-     and the test being wrong. */
-  await load(page, "seated.html");
+     Half a pitch is a different phase in any font on any platform, because it
+     does not depend on the font at all. */
+  await load(page, "one-phase.html");
 
-  const result = await page.evaluate(sweepAndNudge);
+  const result = await page.evaluate(({ pitch }) => {
+    const first = document.querySelector("p") as HTMLElement;
+    const clone = first.cloneNode(true) as HTMLElement;
+    clone.textContent = "A paragraph pushed half a grid row out of phase.";
+    clone.style.paddingTop = `${pitch / 2}px`;
+    first.parentNode!.insertBefore(clone, first.nextSibling);
+
+    let best = { origin: 0, onGrid: -1 };
+    for (let origin = 0; origin < pitch; origin += 0.25) {
+      const report = window.quoin.verifyGrid({ pitch, origin }).report;
+      if (report.onGrid > best.onGrid) best = { origin, onGrid: report.onGrid };
+    }
+    return {
+      aligned: window.quoin.verifyGrid({ pitch, origin: best.origin }).report,
+      nudged: window.quoin.verifyGrid({ pitch, origin: best.origin + 2 }).report,
+    };
+  }, { pitch: GRID.pitch });
 
   expect(
     result.nudged.distinctDrifts,
-    "a heading at a second size is a second phase"
+    "a block half a row out of phase is a second phase, in any font"
   ).toBeGreaterThan(1);
   expect(result.nudged.systematic, "so it is not one shared offset").toBe(false);
+
+  /* And no origin serves both, which is what having two phases means. */
+  expect(
+    result.aligned.offGrid,
+    "no single origin seats a page with two phases"
+  ).toBeGreaterThan(0);
 });
 
 test("the resolved font is reported, not the one that was asked for", async ({ page }) => {
