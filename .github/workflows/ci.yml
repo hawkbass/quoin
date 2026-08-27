@@ -21,6 +21,7 @@ jobs:
       - run: npm run typecheck
       - run: npm run voice:check
       - run: npm run encoding:check
+      - run: npm run workflows:check
       - run: npm run test:unit
       - run: npm run build
 
@@ -99,9 +100,9 @@ jobs:
           comment: "false"
 
       - name: Break the page on purpose
-        run: printf '
-section { border-top: 3px solid red; padding-top: 25px; }
-' >> site/dist/style.css
+        run: |
+          echo "" >> site/dist/style.css
+          echo "section { border-top: 3px solid red; padding-top: 25px; }" >> site/dist/style.css
 
       - name: And now it has to fail
         id: broken

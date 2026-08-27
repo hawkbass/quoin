@@ -62,11 +62,12 @@
     "test": "npm run test:unit",
     "test:unit": "node --test \"test/unit/*.test.ts\"",
     "test:browser": "playwright test",
-    "test:all": "npm run typecheck && npm run voice:check && npm run encoding:check && npm run test:unit && npm run build && playwright test",
+    "test:all": "npm run typecheck && npm run voice:check && npm run encoding:check && npm run workflows:check && npm run test:unit && npm run build && playwright test",
     "fonts": "node scripts/fetch-fonts.mjs && node scripts/make-awkward-fonts.mjs",
     "corpus": "node scripts/run-corpus.mjs",
     "wild": "node scripts/run-wild.mjs",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "workflows:check": "node scripts/check-workflows.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.60.0",
