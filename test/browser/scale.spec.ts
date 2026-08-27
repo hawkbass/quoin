@@ -17,11 +17,25 @@ import { load, GRID } from "./harness.ts";
 
 const PITCH = 8;
 
+/*
+   A generic keyword, not a named face, and that is the point of this comment.
+
+   The first version of this file solved against Georgia and asserted "Georgia
+   is installed everywhere this runs". It is not installed on the Linux CI
+   runner, so six tests failed on an assumption about one laptop, in the file
+   whose whole subject is that a font you asked for is not a font you got.
+
+   `serif` always resolves. What it resolves to varies by platform, which does
+   not matter here: every assertion is about the relationship between the sizes
+   the solver returns, not about any particular typeface's metrics.
+*/
+const FAMILY = "serif";
+
 test("a solved scale puts every size on the same phase", async ({ page }) => {
   await load(page, "prose.html");
 
-  const scale = await page.evaluate(({ pitch }) => {
-    const solved = window.quoin.gridNativeScale("Georgia", {
+  const scale = await page.evaluate(({ pitch, family }) => {
+    const solved = window.quoin.gridNativeScale(family, {
       pitch,
       targets: [16, 28, 40],
       near: 3,
@@ -31,7 +45,7 @@ test("a solved scale puts every size on the same phase", async ({ page }) => {
        the arithmetic rather than agreeing with it. */
     const ctx = document.createElement("canvas").getContext("2d")!;
     const phases = solved.steps.map((step) => {
-      ctx.font = `400 ${step.size}px Georgia`;
+      ctx.font = `400 ${step.size}px ${family}`;
       const box = ctx.measureText("Hxp");
       const phase =
         (step.leading - (box.fontBoundingBoxAscent + box.fontBoundingBoxDescent)) / 2 +
@@ -40,7 +54,7 @@ test("a solved scale puts every size on the same phase", async ({ page }) => {
     });
 
     return { solved, phases };
-  }, { pitch: PITCH });
+  }, { pitch: PITCH, family: FAMILY });
 
   expect(scale.solved.steps.length, "it found a scale").toBeGreaterThanOrEqual(3);
 
@@ -70,13 +84,13 @@ test("steps are distinct and ascending, and a target it cannot meet is reported"
   */
   await load(page, "prose.html");
 
-  const solved = await page.evaluate(({ pitch }) =>
-    window.quoin.gridNativeScale("Georgia", {
+  const solved = await page.evaluate(({ pitch, family }) =>
+    window.quoin.gridNativeScale(family, {
       pitch,
       targets: [16, 20, 28, 40],
       near: 3,
     }),
-  { pitch: PITCH });
+  { pitch: PITCH, family: FAMILY });
 
   const sizes = solved.steps.map((s) => s.size);
   for (let i = 1; i < sizes.length; i++) {
@@ -97,8 +111,8 @@ test("a page built from a solved scale needs no corrections at all", async ({ pa
   /* The claim, end to end. */
   await load(page, "prose.html");
 
-  const result = await page.evaluate(({ pitch }) => {
-    const solved = window.quoin.gridNativeScale("Georgia", {
+  const result = await page.evaluate(({ pitch, family }) => {
+    const solved = window.quoin.gridNativeScale(family, {
       pitch,
       targets: [16, 28, 40],
       near: 3,
@@ -111,7 +125,7 @@ test("a page built from a solved scale needs no corrections at all", async ({ pa
        cannot contribute to the measurement. */
     const host = document.createElement("div");
     host.id = "solved";
-    host.style.cssText = `padding:${pitch * 4}px 0;font-family:Georgia,serif;` +
+    host.style.cssText = `padding:${pitch * 4}px 0;font-family:${family},serif;` +
       `font-size:${body.size}px;line-height:${body.leading}px`;
     host.innerHTML = `
       <h2 style="font-size:${display.size}px;line-height:${display.leading}px;margin:0 0 ${pitch * 3}px;font-weight:400">A scale that lands on the line</h2>
@@ -144,7 +158,7 @@ test("a page built from a solved scale needs no corrections at all", async ({ pa
     seated.undo();
 
     return { best, corrections, phase: solved.phase, steps: solved.steps.length };
-  }, { pitch: PITCH });
+  }, { pitch: PITCH, family: FAMILY });
 
   expect(result, "the solver produced a usable scale").not.toBeNull();
   expect(result!.best.total, "the page has blocks to measure").toBeGreaterThan(3);
@@ -162,14 +176,14 @@ test("a page built from a solved scale needs no corrections at all", async ({ pa
 test("the CSS it emits carries the origin the scale needs", async ({ page }) => {
   await load(page, "prose.html");
 
-  const css = await page.evaluate(({ pitch }) => {
-    const solved = window.quoin.gridNativeScale("Georgia", { pitch, targets: [16, 28, 40] });
+  const css = await page.evaluate(({ pitch, family }) => {
+    const solved = window.quoin.gridNativeScale(family, { pitch, targets: [16, 28, 40] });
     return window.quoin.scaleToCss(solved);
-  }, { pitch: PITCH });
+  }, { pitch: PITCH, family: FAMILY });
 
   expect(css).toContain("--grid-origin");
   expect(css).toContain("--pitch: 8px");
-  expect(css, "it names the font it was solved against").toContain("Georgia");
+  expect(css, "it names the font it was solved against").toContain(FAMILY);
   expect(css, "and why the numbers are not round").toContain("apart");
   expect(css).not.toContain("NaN");
   expect(css).not.toContain("undefined");
@@ -208,20 +222,24 @@ test("an unavailable font is solved against the fallback, and says so", async ({
   expect(css, "and the stylesheet warns rather than quietly lying").toContain("did not render");
 });
 
-test("a font that is present is reported as present, and a generic keyword always is", async ({
+test("a generic keyword always resolves, and a name nobody has does not", async ({
   page,
 }) => {
   await load(page, "prose.html");
 
   const result = await page.evaluate(({ pitch }) => ({
-    real: window.quoin.gridNativeScale("Georgia", { pitch, targets: [16, 28] }).resolved,
-    generic: window.quoin.gridNativeScale("serif", { pitch, targets: [16, 28] }).resolved,
-    quoted: window.quoin.gridNativeScale('"Times New Roman"', { pitch, targets: [16, 28] }).resolved,
+    serif: window.quoin.gridNativeScale("serif", { pitch, targets: [16, 28] }).resolved,
+    mono: window.quoin.gridNativeScale("monospace", { pitch, targets: [16, 28] }).resolved,
+    quoted: window.quoin.gridNativeScale('"sans-serif"', { pitch, targets: [16, 28] }).resolved,
+    absent: window.quoin.gridNativeScale("Definitely Not Installed 98765", {
+      pitch, targets: [16, 28],
+    }).resolved,
   }), { pitch: PITCH });
 
-  expect(result.real, "Georgia is installed everywhere this runs").toBe(true);
   /* A generic keyword is a promise that something will be found rather than a
-     statement about what, so it is never unresolved. */
-  expect(result.generic).toBe(true);
+     statement about what, so it is never unresolved on any platform. */
+  expect(result.serif).toBe(true);
+  expect(result.mono).toBe(true);
   expect(result.quoted, "quotes around the family are stripped before probing").toBe(true);
+  expect(result.absent, "and a name nobody has is still reported as missing").toBe(false);
 });
