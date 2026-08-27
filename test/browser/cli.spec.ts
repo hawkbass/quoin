@@ -12,7 +12,9 @@ import { tmpdir } from "node:os";
 
 const run = promisify(execFile);
 const CLI = "dist/cli.js";
-const PAGE = "http://127.0.0.1:4173/prose.html";
+/* Follows the config rather than repeating its number. */
+const PORT = Number(process.env.FIXTURE_PORT ?? 4173);
+const PAGE = `http://127.0.0.1:${PORT}/prose.html`;
 
 interface Run {
   code: number;

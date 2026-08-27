@@ -3,6 +3,15 @@ import { defineConfig, devices } from "@playwright/test";
 /* Fixtures are served over http rather than opened as files: `file://` gives
    different origin rules in each engine, and a cross-engine study whose
    variable is the origin policy is not a cross-engine study. */
+/* One source of truth for the port.
+
+   The config used to hardcode 4173 while `serve-fixtures.mjs` honoured
+   FIXTURE_PORT, so setting the variable moved the server and left Playwright
+   waiting thirty seconds for a URL nothing was listening on. Two places that
+   have to agree and no mechanism making them. */
+const PORT = Number(process.env.FIXTURE_PORT ?? 4173);
+const ORIGIN = `http://127.0.0.1:${PORT}`;
+
 export default defineConfig({
   testDir: "./test/browser",
   fullyParallel: false,
@@ -12,13 +21,13 @@ export default defineConfig({
   reporter: process.env.CI ? [["github"], ["list"]] : [["list"]],
 
   use: {
-    baseURL: "http://127.0.0.1:4173",
+    baseURL: ORIGIN,
     trace: "on-first-retry",
   },
 
   webServer: {
     command: "node scripts/serve-fixtures.mjs",
-    url: "http://127.0.0.1:4173/prose.html",
+    url: `${ORIGIN}/prose.html`,
     reuseExistingServer: !process.env.CI,
     timeout: 30_000,
   },
