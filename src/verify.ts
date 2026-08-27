@@ -21,6 +21,7 @@ import {
   type GridResult,
 } from "./grid.ts";
 import { describe } from "./selector.ts";
+import { walk, inShadowRoot as isInShadowRoot } from "./walk.ts";
 
 export interface TextNodeResult extends GridResult {
   /** A short readable path. Not unique: for reports, not for stylesheets. */
@@ -40,6 +41,14 @@ export interface TextNodeResult extends GridResult {
    * silently mixed in.
    */
   transformed: boolean;
+  /**
+   * True when this element lives inside a shadow root.
+   *
+   * It can be seated at runtime like anything else. It cannot be carried by an
+   * exported stylesheet, because a document stylesheet does not reach inside a
+   * shadow root and there is no selector that does.
+   */
+  inShadow: boolean;
 }
 
 export interface VerifyOptions extends Partial<GridConfig> {
@@ -53,20 +62,31 @@ export interface VerifyOptions extends Partial<GridConfig> {
    * that cannot be acted on.
    */
   includeTransformed?: boolean;
+  /** Descend into open shadow roots. On by default. */
+  crossShadow?: boolean;
 }
 
-/** Elements whose text is not prose and should not be judged as prose. */
-export const NON_TEXT: readonly string[] = [
-  "SCRIPT", "STYLE", "NOSCRIPT", "TEMPLATE", "SVG", "CANVAS",
-  "IFRAME", "OPTION", "TEXTAREA", "CODE", "PRE", "KBD", "SAMP",
-  "OBJECT", "EMBED", "VIDEO", "AUDIO", "MAP", "MATH",
-];
+/*
+   The walk itself lives in walk.ts, because it stopped being a tree walk: a
+   shadow root hangs off its host rather than sitting under it, and a TreeWalker
+   will not cross that boundary.
+*/
+export { NON_TEXT, inShadowRoot, type WalkOptions, type WalkResult } from "./walk.ts";
 
-const NON_TEXT_SET = new Set(NON_TEXT);
+/** Every element that directly owns rendered words, in flattened tree order. */
+export function textBlocks(
+  root: Element = document.body,
+  ignore: readonly string[] = [],
+  options: { crossShadow?: boolean } = {}
+): Element[] {
+  return walk(root, { ignore, crossShadow: options.crossShadow }).blocks;
+}
 
-/* Whether anything between this element and the root is transformed. Memoised
-   per element, because a deep tree asks the same question about the same
-   ancestors several hundred times. */
+/* Whether anything between this element and the document root is transformed.
+
+   Memoised per element, because a deep tree asks the same question about the
+   same ancestors several hundred times, and because the answer is inherited:
+   once an ancestor is known to be transformed, every descendant is too. */
 function transformedUnder(el: Element, cache: Map<Element, boolean>): boolean {
   const seen = cache.get(el);
   if (seen !== undefined) return seen;
@@ -75,63 +95,20 @@ function transformedUnder(el: Element, cache: Map<Element, boolean>): boolean {
   const own =
     (style.transform !== "none" && style.transform !== "") ||
     (style.scale !== "none" && style.scale !== "") ||
+    (style.rotate !== "none" && style.rotate !== "") ||
     (style.zoom !== "" && style.zoom !== "1" && style.zoom !== "normal");
 
-  const parent = el.parentElement;
+  /* `parentElement` is null at a shadow root's boundary, so step to the host
+     and keep going: a transform on the host moves everything the component
+     renders. */
+  const root = el.getRootNode();
+  const parent =
+    el.parentElement ??
+    (root !== el.ownerDocument && root instanceof ShadowRoot ? root.host : null);
+
   const result = own || (parent ? transformedUnder(parent, cache) : false);
   cache.set(el, result);
   return result;
-}
-
-/* Every element that directly owns rendered words, in document order. */
-export function textBlocks(
-  root: Element = document.body,
-  ignore: readonly string[] = []
-): Element[] {
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, {
-    acceptNode(node) {
-      const el = node as Element;
-      /* `tagName` is uppercase for HTML and as-authored for SVG and MathML,
-         so both cases are checked rather than assumed. */
-      if (NON_TEXT_SET.has(el.tagName) || NON_TEXT_SET.has(el.tagName.toUpperCase())) {
-        return NodeFilter.FILTER_REJECT;
-      }
-
-      for (const selector of ignore) {
-        try {
-          if (el.matches(selector)) return NodeFilter.FILTER_REJECT;
-        } catch {
-          /* An unparseable ignore selector should not take the whole walk
-             down with it. Skipping nothing is the safe reading. */
-        }
-      }
-
-      const style = getComputedStyle(el);
-      if (style.display === "none" || style.visibility === "hidden") {
-        return NodeFilter.FILTER_REJECT;
-      }
-      /* Vertical writing modes have a baseline, but it runs the other way and
-         a horizontal grid has nothing to say about it. */
-      if (style.writingMode && style.writingMode !== "horizontal-tb") {
-        return NodeFilter.FILTER_REJECT;
-      }
-
-      /* Only elements that directly own rendered words. A wrapper div inherits
-         its child's text and would otherwise be measured twice. */
-      const ownsText = [...el.childNodes].some(
-        (child) => child.nodeType === Node.TEXT_NODE && child.textContent?.trim()
-      );
-      return ownsText ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
-    },
-  });
-
-  const found: Element[] = [];
-  let current = walker.nextNode() as Element | null;
-  while (current) {
-    found.push(current);
-    current = walker.nextNode() as Element | null;
-  }
-  return found;
 }
 
 export interface VerifyResult {
@@ -140,6 +117,17 @@ export interface VerifyResult {
   grid: GridConfig;
   /** Nodes skipped because they sit under a transform. */
   skippedTransformed: number;
+  /**
+   * Shadow roots the walk could not enter, either because they are closed or
+   * because `crossShadow` was turned off.
+   *
+   * Text inside them is real and unmeasured. A percentage that quietly omits a
+   * region is worse than no percentage, so this is reported rather than folded
+   * into the total.
+   */
+  closedShadowRoots: number;
+  /** Frames on the page, whose content is a different document. */
+  frames: number;
 }
 
 /* Only the FIRST line of each block is checked. Every subsequent line sits one
@@ -157,11 +145,13 @@ export function verifyGrid(options: VerifyOptions = {}): VerifyResult {
   const transformCache = new Map<Element, boolean>();
   let skippedTransformed = 0;
 
+  const walked = walk(root, { ignore, crossShadow: options.crossShadow });
+
   /* Cache per resolved font shorthand: measuring is cheap, but a long document
      asks the same question thousands of times. */
   const metricCache = new Map<string, FontMetrics>();
 
-  for (const el of textBlocks(root, ignore)) {
+  for (const el of walked.blocks) {
     const rect = el.getBoundingClientRect();
     if (rect.height <= 0) continue;
 
@@ -205,10 +195,18 @@ export function verifyGrid(options: VerifyOptions = {}): VerifyResult {
       lineHeight,
       resolvedFont: metrics.font,
       transformed,
+      inShadow: isInShadowRoot(el),
     });
   }
 
-  return { results, report: summarise(results), grid, skippedTransformed };
+  return {
+    results,
+    report: summarise(results),
+    grid,
+    skippedTransformed,
+    closedShadowRoots: walked.closedShadowRoots,
+    frames: walked.frames,
+  };
 }
 
 /* The off-grid nodes, worst first. */

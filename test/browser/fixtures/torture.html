@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>quoin fixture: things real pages do</title>
+<style>
+  /* Everything in here is ordinary on a real site and absent from a fixture
+     somebody wrote to demonstrate a baseline grid. The point is not that the
+     seater handles all of it. The point is that it says which. */
+
+  html { font-family: serif; }
+  body { margin: 0; font-size: 16.5px; line-height: 1.55; }
+  section { border-top: 1px solid #ddd; padding: 9px 0; }
+  h2 { font-size: 21px; line-height: 1.3; margin: 0 0 7px; }
+
+  /* A wrapper that generates no box at all. Its children are laid out by the
+     grandparent, so anything computed from the wrapper is meaningless. */
+  .contents-wrapper { display: contents; }
+
+  /* Multi-column: a baseline grid is the reason columns exist, and it is also
+     the layout where "the block below" is not below. */
+  .columns { column-count: 2; column-gap: 24px; }
+
+  /* Off the flow entirely. */
+  .fixed { position: fixed; top: 4px; right: 4px; background: #eee; padding: 3px; font-size: 11px; }
+
+  /* Rendered lazily, so its size is not known until it is scrolled to. */
+  .lazy { content-visibility: auto; contain-intrinsic-size: auto 200px; }
+
+  /* Right to left, and a vertical writing mode, which has a baseline running
+     the other way. */
+  [dir="rtl"] { text-align: right; }
+  .vertical { writing-mode: vertical-rl; height: 140px; }
+
+  /* First-line and first-letter change the metrics of part of a block. */
+  .drop::first-letter { font-size: 2.4em; line-height: 1; float: left; padding-right: 4px; }
+  .lead::first-line { font-size: 1.15em; }
+
+  /* A table, where row heights are negotiated between cells. */
+  table { border-collapse: collapse; }
+  td, th { border: 1px solid #ccc; padding: 5px 9px; }
+
+  /* Text inside a scroll container. */
+  .scroller { max-height: 90px; overflow: auto; }
+
+  /* A deliberately deep tree. */
+  .deep div { padding-left: 1px; }
+</style>
+</head>
+<body>
+  <div class="fixed">fixed</div>
+
+  <section>
+    <h2>A wrapper with display contents</h2>
+    <div class="contents-wrapper">
+      <p>This paragraph's parent generates no box at all.</p>
+      <p>Its grandparent lays both of these out directly.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Multi-column</h2>
+    <div class="columns">
+      <p>Column flow means the block below a block is not necessarily below it,
+      which is the case a downward-only correction cannot reason about.</p>
+      <p>Print invented the baseline grid for exactly this layout, and it is the
+      one where a naive sweep is most likely to make things worse.</p>
+      <p>A third paragraph, to force a column break somewhere in the middle.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Pseudo-elements that change metrics mid-block</h2>
+    <p class="drop">Dropped capitals change the height of the first line box
+    without changing the computed line-height of the block, so the first baseline
+    is not where the arithmetic says it is.</p>
+    <p class="lead">A first-line rule does the same thing more quietly, because
+    nothing in the computed style of the element mentions it at all.</p>
+  </section>
+
+  <section>
+    <h2>A table</h2>
+    <table>
+      <thead><tr><th>Engine</th><th>Cap height</th></tr></thead>
+      <tbody>
+        <tr><td>Chromium</td><td>rasterised</td></tr>
+        <tr><td>Firefox</td><td>scaled outline</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Direction and writing mode</h2>
+    <p dir="rtl" lang="ar">هذا النص يعمل من اليمين إلى اليسار.</p>
+    <p class="vertical" lang="ja">縦書きのテキスト。</p>
+  </section>
+
+  <section>
+    <h2>A scroll container</h2>
+    <div class="scroller">
+      <p>Text inside a box with its own scrollbar.</p>
+      <p>The second line is below the fold of its own container.</p>
+      <p>And the third is further down still.</p>
+    </div>
+  </section>
+
+  <section class="lazy">
+    <h2>Content visibility auto</h2>
+    <p>The browser may skip laying this out until it is scrolled near.</p>
+  </section>
+
+  <section>
+    <h2>Shadow DOM</h2>
+    <div id="shadow-host"></div>
+    <p>The paragraph above lives inside a shadow root, which a tree walker over
+    the light DOM never reaches.</p>
+  </section>
+
+  <section>
+    <h2>An iframe</h2>
+    <iframe title="same origin" srcdoc="<p style='font:16px serif'>Text in an iframe.</p>" width="260" height="60"></iframe>
+  </section>
+
+  <section class="deep">
+    <h2>Depth</h2>
+    <div><div><div><div><div><div><div><div><div><div><div><div><div><div>
+      <p>Fourteen wrappers deep, which is ordinary in a component tree.</p>
+    </div></div></div></div></div></div></div></div></div></div></div></div></div></div>
+  </section>
+
+  <section id="bulk">
+    <h2>Bulk</h2>
+  </section>
+
+<script>
+  /* A shadow root with real text in it. Open, because a closed one cannot be
+     reached by anything and there is nothing to test. */
+  const host = document.getElementById("shadow-host");
+  const root = host.attachShadow({ mode: "open" });
+  root.innerHTML =
+    "<style>p { font: 15.5px/1.6 serif; margin: 0 0 11px; }</style>" +
+    "<p>A paragraph inside an open shadow root.</p>" +
+    "<p>And a second one, so the count is not one.</p>";
+
+  /* Enough nodes to characterise the cost of a sweep. */
+  const bulk = document.getElementById("bulk");
+  for (let i = 0; i < 300; i++) {
+    const p = document.createElement("p");
+    p.textContent = "Bulk paragraph number " + (i + 1) + ", to measure the cost of a sweep.";
+    p.style.fontSize = (13 + (i % 7) * 0.7).toFixed(2) + "px";
+    bulk.appendChild(p);
+  }
+</script>
+</body>
+</html>

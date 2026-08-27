@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.9.0
+## 1.0.0
 
 First release as a standalone package. Extracted from the site it was built in,
 where it had lived as an internal tool for four months.
@@ -94,6 +94,71 @@ now fails the build on a NUL byte in any text file.
   horizontal grid.
 - **A size budget** on the single-file build, and a check that it still has no
   dependencies.
+
+
+### Fixed, second pass
+
+The first pass at this release stopped at the point where the fixtures were
+green. Pointing it at real pages found three more, and the pattern in all three
+is the same: a claim the tool made about itself that nothing checked.
+
+**The walk could not see shadow roots.** A `TreeWalker` does not cross a shadow
+boundary. On a page built out of web components almost all the text is on the
+other side of one, and the tool found none of it, seated none of it, and reported
+the page 100% on the grid. Silent and flattering, which is precisely what
+`gridConfig` validation exists to prevent elsewhere in this library. The walk was
+rewritten as a recursive descent that enters open roots; closed ones and frames
+are counted and reported rather than dropped out of the denominator.
+
+Blocks inside a shadow root are seated at runtime and reported as uncarryable by
+CSS, because a document stylesheet does not reach in: `::part()` exposes only
+what the component chose to expose, and the piercing combinator was removed from
+the platform years ago. `uniqueSelector()` returns null for them and they are
+counted in `SeatResult.inShadow`.
+
+**The sweep could exhaust its passes silently.** If the page was still moving on
+the last of `maxPasses` sweeps, the result described a layout the page was
+passing through rather than one it settled on, and nothing said so.
+`SeatResult.exhausted` now does.
+
+**`measureFontWithCap` took a line-height and ignored it.** The trim-both probe
+gives the same answer at every leading, which is a result rather than an
+omission, so the parameter went.
+
+### Added, second pass
+
+- **75 more browser tests**, taking the suite to 132 across three engines. The
+  new ones cover the walk, shadow roots, frames, the selector builder, the
+  verified export, and the CLI, which is a shipped binary that had none at all.
+- **A torture fixture**: shadow roots, a frame, multi-column, drop capitals, a
+  table, right-to-left text, a vertical writing mode, `display: contents`,
+  `content-visibility: auto`, a scroll container, fourteen levels of nesting and
+  three hundred generated paragraphs. It seats 334 of 334 in two sweeps, in 75ms,
+  with no page errors and nothing malformed in the output.
+- **A specificity fixture** reproducing the Material Design 3 cascade defeat, so
+  the case is covered by CI rather than by remembering to run a script against
+  somebody else's deploy. Building it corrected an assumption: `!important` in
+  the page is not on its own enough to beat an escalated rule, because `p.locked`
+  carries more specificity than `.locked` and at equal importance specificity
+  still decides. Genuinely unbeatable needs both.
+- **Firefox 154 in the cap-height study.** Playwright bundles Firefox 153, one
+  release short of `text-box-trim`, so the study could only ever have reported
+  "Firefox: unsupported" and would have been describing Playwright rather than
+  Firefox. The suite now drives the machine's own Firefox over WebDriver BiDi
+  where one is new enough, and says in its output when it could not. That turns
+  the headline finding from a two-engine result plus an inference into a
+  three-engine measurement: 124 of 124 rows agreeing within 0.5px, worst spread
+  0.022px, against 85 of 124 and 0.864px for the canvas route.
+- **`npm run wild`**: the round trip against five live design systems. GOV.UK
+  100%, Polaris 100%, Tailwind 99%, Material Design 3 100%, Ant Design 98%.
+- **An encoding gate**, after a NUL byte in a template literal made a function
+  report nine escalations and perform zero.
+
+### Changed, second pass
+
+- The single-file budget went from 16 kB to 20 kB, and it is worth recording that
+  it was raised rather than met. Crossing shadow boundaries cost 2.7 kB and bought
+  the difference between measuring a component-built page and lying about one.
 
 ### Findings
 

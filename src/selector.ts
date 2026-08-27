@@ -68,6 +68,18 @@ function nthOfParent(el: Element): string {
 export function uniqueSelector(el: Element): string | null {
   if (!el.ownerDocument || !el.isConnected) return null;
 
+  /*
+     Inside a shadow root there is nothing to return. A document stylesheet does
+     not reach in, `::part()` only exposes what the component chose to expose,
+     and `>>>` was removed from the platform years ago. The seater can still move
+     these at runtime; the export cannot carry them, and saying so is the whole
+     job of this returning null.
+  */
+  const root = el.getRootNode();
+  if (root !== el.ownerDocument && typeof ShadowRoot !== "undefined" && root instanceof ShadowRoot) {
+    return null;
+  }
+
   const tag = el.tagName.toLowerCase();
 
   /* 1. An id, if it is unique and addressable. Duplicate ids are invalid HTML

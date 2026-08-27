@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>quoin fixture: CSS that outranks the export</title>
+<style>
+  /* Material Design 3 in miniature.
+
+     The export builds the most specific selector the document offers for each
+     element, which for a class-bearing element is a tag plus its classes. That
+     is two or three components of specificity. A component framework routinely
+     emits more: Angular scopes every rule with a generated attribute, so
+     `.title[_ngcontent-abc] .description[_ngcontent-abc]` carries four, and it
+     wins.
+
+     Discovering this cost a real page: seat gave 123 of 123 and the exported
+     stylesheet gave 18 of 123, because nine overruled line-heights left every
+     block below them 2px short. Fixtures could not have caught it, because a
+     fixture only contains the CSS its author thought to write. So now one does. */
+
+  html { font-family: serif; }
+  body { margin: 0; font-size: 16.5px; line-height: 1.45; }
+
+  /* Ordinary, and beatable by the export. */
+  p { margin: 0 0 13px; }
+
+  /* Four components: two classes and two attributes. Nothing the export can
+     generate reaches this without !important. */
+  .card[data-scope] .body[data-scope] { line-height: 30px; }
+  .card[data-scope] .lede[data-scope] { line-height: 27px; padding-top: 3px; }
+
+  /* Genuinely unwinnable, and it took a failing test to get it right.
+
+     The first version of this rule was `.locked { line-height: 25px !important }`
+     and the export beat it, because `p.locked` carries one more component of
+     specificity than `.locked` does and at equal importance specificity still
+     decides. So `!important` in the page is not on its own enough to defeat an
+     escalated rule, which is a better result than expected and a worse fixture.
+
+     Unbeatable needs both: important AND more specific than anything the export
+     can generate for an element with no id. Two classes and two attributes is
+     four components; the longest structural path the export builds for this
+     element reaches three. */
+  .card[data-scope] .locked[data-scope] { line-height: 25px !important; }
+</style>
+</head>
+<body>
+  <div class="card" data-scope>
+    <p class="lede" data-scope>A lede whose leading is set by a four-component
+    selector, so a class-based rule from the export loses to it.</p>
+
+    <p class="body" data-scope>A body paragraph in the same position. If its
+    line-height stays where the page put it, every block below this one is short
+    by the difference, and the whole column drifts.</p>
+
+    <p class="body" data-scope>A second body paragraph, so the drift compounds
+    rather than being a single block's problem.</p>
+
+    <p>An ordinary paragraph, which the export corrects without any trouble at
+    all, and which is here so the fixture has a control.</p>
+
+    <p class="locked" data-scope>A paragraph whose line-height is already marked important,
+    which nothing appended later can outrank at equal specificity. The honest
+    answer is to report it, not to claim it.</p>
+
+    <p>A closing paragraph, far enough down the column that any drift above it
+    has accumulated by the time it is measured.</p>
+  </div>
+</body>
+</html>

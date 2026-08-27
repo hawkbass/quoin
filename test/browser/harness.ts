@@ -19,6 +19,8 @@ export interface InPage {
     results: TextNodeResult[];
     report: GridReport;
     skippedTransformed: number;
+    closedShadowRoots: number;
+    frames: number;
   };
   seatPage: (o?: SeatOptions) => SeatResult;
   exportCss: (r: SeatResult, o?: ExportOptions) => string;
@@ -34,9 +36,17 @@ export interface InPage {
   };
   offGrid: (r: TextNodeResult[], limit?: number) => TextNodeResult[];
   uniqueSelector: (el: Element) => string | null;
-  textBlocks: (root?: Element, ignore?: readonly string[]) => Element[];
+  matchesOnly: (selector: string, el: Element) => boolean;
+  describe: (el: Element) => string;
+  textBlocks: (root?: Element, ignore?: readonly string[], o?: { crossShadow?: boolean }) => Element[];
+  walk: (root?: Element | ShadowRoot, o?: { ignore?: readonly string[]; crossShadow?: boolean }) => {
+    blocks: Element[];
+    closedShadowRoots: number;
+    frames: number;
+  };
+  inShadowRoot: (el: Element) => boolean;
   measureFont: (font: string, size?: number) => Record<string, number | string>;
-  measureFontWithCap: (font: string, lh: number, size?: number) => Record<string, number | string>;
+  measureFontWithCap: (font: string, size?: number) => Record<string, number | string>;
   capOvershootFromFontTable: (font: string, lh: number) => number | null;
   capHeightFromFontTable: (font: string) => number | null;
   canReadFontTableCapHeight: () => boolean;

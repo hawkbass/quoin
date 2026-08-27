@@ -10,8 +10,15 @@ const { version } = JSON.parse(readFileSync("package.json", "utf8"));
 
 /* The single file is meant to be pasted into a console, injected into somebody
    else's page, or served off a CDN. All three stop being reasonable somewhere,
-   and this is where. */
-const BUDGET_KB = 16;
+   and this is where.
+
+   Raised from 16 to 20 when the walk learned to cross shadow boundaries, which
+   cost 2.7 kB. Worth recording that it was raised rather than met: a budget
+   quietly edited upward every time it fails is not a budget. This one bought
+   the difference between measuring a page built out of web components and
+   reporting it 100% correct because the text was somewhere the walk could not
+   see. */
+const BUDGET_KB = 20;
 
 rmSync("dist", { recursive: true, force: true });
 mkdirSync("dist", { recursive: true });

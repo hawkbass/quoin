@@ -41,10 +41,15 @@ export {
   offGrid,
   textBlocks,
   NON_TEXT,
+  inShadowRoot,
   type TextNodeResult,
   type VerifyOptions,
   type VerifyResult,
+  type WalkOptions,
+  type WalkResult,
 } from "./verify.ts";
+
+export { walk } from "./walk.ts";
 
 export {
   seatPage,

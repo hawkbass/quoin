@@ -8,6 +8,11 @@
       "firefox",
       "webkit"
     ],
+    "builds": {
+      "chromium": "Playwright Chromium 151.0.7922.34",
+      "firefox": "system Firefox 154.0.1",
+      "webkit": "Playwright WebKit 26.5"
+    },
     "tolerance": 0.5,
     "caveat": "Playwright's WebKit is not Safari: same engine, without Apple's font stack or CoreText rasterisation. Good evidence about the engine, weak evidence about the browser."
   },
@@ -39,7 +44,7 @@
           "ascent": 16,
           "descent": 4,
           "capRaster": 11.91796875,
-          "capTable": null,
+          "capTable": 11.916671752929688,
           "xHeight": 8.05078125,
           "resolved": "18px serif",
           "widthSignature": 300.67,
@@ -58,10 +63,10 @@
       },
       "baselineSpread": 0,
       "capRasterSpread": 0.08,
-      "capTableSpread": null,
+      "capTableSpread": 0.02,
       "definitionGap": {
         "chromium": -0.08,
-        "firefox": null,
+        "firefox": 0,
         "webkit": -0.09
       }
     },
@@ -92,7 +97,7 @@
           "ascent": 16,
           "descent": 4,
           "capRaster": 12.884765625,
-          "capTable": null,
+          "capTable": 12.899993896484375,
           "xHeight": 9.333984375,
           "resolved": "18px sans-serif",
           "widthSignature": 315.13,
@@ -111,10 +116,10 @@
       },
       "baselineSpread": 0,
       "capRasterSpread": 0.12,
-      "capTableSpread": null,
+      "capTableSpread": 0.01,
       "definitionGap": {
         "chromium": -0.11,
-        "firefox": null,
+        "firefox": 0.02,
         "webkit": -0.11
       }
     },
@@ -145,7 +150,7 @@
           "ascent": 17,
           "descent": 5,
           "capRaster": 11.4873046875,
-          "capTable": null,
+          "capTable": 11.48333740234375,
           "xHeight": 8.82421875,
           "resolved": "18px monospace",
           "widthSignature": 297,
@@ -164,10 +169,10 @@
       },
       "baselineSpread": 1,
       "capRasterSpread": 1.49,
-      "capTableSpread": null,
+      "capTableSpread": 1.2,
       "definitionGap": {
         "chromium": 0.48,
-        "firefox": null,
+        "firefox": 0,
         "webkit": 0.28
       }
     },
@@ -188,7 +193,7 @@
           "ascent": 17,
           "descent": 4,
           "capRaster": 13,
-          "capTable": 12.96875,
+          "capTable": 12.46875,
           "xHeight": 9,
           "resolved": "18px Georgia, serif",
           "widthSignature": 319.97,
@@ -198,7 +203,7 @@
           "ascent": 17,
           "descent": 4,
           "capRaster": 12.4716796875,
-          "capTable": null,
+          "capTable": 12.466659545898438,
           "xHeight": 8.666015625,
           "resolved": "18px Georgia, serif",
           "widthSignature": 319.95,
@@ -217,10 +222,10 @@
       },
       "baselineSpread": 0,
       "capRasterSpread": 0.53,
-      "capTableSpread": null,
+      "capTableSpread": 0,
       "definitionGap": {
-        "chromium": -0.03,
-        "firefox": null,
+        "chromium": -0.53,
+        "firefox": -0.01,
         "webkit": -0.53
       }
     },
@@ -251,7 +256,7 @@
           "ascent": 16,
           "descent": 4,
           "capRaster": 12.884765625,
-          "capTable": null,
+          "capTable": 12.899993896484375,
           "xHeight": 9.333984375,
           "resolved": "18px Arial, sans-serif",
           "widthSignature": 315.13,
@@ -270,10 +275,10 @@
       },
       "baselineSpread": 0,
       "capRasterSpread": 0.12,
-      "capTableSpread": null,
+      "capTableSpread": 0.01,
       "definitionGap": {
         "chromium": -0.11,
-        "firefox": null,
+        "firefox": 0.02,
         "webkit": -0.11
       }
     },
@@ -304,7 +309,7 @@
           "ascent": 16,
           "descent": 4,
           "capRaster": 11.91796875,
-          "capTable": null,
+          "capTable": 11.916671752929688,
           "xHeight": 8.05078125,
           "resolved": "18px \"Times New Roman\", serif",
           "widthSignature": 300.67,
@@ -323,10 +328,10 @@
       },
       "baselineSpread": 0,
       "capRasterSpread": 0.08,
-      "capTableSpread": null,
+      "capTableSpread": 0.02,
       "definitionGap": {
         "chromium": -0.08,
-        "firefox": null,
+        "firefox": 0,
         "webkit": -0.09
       }
     },
@@ -357,7 +362,7 @@
           "ascent": 19,
           "descent": 5,
           "capRaster": 12.603515625,
-          "capTable": null,
+          "capTable": 12.600006103515625,
           "xHeight": 9,
           "resolved": "18px system-ui, sans-serif",
           "widthSignature": 300.95,
@@ -376,10 +381,10 @@
       },
       "baselineSpread": 1,
       "capRasterSpread": 0.4,
-      "capTableSpread": null,
+      "capTableSpread": 0.29,
       "definitionGap": {
         "chromium": -0.39,
-        "firefox": null,
+        "firefox": 0,
         "webkit": -0.11
       }
     }
@@ -389,50 +394,50 @@
       "size": 12,
       "rasterWorstPx": 1.05,
       "rasterWorstPercent": 8.79,
-      "tableWorstPx": null,
-      "tableWorstPercent": null
+      "tableWorstPx": 0.81,
+      "tableWorstPercent": 6.77
     },
     {
       "size": 14,
       "rasterWorstPx": 1,
       "rasterWorstPercent": 7.14,
-      "tableWorstPx": null,
-      "tableWorstPercent": null
+      "tableWorstPx": 0.95,
+      "tableWorstPercent": 6.81
     },
     {
       "size": 16,
       "rasterWorstPx": 1.21,
       "rasterWorstPercent": 7.57,
-      "tableWorstPx": null,
-      "tableWorstPercent": null
+      "tableWorstPx": 1.08,
+      "tableWorstPercent": 6.74
     },
     {
       "size": 18,
       "rasterWorstPx": 1.49,
       "rasterWorstPercent": 8.26,
-      "tableWorstPx": null,
-      "tableWorstPercent": null
+      "tableWorstPx": 1.2,
+      "tableWorstPercent": 6.68
     },
     {
       "size": 24,
       "rasterWorstPx": 1.32,
       "rasterWorstPercent": 5.49,
-      "tableWorstPx": null,
-      "tableWorstPercent": null
+      "tableWorstPx": 1.61,
+      "tableWorstPercent": 6.72
     },
     {
       "size": 32,
       "rasterWorstPx": 1.42,
       "rasterWorstPercent": 4.44,
-      "tableWorstPx": null,
-      "tableWorstPercent": null
+      "tableWorstPx": 2.14,
+      "tableWorstPercent": 6.69
     },
     {
       "size": 48,
       "rasterWorstPx": 3,
       "rasterWorstPercent": 6.25,
-      "tableWorstPx": null,
-      "tableWorstPercent": null
+      "tableWorstPx": 3.22,
+      "tableWorstPercent": 6.71
     }
   ],
   "quantisation": {
@@ -447,7 +452,7 @@
       "readings": 49,
       "rasterWholePixels": 0,
       "tableWholePixels": 0,
-      "supportsTrim": false,
+      "supportsTrim": true,
       "rasterisedFlag": false
     },
     "webkit": {
@@ -484,8 +489,8 @@
     ],
     "baselineAgreeing": 5,
     "capRasterAgreeing": 0,
-    "capTableComparable": 0,
-    "capTableAgreeing": 0,
+    "capTableComparable": 7,
+    "capTableAgreeing": 1,
     "rasterExceedsTolerance": [
       {
         "font": "monospace",
@@ -496,6 +501,11 @@
         "spread": 0.53
       }
     ],
-    "tableExceedsTolerance": []
+    "tableExceedsTolerance": [
+      {
+        "font": "monospace",
+        "spread": 1.2
+      }
+    ]
   }
 }

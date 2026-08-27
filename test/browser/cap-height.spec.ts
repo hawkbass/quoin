@@ -27,7 +27,8 @@
    it. Only the second one licenses "portable". */
 
 import { test, expect } from "@playwright/test";
-import { chromium, firefox, webkit, type Browser } from "@playwright/test";
+import type { Browser } from "@playwright/test";
+import { launchEngines, closeEngines, type Engine } from "./engines.ts";
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 
@@ -188,6 +189,11 @@ async function measureIn(browser: Browser, baseURL: string, fonts: FontEntry[], 
   return data;
 }
 
+/* These drive their own browsers, so running the file under all three Playwright
+   projects would run the same work three times and report it as three results.
+   Pinned to one project; the engines are covered inside the test. */
+test.skip(({ browserName }) => browserName !== "chromium", "drives its own browsers");
+
 const round = (n: number) => Math.round(n * 1000) / 1000;
 const spread = (values: number[]) =>
   values.length > 1 ? round(Math.max(...values) - Math.min(...values)) : null;
@@ -201,14 +207,8 @@ test("cap height across three engines and the whole font corpus", async ({ baseU
     "font corpus not downloaded: run `npm run fonts` first"
   );
 
-  const engines: { name: string; browser: Browser }[] = [];
-  for (const [name, type] of [
-    ["chromium", chromium],
-    ["firefox", firefox],
-    ["webkit", webkit],
-  ] as const) {
-    engines.push({ name, browser: await type.launch() });
-  }
+  const engines: Engine[] = await launchEngines();
+  const builds = Object.fromEntries(engines.map((e) => [e.name, e.build]));
 
   const byEngine: Record<string, Awaited<ReturnType<typeof measureIn>>> = {};
   try {
@@ -216,7 +216,7 @@ test("cap height across three engines and the whole font corpus", async ({ baseU
       byEngine[engine.name] = await measureIn(engine.browser, baseURL!, fonts, SIZES);
     }
   } finally {
-    for (const engine of engines) await engine.browser.close();
+    await closeEngines(engines);
   }
 
   const names = Object.keys(byEngine);
@@ -300,6 +300,7 @@ test("cap height across three engines and the whole font corpus", async ({ baseU
     fonts: fonts.length,
     sizes: SIZES,
     enginesTested: names,
+    builds,
     enginesWithTextBoxTrim: trimEngines,
     rows: rows.length,
     comparableRows: comparable.length,
@@ -360,6 +361,7 @@ test("cap height across three engines and the whole font corpus", async ({ baseU
   const pad = (s: unknown, n: number) => String(s).padEnd(n);
 
   console.log(`\n  ${fonts.length} fonts x ${SIZES.length} sizes x ${names.length} engines`);
+  for (const engine of engines) console.log(`    ${pad(engine.name, 12)}${engine.build}`);
   console.log(`  text-box-trim available in: ${trimEngines.join(", ") || "none"}`);
   console.log(`  raster cap heights land on whole pixels:`);
   for (const name of names) {
@@ -472,4 +474,24 @@ test("cap height across three engines and the whole font corpus", async ({ baseU
     summary.tableWithinTolerance,
     `every engine should agree on cap height within ${TOLERANCE}px`
   ).toBe(summary.comparableRows);
+
+  /*
+     With a system Firefox 154 or later this is a three-engine result rather
+     than a two-engine one plus an inference. Asserted so the study cannot
+     quietly regress to two engines the day somebody runs it on a machine
+     without one, without that being visible in the output.
+  */
+  const systemFirefox = engines.find((e) => e.name === "firefox")?.system ?? false;
+  if (systemFirefox) {
+    expect(
+      trimEngines.length,
+      `a system Firefox was used, so all three engines should read the font table: ${JSON.stringify(builds)}`
+    ).toBe(3);
+  } else {
+    console.log("");
+    console.log("  NOTE: Playwright's bundled Firefox predates text-box-trim, so Firefox");
+    console.log("  has no font-table column here. Install Firefox 154 or later and the");
+    console.log("  study picks it up by itself, turning a two-engine result into three.");
+    console.log("");
+  }
 });

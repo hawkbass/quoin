@@ -43,6 +43,11 @@ interface Row {
   skippedTransformed?: number;
 }
 
+/* These drive their own browsers, so running the file under all three Playwright
+   projects would run the same work three times and report it as three results.
+   Pinned to one project; the engines are covered inside the test. */
+test.skip(({ browserName }) => browserName !== "chromium", "drives its own browsers");
+
 test("measure the reference design systems", async ({ browser }) => {
   test.skip(!process.env.CORPUS, "set CORPUS=1 to measure twelve live sites");
   test.setTimeout(20 * 60_000);

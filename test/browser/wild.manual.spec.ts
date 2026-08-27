@@ -53,6 +53,11 @@ interface Result {
   stillLost?: number;
 }
 
+/* These drive their own browsers, so running the file under all three Playwright
+   projects would run the same work three times and report it as three results.
+   Pinned to one project; the engines are covered inside the test. */
+test.skip(({ browserName }) => browserName !== "chromium", "drives its own browsers");
+
 test("seat, export, delete the script, stay seated", async ({ browser }) => {
   test.skip(!process.env.WILD, "set WILD=1 to run against five live sites");
   test.setTimeout(20 * 60_000);

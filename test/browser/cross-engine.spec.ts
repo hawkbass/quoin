@@ -12,7 +12,8 @@
    height", and if the second one is portable then the documented limitation
    has a fix rather than a caveat. */
 
-import { test, expect, chromium, firefox, webkit, type Browser } from "@playwright/test";
+import { test, expect, type Browser } from "@playwright/test";
+import { launchEngines, closeEngines, type Engine } from "./engines.ts";
 import { writeFileSync, mkdirSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { baselineWithinLineBox } from "../../src/metrics.ts";
@@ -145,19 +146,18 @@ function spread(values: number[]): number | null {
   return values.length > 1 ? round(Math.max(...values) - Math.min(...values)) : null;
 }
 
+
+/* These drive their own browsers, so running the file under all three Playwright
+   projects would run the same work three times and report it as three results.
+   Pinned to one project; the engines are covered inside the test. */
+test.skip(({ browserName }) => browserName !== "chromium", "drives its own browsers");
+
 test("font metrics across three engines", async ({ baseURL }) => {
   test.setTimeout(300_000);
 
   const url = `${baseURL}/metrics.html`;
-  const engines: { name: string; browser: Browser }[] = [];
-
-  for (const [name, type] of [
-    ["chromium", chromium],
-    ["firefox", firefox],
-    ["webkit", webkit],
-  ] as const) {
-    engines.push({ name, browser: await type.launch() });
-  }
+  const engines: Engine[] = await launchEngines();
+  const builds = Object.fromEntries(engines.map((e) => [e.name, e.build]));
 
   const byEngine: Record<string, Awaited<ReturnType<typeof measureIn>>> = {};
   try {
@@ -165,7 +165,7 @@ test("font metrics across three engines", async ({ baseURL }) => {
       byEngine[engine.name] = await measureIn(engine.browser, url);
     }
   } finally {
-    for (const engine of engines) await engine.browser.close();
+    await closeEngines(engines);
   }
 
   const names = Object.keys(byEngine);
@@ -300,6 +300,7 @@ test("font metrics across three engines", async ({ baseURL }) => {
       lineHeight: LINE_HEIGHT,
       probe: "Hxp for the box, H and x for cap and x height; text-box-trim for the font table",
       engines: names,
+      builds,
       tolerance: 0.5,
       caveat:
         "Playwright's WebKit is not Safari: same engine, without Apple's font stack or " +

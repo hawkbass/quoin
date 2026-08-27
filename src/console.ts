@@ -45,7 +45,8 @@ export function install(
     version: VERSION,
 
     check(pitch = 8) {
-      const { results, report, skippedTransformed } = verifyGrid({ pitch });
+      const { results, report, skippedTransformed, closedShadowRoots, frames } =
+        verifyGrid({ pitch });
       console.log(
         `${report.onGrid} of ${report.total} on a ${pitch}px grid. ` +
           `Worst drift ${report.worst.toFixed(2)}px. ` +
@@ -61,6 +62,20 @@ export function install(
         console.log(
           `${skippedTransformed} nodes skipped: they sit under a CSS transform, ` +
             `so their measured position is in a different coordinate space.`
+        );
+      }
+      /* Regions this could not see. A percentage that quietly omits one is
+         worse than no percentage. */
+      if (closedShadowRoots > 0) {
+        console.log(
+          `${closedShadowRoots} shadow ${closedShadowRoots === 1 ? "root" : "roots"} ` +
+            `could not be entered, so any text inside is not in this count.`
+        );
+      }
+      if (frames > 0) {
+        console.log(
+          `${frames} ${frames === 1 ? "frame" : "frames"} on the page. ` +
+            `Their content is a different document: point this at the frame's own URL.`
         );
       }
       console.table(
@@ -105,10 +120,20 @@ export function install(
         `Padding moved ${levers.padding ?? 0}, offset moved ${levers.offset ?? 0}, ` +
           `${levers.none ?? 0} could not be moved.`
       );
+      if (seated.exhausted) {
+        console.log(
+          `The page was still moving on the last of ${seated.passes} sweeps, so it ` +
+            `has not converged. Raise maxPasses, or treat this as provisional.`
+        );
+      }
       if (seated.unexportable > 0) {
+        const shadow = seated.inShadow
+          ? ` ${seated.inShadow} of those are inside a shadow root, where the fix ` +
+            `belongs in the component rather than in your stylesheet.`
+          : "";
         console.log(
           `${seated.unexportable} corrected blocks have no unique selector and ` +
-            `will not appear in quoin.css().`
+            `will not appear in quoin.css().${shadow}`
         );
       }
       console.log("quoin.css() for the stylesheet, quoin.seat() again to undo.");

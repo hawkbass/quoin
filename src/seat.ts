@@ -22,7 +22,7 @@ import {
   snapLineHeight,
   type GridConfig,
 } from "./grid.ts";
-import { textBlocks } from "./verify.ts";
+import { walk, inShadowRoot } from "./walk.ts";
 import { describe, uniqueSelector } from "./selector.ts";
 
 export type SeatMode = "full" | "first-line";
@@ -80,6 +80,8 @@ export interface SeatedBlock {
   partial: boolean;
   /** True when the block ended up within tolerance. */
   seated: boolean;
+  /** True when the element lives inside a shadow root, so no rule can reach it. */
+  inShadow: boolean;
 }
 
 export interface SeatResult {
@@ -92,6 +94,26 @@ export interface SeatResult {
   missed: number;
   /** Blocks that were moved but have no selector that could carry the fix. */
   unexportable: number;
+  /**
+   * Of those, how many are inside a shadow root.
+   *
+   * A different problem from a block with an awkward selector, and it has a
+   * different answer: put the rule inside the component rather than in your
+   * stylesheet. Counted separately so the two do not read as one number.
+   */
+  inShadow: number;
+  /**
+   * True when the sweep hit `maxPasses` while blocks were still moving.
+   *
+   * The page has not converged, so the corrections describe a layout the page
+   * was passing through rather than one it settled on. Raise `maxPasses`, or
+   * treat the result as provisional.
+   */
+  exhausted: boolean;
+  /** Shadow roots the walk could not enter. */
+  closedShadowRoots: number;
+  /** Frames on the page, whose content is a different document. */
+  frames: number;
   /** Restore every element this touched to how it was. */
   undo: () => void;
 }
@@ -122,11 +144,15 @@ export function seatPage(options: SeatOptions = {}): SeatResult {
   const records = new Map<HTMLElement, SeatedBlock>();
 
   let passes = 0;
+  let stillMoving = 0;
+  let lastWalk = { closedShadowRoots: 0, frames: 0 };
   for (let pass = 0; pass < maxPasses; pass++) {
     passes = pass + 1;
-    const moved = seatOnce(root, ignore, grid, mode, maxGrowth, original, records);
+    const swept = seatOnce(root, ignore, grid, mode, maxGrowth, original, records);
+    stillMoving = swept.moved;
+    lastWalk = swept.walk;
     /* Nothing needed correcting, so another sweep would find the same. */
-    if (moved === 0) break;
+    if (swept.moved === 0) break;
   }
 
   /* Selectors last, and only for blocks that carry a correction. Each one runs
@@ -146,6 +172,12 @@ export function seatPage(options: SeatOptions = {}): SeatResult {
     passes,
     missed: blocks.filter((b) => b.lever === "none").length,
     unexportable: blocks.filter((b) => carriesCorrection(b) && b.selector === null).length,
+    inShadow: blocks.filter((b) => b.inShadow).length,
+    /* The sweep used every pass it had and the page was still moving on the
+       last one, so it has not converged. */
+    exhausted: passes >= maxPasses && stillMoving > 0,
+    closedShadowRoots: lastWalk.closedShadowRoots,
+    frames: lastWalk.frames,
     undo() {
       for (const [el, was] of original) {
         el.style.paddingTop = was.paddingTop;
@@ -178,10 +210,11 @@ function seatOnce(
   maxGrowth: number,
   original: Map<HTMLElement, Original>,
   records: Map<HTMLElement, SeatedBlock>
-): number {
+): { moved: number; walk: { closedShadowRoots: number; frames: number } } {
   let moved = 0;
+  const walked = walk(root, { ignore });
 
-  for (const node of textBlocks(root, ignore)) {
+  for (const node of walked.blocks) {
     const el = node as HTMLElement;
     if (el.getBoundingClientRect().height <= 0) continue;
 
@@ -261,6 +294,7 @@ function seatOnce(
           driftAfter: round(driftBefore),
           partial,
           seated: true,
+          inShadow: inShadowRoot(el),
         });
       }
       continue;
@@ -342,10 +376,14 @@ function seatOnce(
       driftAfter,
       partial,
       seated: Math.abs(driftAfter) <= grid.tolerance,
+      inShadow: inShadowRoot(el),
     });
   }
 
-  return moved;
+  return {
+    moved,
+    walk: { closedShadowRoots: walked.closedShadowRoots, frames: walked.frames },
+  };
 }
 
 function sampleOf(el: Element): string {

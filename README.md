@@ -11,7 +11,7 @@ quoin.seat()    // put it on. Call again to lift it back off.
 quoin.css()     // the corrections as a stylesheet you can ship
 ```
 
-MIT. No dependencies. 14 kB.
+MIT. No dependencies. 17 kB.
 
 ---
 
@@ -84,7 +84,7 @@ So it sweeps until nothing moves.
 ## Correcting
 
 ```ts
-import { seatPage, exportCss } from "quoin"
+import { seatPage, exportCssVerified } from "quoin"
 
 const seated = seatPage({
   pitch: 8,
@@ -93,8 +93,12 @@ const seated = seatPage({
 })
 
 console.log(`${seated.passes} sweeps, ${seated.missed} could not be moved`)
-console.log(exportCss(seated))   // ship this, delete the JavaScript
-seated.undo()                    // put it back
+
+// Applies the sheet, measures every declaration, escalates only what lost.
+// Undoes the seating, because that is the only state it can be tested in.
+const { css, check } = exportCssVerified(seated)
+console.log(css)
+if (!check.clean) console.log(`${check.lost.length} declarations the page overrules`)
 ```
 
 ### Two levers, and it picks by measuring
@@ -128,16 +132,11 @@ crooked as it started. The test covering it asserted that the output contained
 `padding-top` declarations. It did. It passed.
 
 It now builds a real selector for each corrected element and **verifies each one
-against the document** before writing it out, the same way the seater verifies
-its own corrections. Blocks it cannot address uniquely are counted in
-`result.unexportable` and named in a comment at the top of the stylesheet, rather
-than emitted as a rule that matches something else.
+against the document** before writing it out. Blocks it cannot address uniquely
+are counted in `result.unexportable` and named in a comment at the top of the
+stylesheet, rather than emitted as a rule that matches something else.
 
-The test that replaced the old one seats the page, exports, **undoes everything**,
-injects the stylesheet on its own, and re-measures. If the CSS does not reproduce
-the seating without the JavaScript, it fails.
-
-### The export has to be checked too, and that took a real page to find out
+### And the export has to be checked too, which took a real page to find out
 
 Fixtures prove the seater handles the cases it was built to handle, which is
 necessary and is also grading your own homework. So the round trip was run
@@ -150,8 +149,8 @@ with the script to **18 of 123** with the stylesheet.
 Every rule matched. Every rule matched exactly one element. No padding
 declaration was overruled. **Nine `line-height` declarations lost the cascade**,
 to a rule of the page's own with higher specificity: Angular emits
-`.title[_ngcontent-hfd-c28] .description[_ngcontent-hfd-c28]`, which is four
-components of specificity against the two a class-based selector can offer.
+`.title[_ngcontent-hfd-c28] .description[_ngcontent-hfd-c28]`, four components of
+specificity against the two a class-based selector can offer.
 
 Nine of 106 rules costing 105 of 123 blocks is not a rounding error, and the
 reason is the constraint that makes seating a page hard in the first place. A
@@ -164,19 +163,24 @@ So `exportCssVerified()` applies the sheet, measures every declaration against
 what was asked for, adds `!important` to **exactly** the ones measured to have
 lost, and checks again:
 
-| | Before | Seated | Stylesheet alone | Escalated |
-|---|---|---|---|---|
-| GOV.UK Design System | 16% | 100% | **100%** | 0 |
-| Shopify Polaris | 29% | 100% | **100%** | 1 |
-| Tailwind CSS | 11% | 100% | **99%** | 0 |
-| Material Design 3 | 17% | 100% | **100%** | 9 |
-| Ant Design | 21% | 98% | **98%** | 5 |
+| | Before | Seated | Stylesheet alone | Escalated | Still lost |
+|---|---|---|---|---|---|
+| GOV.UK Design System | 16% | 100% | **100%** | 0 | 0 |
+| Shopify Polaris | 29% | 100% | **100%** | 1 | 0 |
+| Tailwind CSS | 12% | 100% | **99%** | 0 | 0 |
+| Material Design 3 | 17% | 100% | **100%** | 9 | 0 |
+| Ant Design | 21% | 98% | **98%** | 5 | 5 |
 
 `npm run wild` reproduces it. Raw output in `findings/wild.json`.
 
 `!important` is a blunt instrument and it is applied here with a scalpel: only
-where a measurement showed the declaration lost, never pre-emptively. On the two
-pages where nothing lost, the output is byte-for-byte what `exportCss` produces.
+where a measurement showed the declaration lost, never pre-emptively. On the
+three pages where nothing lost, the output is byte-for-byte what `exportCss`
+produces.
+
+It does not always win, and it says so. A rule that is both `!important` **and**
+more specific than anything the export can generate cannot be beaten, and those
+are reported in `check.lost` rather than counted as corrected.
 
 ### What it costs
 
@@ -198,6 +202,41 @@ the text jump into place after first paint. Measure in the browser during
 development, export the stylesheet, paste it in, delete the script. The browser is
 where the font metrics live, so that is where the measuring has to happen. It is
 not where the fix has to ship.
+
+---
+
+## What it can see, and what it says it cannot
+
+A measuring tool that skips a region and does not mention it reports a number
+worse than no number. Three regions are genuinely hard, and each is handled
+rather than ignored.
+
+**Shadow roots are walked.** A `TreeWalker` does not cross a shadow boundary, and
+the first version of this used one. On the torture fixture it found 332 blocks,
+seated all 332, and called the page 100% correct while two paragraphs inside an
+open shadow root sat off the grid, unmeasured and unmentioned. The walk now
+descends into open roots. Closed ones are counted in `closedShadowRoots`, because
+there is no way in from outside and the text is still there.
+
+A block inside a shadow root can be **seated at runtime** and **cannot be carried
+by an exported stylesheet**: a document stylesheet does not reach in, `::part()`
+exposes only what the component chose to expose, and the piercing combinator was
+removed from the platform years ago. So `uniqueSelector()` returns null for them
+and they are counted separately in `result.inShadow`. The fix belongs inside the
+component.
+
+**Frames are counted, not walked.** A frame's content is a different document
+with its own layout origin, so a grid measured out here does not describe it.
+Point the tool at the frame's own URL.
+
+**Nodes under a transform are excluded and counted.** `getBoundingClientRect`
+reports the transformed box while `line-height` stays in untransformed px, so the
+two are in different coordinate spaces and a drift computed from them is not a
+drift. Reported in `skippedTransformed`. Pass `includeTransformed: true` if you
+want them anyway.
+
+**Vertical writing modes are skipped.** They have a baseline and it runs the
+other way. A horizontal grid has nothing to say about it.
 
 ---
 
@@ -227,8 +266,7 @@ no single phase.
 ## Finding: cap height travels now, and it did not before
 
 `text-box-trim` reached its third engine in August 2026. That changes the answer
-to a question this tool had previously answered "no", and the change is the
-useful kind, so here is the whole thing.
+to a question this tool had previously answered "no".
 
 **Reproduce:** `npm run fonts && npx playwright test test/browser/cap-height.spec.ts`.
 Raw output in `findings/cap-height.json`.
@@ -261,23 +299,32 @@ So: a copy of Space Mono declaring `sCapHeight: 600` where its own H is 700. A
 plausible number, well inside the em box, and simply not what the letters do.
 Same again on Lato, 1433 down to 1200, on a different units-per-em.
 
-At 18px, both Chromium and WebKit report **10.797px**, which is the declared
-value. The glyph is 12.6px. They read the table.
+At 18px all three engines report the declared value:
+
+| | declares | Chromium | Firefox 154 | WebKit | the actual glyph |
+|---|---|---|---|---|---|
+| AwkwardLies | 10.8 | 10.797 | 10.800 | 10.797 | 12.6 |
+| AwkwardLiesLato | 10.8 | 10.797 | 10.800 | 10.797 | 12.9 |
+
+They read the table.
 
 The other two manufactured fonts take the metric away instead: OS/2 dropped to
-version 1 so the field does not exist, and `sCapHeight` set to 0. Both engines
-fall back to the outline, and agree with each other on the fallback.
+version 1 so the field does not exist, and `sCapHeight` set to 0. A third
+declares 1400 on a 1000-unit em, which is taller than the em box. All three
+engines fall back to the outline in every case, and agree with each other on the
+fallback to within 0.016px.
 
 ### The result
 
-Over 124 comparable font-and-size rows, at 12, 16, 18, 24 and 48px:
+Over 124 comparable font-and-size rows, at 12, 16, 18, 24 and 48px, in three
+engines:
 
 | | agree within 0.5px | worst spread |
 |---|---|---|
-| Cap height via `text-box-edge: cap` | **124 / 124** | **0.016px** |
+| Cap height via `text-box-edge: cap` | **124 / 124** | **0.022px** |
 | Cap height via canvas `actualBoundingBoxAscent` | 85 / 124 | 0.864px |
 
-0.016px is 1/64 of a pixel, which is layout-unit quantisation rather than
+0.022px is under 1/32 of a pixel, which is layout-unit quantisation rather than
 disagreement. And where the font declares a usable `sCapHeight`, all 109 rows
 match `sCapHeight / unitsPerEm × size` to within **0.02px**, computed in Node
 straight out of the binary with no browser involved. Agreeing with each other
@@ -313,11 +360,12 @@ font that lies, which is why one had to be built to find out.
 `"font-table"` the number travels. On `"raster"` it belongs to the browser that
 produced it: compute and apply in the same browser, never ship the number.
 
-*Caveat, because it matters: Playwright's WebKit is not Safari. Same engine,
-without Apple's font stack or CoreText rasterisation. Good evidence about the
-engine, weak evidence about the browser. Playwright currently bundles Firefox
-153, which is one release short of `text-box-trim`, so Firefox's column in the
-font-table table is measured by inference from its canvas rather than directly.*
+*Two caveats, because they matter. Playwright's WebKit is not Safari: same engine,
+without Apple's font stack or CoreText rasterisation, so this is good evidence
+about the engine and weak evidence about the browser. And Playwright bundles
+Firefox 153, one release short of `text-box-trim`, so the suite drives the
+machine's own Firefox over WebDriver BiDi where one is installed and says in its
+output when it could not.*
 
 ---
 
@@ -372,7 +420,7 @@ It lands on display type, which is where this tool already declines to work.
 
 ## Finding: nobody has a baseline grid
 
-The tool bundles to 14 kB with no dependencies, so it can be dropped into any
+The tool bundles to 17 kB with no dependencies, so it can be dropped into any
 page. Pointed at the reference design systems, homepages at 1280px, half-pixel
 tolerance:
 
@@ -423,9 +471,9 @@ reset, a webfont that failed to load, and one heading with a `clamp()` that
 resolves to something the type scale never anticipated.
 
 ```ts
-import { verifyGrid, offGrid } from "quoin"
+import { verifyGrid } from "quoin"
 
-const { results, report, skippedTransformed } = verifyGrid({ pitch: 8 })
+const { report, skippedTransformed, closedShadowRoots, frames } = verifyGrid({ pitch: 8 })
 console.log(`${report.onGrid} of ${report.total} on grid`)
 console.log(`${report.distinctDrifts} distinct drift values`)
 if (report.systematic) console.log("one shared offset: check your origin")
@@ -438,14 +486,6 @@ un-snapped line-height, and it is a one-line fix. Scattered drift means your typ
 scale and your spacing scale disagree, which is a design problem wearing a CSS
 costume. The two look identical in a screenshot and want completely different
 responses.
-
-### Nodes under a transform are excluded, and counted
-
-`getBoundingClientRect` reports the transformed box while `line-height` stays in
-untransformed px, so the two are in different coordinate spaces and a drift
-computed from them is not a drift. Those nodes are reported in
-`skippedTransformed` rather than folded into a percentage they cannot be part of.
-Pass `includeTransformed: true` if you want them anyway.
 
 ---
 
@@ -473,11 +513,12 @@ Playwright, and says so plainly if you have not got it.
 | `seatPage(options)` | seat the whole page, returns an undo |
 | `exportCss(result, options?)` | the corrections as a stylesheet with real selectors |
 | `exportCssVerified(result, options?)` | the same, applied and re-measured, escalating only what lost |
-| `checkExport(result, css)` | which declarations the page's own CSS overruled |
+| `checkExport(result, css)` | which declarations the page's own CSS overrules |
 | `verifyGrid(options)` | walk a rendered page, report every line |
-| `textBlocks(root, ignore)` | every element that owns rendered words, in document order |
+| `walk(root, options?)` | every element owning words, plus what could not be entered |
+| `textBlocks(root, ignore)` | the same, blocks only |
 | `measureFont(shorthand, size?)` | ascent, descent, cap height, x height |
-| `measureFontWithCap(shorthand, lh)` | the same, with a cap height that travels. Check `capSource` |
+| `measureFontWithCap(shorthand)` | the same, with a cap height that travels. Check `capSource` |
 | `capHeightFromFontTable(shorthand)` | the font's own `sCapHeight`, via CSS. **Portable** |
 | `canReadFontTableCapHeight()` | whether this engine can do the above |
 | `capHeightIsRasterised(family?)` | whether this engine rounds cap heights to whole pixels |
@@ -487,7 +528,8 @@ Playwright, and says so plainly if you have not got it.
 | `snapLineHeight(preferred, grid)` | nearest line-height that keeps the rhythm |
 | `seatingShift(drift, grid)` | how far down to push a baseline to seat it |
 | `seatingPadding(within, blockTop, grid)` | top and bottom padding that sum to one grid row |
-| `uniqueSelector(el)` | a selector verified to match exactly that element |
+| `uniqueSelector(el)` | a selector verified to match exactly that element, or null |
+| `inShadowRoot(el)` | whether a stylesheet can reach it at all |
 | `gridConfig(options)` | validate a grid, or throw |
 
 Drift is signed rather than absolute, on purpose. A page where everything is 3px
@@ -513,8 +555,13 @@ red on 0.02px is a tool you uninstall on the second day.
 
 **It will not claim a correction it did not make.** Every seat is re-measured, and
 blocks it could not move are reported as missed rather than counted as fixed.
-Blocks it moved but could not build a selector for are reported separately, and
-named in the stylesheet.
+Blocks it moved but could not build a selector for are reported separately.
+Declarations the page's own CSS overrules are reported rather than assumed to
+have taken.
+
+**It will not pretend it saw everything.** Closed shadow roots, frames and
+transformed subtrees are counted and named rather than dropped out of a
+percentage.
 
 **It will not tell you your site is fine.** Pointed at the site that ships it, it
 reports 22.2% of text on grid before it runs.
@@ -543,28 +590,35 @@ Then `quoin.check()` in the console.
 ## Tests
 
 ```bash
-npm test              # the arithmetic, in Node, no browser
-npm run test:browser  # the walk, the seater, the CSS export, three engines
+npm test              # 43 unit tests: the arithmetic, in Node, no browser
+npm run test:browser  # 132 browser tests across Chromium, Firefox and WebKit
 npm run fonts         # download the 24-font corpus
 npm run corpus        # measure twelve live design systems
 npm run wild          # seat five of them and check the exported CSS holds
 ```
 
 The unit tests cover the pure maths against hand-computed cases, including the
-properties rather than the examples: that a shift never moves text upward, never
-exceeds one pitch, and always lands the baseline on the grid, swept across every
-sub-pixel drift in a whole row.
+properties rather than the examples: that a seating shift never moves text
+upward, never exceeds one pitch, and always lands the baseline on the grid, swept
+across every sub-pixel drift in a whole row.
 
 That paragraph was in this README for four months before the file existed. It is
 worth saying which way round that happened.
+
+The browser tests run against fixtures built to reproduce the cases the seater
+exists for: a flex row that defeats padding, a page with two phases and a page
+with one, a component framework's scoped selectors outranking the export, and a
+torture page with shadow roots, frames, multi-column, drop capitals, tables,
+right-to-left text, vertical writing, `display: contents`, `content-visibility`,
+fourteen levels of nesting and three hundred generated paragraphs.
 
 ---
 
 ## Status
 
-**0.9.** The arithmetic is tested, the seater and the CSS export are tested
-against fixtures that reproduce the cases they exist for, and the cross-engine
-findings are regenerated from live browsers rather than replayed from a
-recording.
+**1.0.** The arithmetic is tested, the seater and the CSS export are tested
+against fixtures that reproduce the cases they exist for and against five live
+design systems, and the cross-engine findings are regenerated from real browsers
+rather than replayed from a recording.
 
-Not published to npm. When it is, this line will say so, and not before.
+Not published to npm.

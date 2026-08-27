@@ -210,6 +210,8 @@ interface InPage {
     results: TextNodeResult[];
     report: GridReport;
     skippedTransformed: number;
+    closedShadowRoots: number;
+    frames: number;
   };
   seatPage: (o: unknown) => SeatResult;
   exportCss: (r: SeatResult, o?: unknown) => string;
@@ -249,10 +251,13 @@ switch (command) {
     const { browser, page } = await open(url, options);
 
     const data = await page.evaluate((o) => {
-      const { results, report, skippedTransformed } = quoin.verifyGrid(o);
+      const { results, report, skippedTransformed, closedShadowRoots, frames } =
+        quoin.verifyGrid(o);
       return {
         report,
         skippedTransformed,
+        closedShadowRoots,
+        frames,
         worst: quoin
           .offGrid(results, 12)
           .map((r) => ({ drift: r.drift, path: r.path, sample: r.sample })),
@@ -279,6 +284,12 @@ switch (command) {
       );
       if (data.skippedTransformed > 0) {
         console.log(`  ${data.skippedTransformed} skipped: under a CSS transform`);
+      }
+      if (data.closedShadowRoots > 0) {
+        console.log(`  ${data.closedShadowRoots} shadow roots could not be entered`);
+      }
+      if (data.frames > 0) {
+        console.log(`  ${data.frames} frames: a different document, measure them separately`);
       }
       console.log("");
       for (const row of data.worst) {
@@ -321,6 +332,8 @@ switch (command) {
           passes: seated.passes,
           missed: seated.missed,
           unexportable: seated.unexportable,
+          inShadow: seated.inShadow,
+          exhausted: seated.exhausted,
         };
       },
       { o: gridOptions, mode: options.mode, important: options.important }
@@ -350,7 +363,13 @@ switch (command) {
         `${data.missed} could not be moved`
     );
     if (data.unexportable > 0) {
-      console.log(`  ${data.unexportable} corrected blocks have no unique selector`);
+      console.log(
+        `  ${data.unexportable} corrected blocks have no unique selector` +
+          (data.inShadow > 0 ? `, ${data.inShadow} of them inside a shadow root` : "")
+      );
+    }
+    if (data.exhausted) {
+      console.log(`  the page had not converged after ${data.passes} sweeps: provisional`);
     }
     console.log(options.out ? `  CSS written to ${options.out}\n` : "");
     if (!options.out) console.log(data.css);

@@ -271,6 +271,11 @@ export function measureFont(font: string, knownSize?: number): FontMetrics {
  * Costs a layout, so the page walk uses `measureFont` and this is for when the
  * cap height is the number you actually want.
  *
+ * It takes no line-height, and that is a result rather than an omission: the
+ * trim-both probe below is measured to give the same answer at every leading
+ * from 26.5px to 40px, because cap height is a property of the font and not of
+ * the box you set it in. An earlier signature took one and ignored it.
+ *
  * ## Why there are two routes, and which one you get
  *
  * Canvas `actualBoundingBoxAscent` measures the glyph as drawn. Chromium and
@@ -298,15 +303,10 @@ export function measureFont(font: string, knownSize?: number): FontMetrics {
  * come apart only on a font that lies, which is why one had to be built to
  * find out.
  */
-export function measureFontWithCap(
-  font: string,
-  lineHeight: number,
-  knownSize?: number
-): FontMetrics {
+export function measureFontWithCap(font: string, knownSize?: number): FontMetrics {
   const metrics = measureFont(font, knownSize);
   const capHeight = capHeightFromFontTable(font);
   if (capHeight === null) return metrics;
-  void lineHeight;
   return { ...metrics, capHeight, capSource: "font-table" };
 }
 
