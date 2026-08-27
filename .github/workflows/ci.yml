@@ -37,7 +37,10 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
-      - run: npx playwright install --with-deps chromium firefox webkit
+      # The extension suite loads a real Manifest V3 extension, which only
+      # works in the newer headless build that `channel: "chromium"` selects.
+      - run: npm run build:extension:test
+      - run: npx playwright install --with-deps chromium chromium-headless-shell firefox webkit
       # Every spec that does not need the network. The manual ones skip
       # themselves; the font study runs in its own job.
       - run: npx playwright test --grep-invert "@network"

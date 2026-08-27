@@ -1,5 +1,6 @@
 node_modules/
 dist/
+dist-extension/
 .scratch/
 test-results/
 playwright-report/
@@ -11,3 +12,7 @@ blob-report/
 # findings can be read without them.
 test/browser/fixtures/fonts/*.ttf
 test/browser/fixtures/fonts/*.woff2
+
+# Only needed to sign a self-hosted .crx. The store issues its own id.
+extension-signing-key.pem
+dist-extension-test/

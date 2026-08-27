@@ -1,6 +1,6 @@
 {
   "name": "quoin",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "It puts a web page on a baseline grid. Seats every line of text on a rendered page, re-measures each correction, and exports CSS you can ship without the JavaScript.",
   "keywords": [
     "baseline-grid",
@@ -52,6 +52,8 @@
   },
   "scripts": {
     "build": "node scripts/build.mjs",
+    "build:extension": "npm run build && node scripts/build-extension.mjs",
+    "build:extension:test": "npm run build && node scripts/build-extension.mjs --test",
     "typecheck": "tsc --noEmit",
     "voice:check": "node scripts/check-voice.mjs",
     "encoding:check": "node scripts/check-encoding.mjs",

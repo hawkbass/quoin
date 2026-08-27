@@ -1,5 +1,56 @@
 # Changelog
 
+## 1.1.0
+
+A browser extension, and the reason it is an extension rather than a website.
+
+### Added
+
+- **A Manifest V3 extension** for Chromium and Firefox. It measures the page you
+  are on, draws the grid over it, seats it, and hands back the verified
+  stylesheet. `npm run build:extension`, then load `./dist-extension` unpacked.
+
+  It reports what it could not reach as plainly as what it could: closed shadow
+  roots, frames and transformed subtrees are named rather than dropped out of the
+  denominator. The panel also sweeps for the page's own best origin, because a
+  page can be perfectly rhythmic and score nought against an origin of zero,
+  which is a true reading and a useless one.
+
+- **`activeTab` rather than host permissions.** The install prompt says "read
+  your data on the site you are on" instead of "on all websites". The cost is
+  that the grant comes from a toolbar click, which nothing can automate, so the
+  test suite builds a second copy scoped to `127.0.0.1` and differing by that one
+  line.
+
+- **Eight tests that load the built extension into a real browser** and click the
+  buttons. An extension is four files that only run together in a context no unit
+  test reaches, so every defect in one lives where nothing else looks.
+
+### Why an extension and not a hosted playground
+
+A page's Content-Security-Policy governs script tags injected from outside, and a
+hosted "paste your URL" service has no other way in. Measured:
+
+| | Stripe | GitHub | Klim | Linear |
+|---|---|---|---|---|
+| `<script>` tag, which a hosted service must use | no | no | yes | yes |
+| `chrome.scripting`, which the extension uses | yes | yes | yes | yes |
+
+The two most famous URLs anyone would paste are the two it could not measure.
+
+### Fixed
+
+- **The grid button wrote its label into its own icon.** `firstChild.nextSibling`
+  found the swatch `<span>`, so toggling replaced the icon with text and left the
+  original label behind it, overlapping. Labels now have their own element.
+- **The score panel was revealed before it was filled**, so it showed a blank
+  readout for a frame, which reads as a hang on a page with a few thousand text
+  nodes. Filled first, revealed last.
+- **A fully seated page was described as "orderly"**, which is the message for a
+  page with few distinct drifts and is nonsense when there are none because
+  everything is on the grid. It now says so.
+
+
 ## 1.0.0
 
 First release as a standalone package. Extracted from the site it was built in,

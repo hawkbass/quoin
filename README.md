@@ -553,6 +553,43 @@ Playwright, and says so plainly if you have not got it.
 
 ---
 
+## The browser extension
+
+The console one-liner works everywhere, and typing it on every page you want to
+look at gets old. The extension is the same 17 kB with a panel on it.
+
+```bash
+npm run build:extension     # then load ./dist-extension unpacked
+```
+
+It measures the page you are on, draws the grid over it, seats it, and hands you
+the verified stylesheet. The panel reports what it could not reach as plainly as
+what it could: closed shadow roots, frames, and nodes under a transform are
+named rather than quietly dropped out of the denominator.
+
+**It asks for `activeTab`, not host permissions.** That is the difference between
+an install prompt saying "read your data on the site you are on" and one saying
+"read your data on all websites". A measuring tool has no business asking for the
+second, and the cost is real: `activeTab` is granted by a click on the toolbar
+icon, so the extension cannot be driven from outside without a second build. The
+test suite uses one, scoped to `127.0.0.1`, and it differs from the shipped
+extension by exactly that one line.
+
+**Why an extension rather than a hosted "paste your URL" page.** A page's
+Content-Security-Policy governs script tags injected from outside, and a hosted
+service has no other way in. Measured across four sites:
+
+| | Stripe | GitHub | Klim | Linear |
+|---|---|---|---|---|
+| a `<script>` tag, which a hosted service must use | no | no | yes | yes |
+| `chrome.scripting`, which the extension uses | yes | yes | yes | yes |
+
+The two most famous URLs anyone would paste into a playground are the two it
+could not measure. The extension injects in a world the page's policy does not
+govern, so it works everywhere the console does.
+
+---
+
 ## API
 
 | | |
@@ -642,6 +679,7 @@ npm run test:browser  # 132 browser tests across Chromium, Firefox and WebKit
 npm run fonts         # download the 24-font corpus
 npm run corpus        # measure twelve live design systems
 npm run wild          # seat five of them and check the exported CSS holds
+npm run build:extension:test && npx playwright test test/browser/extension.spec.ts
 ```
 
 The unit tests cover the pure maths against hand-computed cases, including the

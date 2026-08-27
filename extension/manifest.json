@@ -1,0 +1,44 @@
+{
+  "manifest_version": 3,
+  "name": "Quoin",
+  "version": "1.1.0",
+  "description": "Put a web page on a baseline grid. Measure any page, see the grid, seat the text, and take the CSS away with you.",
+  "homepage_url": "https://github.com/hawkbass/quoin",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Quoin: measure this page against a baseline grid",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "//permissions": "activeTab rather than host permissions, deliberately. It grants access to one tab, only after the user clicks the icon, and it is the difference between an install prompt that says 'read your data on the site you are on' and one that says 'read your data on all websites'. A measuring tool has no business asking for the second.",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage"
+  ],
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Alt+Shift+G"
+      },
+      "description": "Open Quoin"
+    }
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "quoin@craighawkes.dev",
+      "strict_min_version": "128.0"
+    }
+  },
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzaace5nvwt+n3hBo8ab18AUzAVyV5mbq8ltwc24R1ZDPzLK8di04tvAKf0Mng5cNmp5YOzl7V6Qfs9Oll1uCDog6BUTbe4JeW3oMZhW2UQS4qGWFpj59xImE6M7+53ZPKzExD2PfhvQC9W/VoN7Q4RnVIIZsH1p07WROhlbNdtIszwSaLI5Vz/hPPC9M9qlPC6J9U1q1FwlCD3+88rZBf8/iHSEX2Nmt8kYnLptYFvazrDwiXsZJHzmIIOwLDzbGwBlLVyMEhBoVfQNR4hIOnOSSR0ZxQdpPVimIyMyKBgSiHaNSrAeAksqwLy4wbX/YRURHwLy6bDrUNDI4qRnwJwIDAQAB"
+}

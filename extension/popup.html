@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Quoin</title>
+<link rel="stylesheet" href="popup.css">
+</head>
+<body>
+
+<header class="masthead">
+  <h1>Quoin</h1>
+  <p class="sub" id="host">measuring&hellip;</p>
+</header>
+
+<div class="score" id="score" hidden>
+  <div class="score-figure">
+    <b id="pct">&mdash;</b>
+    <span id="fraction">&nbsp;</span>
+  </div>
+  <div class="score-read">
+    <p id="verdict">&nbsp;</p>
+    <p class="drifts"><span id="drifts">&mdash;</span> distinct drift values</p>
+  </div>
+</div>
+
+<p class="banner" id="banner" hidden></p>
+
+<div class="controls">
+  <div class="row">
+    <label for="pitch">Pitch</label>
+    <div class="segmented" role="group" aria-label="Grid pitch">
+      <button type="button" data-pitch="4">4</button>
+      <button type="button" data-pitch="8" class="on">8</button>
+      <button type="button" data-pitch="12">12</button>
+      <button type="button" data-pitch="16">16</button>
+    </div>
+    <span class="unit">px</span>
+  </div>
+
+  <div class="row">
+    <label for="origin">Origin</label>
+    <output id="origin" class="reading">0.00px</output>
+    <button type="button" class="link" id="sweep">find the page's own</button>
+  </div>
+
+  <div class="row">
+    <label for="ignore">Ignore</label>
+    <input type="text" id="ignore" placeholder="h1, .display, [class*=hero]" spellcheck="false">
+  </div>
+</div>
+
+<div class="actions">
+  <button type="button" id="grid" class="btn">
+    <span class="swatch" aria-hidden="true"></span><span id="gridlabel">Show the grid</span>
+  </button>
+  <button type="button" id="seat" class="btn primary">Seat the page</button>
+</div>
+
+<div class="result" id="result" hidden></div>
+
+<div class="actions secondary">
+  <button type="button" id="copy" class="btn" disabled>Copy the CSS</button>
+  <button type="button" id="reset" class="btn quiet">Reset</button>
+</div>
+
+<details class="offenders" id="offendersWrap">
+  <summary>Worst offenders</summary>
+  <table id="offenders"><tbody></tbody></table>
+  <p class="hint">Signed: positive sits below the line, negative above.</p>
+</details>
+
+<footer>
+  <span id="version">quoin</span>
+  <a href="https://github.com/hawkbass/quoin" target="_blank" rel="noreferrer noopener">github.com/hawkbass/quoin</a>
+</footer>
+
+<script src="popup.js"></script>
+</body>
+</html>
