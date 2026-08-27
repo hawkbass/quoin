@@ -20,6 +20,7 @@ quoin: it puts a web page on a baseline grid
   quoin check <url>          how much of the page is on the grid
   quoin seat  <url>          seat it, and print the CSS that does the same
   quoin engine [url]         what this engine's font metrics do
+  quoin scale                solve a type scale that needs no correction
 
 Options
   --pitch <px>               grid pitch                        (default 8)
@@ -33,6 +34,9 @@ Options
   --min <percent>            exit non-zero below this         (check only)
   -o, --out <file>           write the CSS here                (seat only)
   --important                add !important to every rule      (seat only)
+  --font <stack>             CSS font family                 (scale only)
+  --sizes <a,b,c>            the sizes you want              (scale only)
+  --near <px>                how far from those is acceptable (default 3)
   --json                     machine-readable output
   -h, --help                 this
 
@@ -41,6 +45,7 @@ Examples
   npx quoin check https://example.com --pitch 4 --min 90
   npx quoin seat https://example.com -o baseline.css
   npx quoin engine --browser firefox
+  npx quoin scale --font "EB Garamond" --sizes 16,20,28,40
 `;
 
 interface Options {
@@ -54,6 +59,9 @@ interface Options {
   mode: "full" | "first-line";
   min: number | null;
   out: string | null;
+  font: string;
+  sizes: number[];
+  near: number;
   important: boolean;
   json: boolean;
 }
@@ -75,6 +83,9 @@ function parseArgs(argv: string[]): { command: string; url: string | null; optio
     mode: "full",
     min: null,
     out: null,
+    font: "serif",
+    sizes: [16, 20, 28, 40],
+    near: 3,
     important: false,
     json: false,
   };
@@ -131,6 +142,17 @@ function parseArgs(argv: string[]): { command: string; url: string | null; optio
           fail(`--mode wants full or first-line, got ${value}`);
         }
         options.mode = value;
+        break;
+      }
+      case "--font": options.font = next(); break;
+      case "--near": options.near = number(); break;
+      case "--sizes": {
+        const raw = next();
+        const parsed = raw.split(",").map((v) => Number.parseFloat(v.trim()));
+        if (parsed.some((v) => !Number.isFinite(v) || v <= 0)) {
+          fail(`--sizes wants a comma-separated list of positive numbers, got ${raw}`);
+        }
+        options.sizes = parsed;
         break;
       }
       case "-o":
@@ -217,6 +239,15 @@ interface InPage {
   exportCss: (r: SeatResult, o?: unknown) => string;
   offGrid: (r: TextNodeResult[], limit?: number) => TextNodeResult[];
   capHeightIsRasterised: () => boolean;
+  gridNativeScale: (font: string, o: unknown) => {
+    font: string;
+    phase: number;
+    spacing: number;
+    steps: { size: number; leading: number; ratio: number; rows: number; wanted: number; off: number }[];
+    missed: number[];
+    available: number[];
+  };
+  scaleToCss: (scale: unknown) => string;
   canReadFontTableCapHeight: () => boolean;
   measureFont: (font: string, size?: number) => Record<string, unknown>;
   version: string;
@@ -407,6 +438,66 @@ switch (command) {
         : "\n  Cap height here comes from the drawn glyph and does not travel.\n" +
             "  Compute and apply it in this browser, never ship the number.\n"
     );
+    break;
+  }
+
+  case "scale": {
+    /* Needs a browser for the font metrics and nothing else, so it measures
+       against a blank page rather than whatever URL happened to be passed. */
+    const target = url ?? "about:blank";
+    const { browser, page } = await open(target, options);
+
+    /* The family has to be loadable in that page. A local file or a webfont
+       the page does not link is a request for a fallback, and a scale solved
+       against a fallback describes the wrong typeface. */
+    const solved = await page.evaluate(
+      ({ font, sizes, near, pitch }) => {
+        const scale = quoin.gridNativeScale(font, {
+          pitch,
+          targets: sizes,
+          near,
+        });
+        return { scale, css: quoin.scaleToCss(scale) };
+      },
+      { font: options.font, sizes: options.sizes, near: options.near, pitch: options.pitch }
+    );
+
+    await browser.close();
+
+    if (options.out) writeFileSync(options.out, solved.css, "utf8");
+
+    if (options.json) {
+      console.log(JSON.stringify(solved.scale, null, 2));
+      break;
+    }
+
+    const s = solved.scale;
+    console.log(`\n  ${s.font}`);
+    console.log(
+      `  ${options.pitch}px grid, shared phase ${s.phase}px, ` +
+      `solved sizes about ${s.spacing}px apart`
+    );
+    console.log("");
+    console.log("  wanted    size      leading   ratio   rows   off by");
+    for (const step of s.steps) {
+      console.log(
+        "  " + String(step.wanted + "px").padEnd(10) +
+        String(step.size + "px").padEnd(10) +
+        String(step.leading + "px").padEnd(10) +
+        String(step.ratio).padEnd(8) +
+        String(step.rows).padEnd(7) +
+        (step.off === 0 ? "exact" : (step.off > 0 ? "+" : "") + step.off)
+      );
+    }
+    if (s.missed.length) {
+      console.log(`\n  no solved size within ${options.near}px of: ${s.missed.join(", ")}`);
+    }
+    console.log(
+      `\n  Set the grid origin to ${s.phase}px and keep every vertical distance a` +
+      `\n  whole number of ${options.pitch}px rows. Nothing then needs correcting.`
+    );
+    if (options.out) console.log(`\n  CSS written to ${options.out}\n`);
+    else console.log("\n" + solved.css + "\n");
     break;
   }
 

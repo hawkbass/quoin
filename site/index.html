@@ -263,6 +263,98 @@
 </section>
 
 <!-- ============================================================
+     Solving instead of correcting
+     ============================================================ -->
+<section class="solve">
+  <div class="shell">
+    <div class="column">
+      <h2>Or don't correct it at all</h2>
+      <p class="lede">
+        Everything above is remedial. It measures a page that is off the grid
+        and pushes each block into place. There is a constructive answer, and
+        for new work it makes the corrector unnecessary.
+      </p>
+      <p>
+        A block's phase, meaning where its first baseline sits inside its own
+        line box, is half the leading plus the ascent. Written out, with
+        <code>A</code> and <code>D</code> as the font's per-em ascent and
+        descent, that is
+      </p>
+      <p class="formula"><code>phase(S, L) = L/2 + S(A &minus; D)/2</code></p>
+      <p>
+        <strong>If every size and leading on a page produces the same phase,
+        one grid origin seats the whole page.</strong> The phase is identical,
+        so the correction would be identical, so it folds into where the grid
+        starts. There is nothing left to correct.
+      </p>
+    </div>
+
+    <div class="tablewrap tight">
+      <table class="compact">
+        <caption><code>npx quoin scale --font "EB Garamond" --sizes 16,28,44</code></caption>
+        <thead><tr><th scope="col">Wanted</th><th scope="col">Size</th><th scope="col">Leading</th><th scope="col">Ratio</th><th scope="col">Rows</th><th scope="col">Off by</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">16px</th><td>17.5px</td><td>24px</td><td>1.37</td><td>3</td><td>+1.5</td></tr>
+          <tr><th scope="row">28px</th><td>28.5px</td><td>48px</td><td>1.68</td><td>6</td><td>+0.5</td></tr>
+          <tr><th scope="row">44px</th><td>42px</td><td>56px</td><td>1.33</td><td>7</td><td>&minus;2</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="column">
+      <h3>What it costs, and it is a real cost</h3>
+      <p>
+        Solved sizes sit <code>pitch / (A &minus; D)</code> apart, which is 11
+        to 12 pixels for a text face on an 8px grid. You take the nearest solved
+        size rather than the round number you had in mind, and
+        <strong>two targets closer together than that spacing cannot both be
+        met.</strong> Ask for 16 and 20 and it gives you one and says why.
+      </p>
+      <p>
+        Refusing is the point. The first version of the solver answered 17px and
+        17.5px, which satisfies both requests and is one step and a rounding
+        error.
+      </p>
+    </div>
+
+    <div class="tablewrap tight">
+      <table class="compact">
+        <caption>The spacing belongs to the typeface, so it differs. Measured at 400px, where the rounding in ascent and descent is under a tenth of a percent.</caption>
+        <thead><tr><th scope="col">Typeface</th><th scope="col">Spacing</th><th scope="col">Phase</th><th scope="col">A solved scale</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Georgia</th><td>11.47px</td><td>2.0px</td><td>17 / 28 / 40.5</td></tr>
+          <tr><th scope="row">Arial</th><td>11.55px</td><td>2.0px</td><td>16.5 / 28.5 / 41</td></tr>
+          <tr><th scope="row">Times New Roman</th><td>11.90px</td><td>1.5px</td><td>16 / 28 / 40.5</td></tr>
+          <tr><th scope="row">EB Garamond</th><td>11.27px</td><td>2.5px</td><td>17.5 / 28.5 / 42</td></tr>
+          <tr><th scope="row">JetBrains Mono</th><td>11.11px</td><td>2.5px</td><td>17.5 / 28 / 40.5</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="column">
+      <p class="pull">
+        This is the trade print has always made. It is why the checkbox in
+        InDesign changes your leading when you tick it.
+      </p>
+      <h3>And it checks the font actually loaded</h3>
+      <p>
+        A scale solved against a font that did not render describes a typeface
+        nobody is going to set in, and the obvious check does not work:
+        <code>ctx.font</code> reads back the family you <em>asked for</em>, so a
+        font nobody has installed hands its own name straight back while the
+        measurement comes off the fallback.
+      </p>
+      <p>
+        Solving for Inter on a page that never loaded it produced numbers
+        identical to Times New Roman, down to the last step, with the shorthand
+        saying Inter throughout. It now probes widths against two different
+        fallbacks and warns in the stylesheet rather than quietly lying.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
      Findings
      ============================================================ -->
 <section class="findings">

@@ -1,5 +1,62 @@
 # Changelog
 
+## 1.3.0
+
+Solving instead of correcting.
+
+Everything in this library up to now was remedial: measure a page that is off the
+grid, push each block into place, hand back a stylesheet to regenerate whenever
+the copy changes. This release adds the constructive answer, and for new work it
+makes the corrector unnecessary.
+
+### Added
+
+**`gridNativeScale(font, options)` and `quoin scale`.** A block's phase is
+`L/2 + S(A - D)/2`, with `A` and `D` the font's per-em ascent and descent. If
+every size-and-leading pair on a page produces the same phase, one grid origin
+seats the whole page and there is nothing left to correct.
+
+```
+npx quoin scale --font "EB Garamond" --sizes 16,28,44
+
+  8px grid, shared phase 2.5px, solved sizes about 11.27px apart
+  16px   17.5px / 24px   ratio 1.37   +1.5
+  28px   28.5px / 48px   ratio 1.68   +0.5
+  44px   42px   / 56px   ratio 1.33   -2
+```
+
+`test/browser/scale.spec.ts` builds a page out of a solved scale and asserts the
+seater finds nothing to do. It finds nothing to do.
+
+**The cost is real and it is reported.** Solved sizes sit `pitch / (A - D)`
+apart, 11 to 12px for a text face on an 8px grid, so two targets closer together
+than that cannot both be met. Ask for 16 and 20 and it gives you one and names
+the other as missed. The first version of the solver answered 17px and 17.5px,
+which satisfies both and is one step and a rounding error.
+
+**`GridScale.resolved`.** A scale solved against a font that did not render
+describes a typeface nobody will set in, and the obvious check does not work.
+Solving for Inter on a page that never loaded it produced numbers identical to
+Times New Roman, down to the last step. It now probes widths against two
+different fallbacks, and the emitted CSS warns rather than quietly lying.
+
+### Fixed
+
+**`FontMetrics.font` was documented as "the shorthand the browser resolved".**
+It is not. `ctx.font` returns the specified value, normalised: request a font
+nobody has installed and it hands the name straight back while measuring
+something else. The doc comment now says so and points at `fontIsAvailable`.
+
+**`ScaleOptions.tolerance` meant two things.** The interface extends `GridConfig`,
+which already has a `tolerance` meaning how far a baseline may drift. Passing 4
+as a scale window threw a range error about the grid. Renamed to `near`.
+
+**The spacing figure was quantised by rounding.** Taken at 48px, where
+`fontBoundingBox` is rounded to whole pixels, six different typefaces reported an
+identical 11.64px. Taken at 400px they differ: Georgia 11.47, Arial 11.55,
+JetBrains Mono 11.11.
+
+
 ## 1.2.0
 
 quoin.dev, and three things building it found in the tool.

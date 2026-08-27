@@ -52,6 +52,14 @@ export {
 export { walk } from "./walk.ts";
 
 export {
+  gridNativeScale,
+  scaleToCss,
+  type GridScale,
+  type ScaleStep,
+  type ScaleOptions,
+} from "./scale.ts";
+
+export {
   seatPage,
   exportCss,
   exportCssVerified,

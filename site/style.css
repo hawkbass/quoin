@@ -263,6 +263,16 @@ a:hover { color: var(--ink); }
 /* 56 + content + 55 + 1px border = 112 */
 section { padding: 56px 0 55px; border-bottom: 1px solid var(--rule); }
 .survey, .get { background: var(--paper-lift); }
+.solve { background: var(--paper); }
+.formula {
+  font-family: var(--mono);
+  font-size: 15px;
+  line-height: 32px;
+  padding: 0 0 0 24px;
+  border-left: 3px solid var(--brass);
+  margin: 24px 0;
+}
+.formula code { background: none; padding: 0; font-size: inherit; }
 .findings { background: var(--ink); color: var(--paper-lift); }
 
 .split {

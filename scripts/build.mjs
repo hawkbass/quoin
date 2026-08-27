@@ -14,11 +14,17 @@ const { version } = JSON.parse(readFileSync("package.json", "utf8"));
 
    Raised from 16 to 20 when the walk learned to cross shadow boundaries, which
    cost 2.7 kB. Worth recording that it was raised rather than met: a budget
-   quietly edited upward every time it fails is not a budget. This one bought
+   quietly edited upward every time it fails is not a budget. That one bought
    the difference between measuring a page built out of web components and
    reporting it 100% correct because the text was somewhere the walk could not
-   see. */
-const BUDGET_KB = 20;
+   see.
+
+   Raised again from 20 to 24 for the scale solver, which is 2.5 kB and is the
+   only thing in here that prevents the problem rather than correcting it. It
+   stays in the console bundle rather than moving to the CLI because the
+   question it answers, what sizes would this font need, is one you ask while
+   looking at a page. */
+const BUDGET_KB = 24;
 
 rmSync("dist", { recursive: true, force: true });
 mkdirSync("dist", { recursive: true });

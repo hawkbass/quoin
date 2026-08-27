@@ -27,7 +27,14 @@ export interface FontMetrics {
   capSource: CapSource;
   /** Size these were taken at, so they can be rescaled. */
   fontSize: number;
-  /** The shorthand the browser resolved, which may not be the one asked for. */
+  /**
+   * The shorthand read back off the canvas after setting it.
+   *
+   * This is the specified value, normalised, and NOT proof that the family was
+   * found. `ctx.font` returns what you asked for: request a font nobody has
+   * installed and it hands the name straight back while measuring the fallback.
+   * Use `fontIsAvailable` to ask whether a family actually rendered.
+   */
   font: string;
 }
 

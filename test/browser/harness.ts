@@ -45,6 +45,16 @@ export interface InPage {
     frames: number;
   };
   inShadowRoot: (el: Element) => boolean;
+  gridNativeScale: (font: string, o?: unknown) => {
+    font: string;
+    resolved: boolean;
+    phase: number;
+    spacing: number;
+    steps: { size: number; leading: number; ratio: number; rows: number; wanted: number; off: number }[];
+    missed: number[];
+    available: number[];
+  };
+  scaleToCss: (scale: unknown, names?: string[]) => string;
   measureFont: (font: string, size?: number) => Record<string, number | string>;
   measureFontWithCap: (font: string, size?: number) => Record<string, number | string>;
   capOvershootFromFontTable: (font: string, lh: number) => number | null;

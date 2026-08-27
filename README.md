@@ -242,6 +242,88 @@ other way. A horizontal grid has nothing to say about it.
 
 ---
 
+## Solving instead of correcting
+
+Everything above is remedial. It measures a page that is off the grid and pushes
+each block into place, which works and leaves you regenerating a stylesheet every
+time the copy changes.
+
+There is a constructive answer, and for new work it makes the corrector
+unnecessary.
+
+A block's phase, meaning where its first baseline sits inside its own line box, is
+
+```
+phase(S, L) = (L - (ascent + descent)) / 2 + ascent
+            = L/2 + S(A - D)/2
+```
+
+with `A` and `D` the font's per-em ascent and descent. **If every size-and-leading
+pair on a page produces the same phase, one grid origin seats the whole page and
+there is nothing left to correct.** The phase is identical, so the correction
+would be identical, so it folds into where the grid starts.
+
+```bash
+npx quoin scale --font "EB Garamond" --sizes 16,28,44
+```
+
+```
+  EB Garamond
+  8px grid, shared phase 2.5px, solved sizes about 11.27px apart
+
+  wanted    size      leading   ratio   rows   off by
+  16px      17.5px    24px      1.37    3      +1.5
+  28px      28.5px    48px      1.68    6      +0.5
+  44px      42px      56px      1.33    7      -2
+```
+
+Set those, keep every vertical distance a whole number of rows, put the grid
+origin at 2.5px, and the page is on the grid with **no per-element rules at
+all**. `test/browser/scale.spec.ts` builds a page from a solved scale and asserts
+the seater finds nothing to do.
+
+### What it costs, and it is a real cost
+
+Solved sizes are spaced `pitch / (A − D)` apart, which is 11 to 12px for a text
+face on an 8px grid. You take the nearest solved size rather than the round
+number you had in mind, and **two targets closer together than that spacing
+cannot both be met**. Ask for 16 and 20 and it gives you one and says why:
+
+```
+  no solved size within 3px of: 20
+```
+
+Refusing is the point. The first version of the solver answered 17px and 17.5px,
+which satisfies both requests and is one step and a rounding error.
+
+The spacing is a property of the typeface, so it differs:
+
+| | spacing | phase | a solved scale |
+|---|---|---|---|
+| Georgia | 11.47px | 2.0px | 17 / 28 / 40.5 |
+| Arial | 11.55px | 2.0px | 16.5 / 28.5 / 41 |
+| Times New Roman | 11.90px | 1.5px | 16 / 28 / 40.5 |
+| EB Garamond | 11.27px | 2.5px | 17.5 / 28.5 / 42 |
+| JetBrains Mono | 11.11px | 2.5px | 17.5 / 28 / 40.5 |
+
+This is the trade print has always made. It is why the checkbox in InDesign
+changes your leading when you tick it.
+
+### It checks the font actually loaded
+
+A scale solved against a font that did not render describes a typeface nobody is
+going to set in, and the obvious check does not work: `ctx.font` reads back the
+family you **asked for**, so a font nobody has installed hands its own name
+straight back while the measurement comes off the fallback.
+
+Solving for Inter on a page that never loaded it produced numbers identical to
+Times New Roman, down to the last step, with the shorthand saying "Inter"
+throughout. `GridScale.resolved` now settles it by probing widths against two
+different fallbacks, and the emitted CSS carries a warning rather than quietly
+lying.
+
+---
+
 ## Finding: you cannot do this in CSS instead
 
 Worth knowing before you reach for any of it.
@@ -636,6 +718,8 @@ govern, so it works everywhere the console does.
 | `snapLineHeight(preferred, grid)` | nearest line-height that keeps the rhythm |
 | `seatingShift(drift, grid)` | how far down to push a baseline to seat it |
 | `seatingPadding(within, blockTop, grid)` | top and bottom padding that sum to one grid row |
+| `gridNativeScale(font, options)` | solve a type scale that needs no correction |
+| `scaleToCss(scale)` | that scale as custom properties, with its origin |
 | `uniqueSelector(el)` | a selector verified to match exactly that element, or null |
 | `inShadowRoot(el)` | whether a stylesheet can reach it at all |
 | `gridConfig(options)` | validate a grid, or throw |
