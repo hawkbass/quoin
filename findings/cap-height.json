@@ -24,18 +24,19 @@
       "webkit"
     ],
     "rows": 130,
-    "comparableRows": 124,
-    "tableAgreeing": 64,
-    "tableWithinTolerance": 124,
+    "comparableRows": 130,
+    "tableAgreeing": 69,
+    "tableWithinTolerance": 130,
     "worstTableSpread": 0.022,
-    "matchingFile": 109,
-    "matchingFileExactly": 109,
-    "declaredRows": 109,
+    "matchingFile": 115,
+    "matchingFileExactly": 115,
+    "declaredRows": 115,
     "worstAgainstFile": 0.015,
+    "verticalMetricsAgreeing": 130,
     "rasterAgreeing": 1,
-    "rasterWithinTolerance": 85,
+    "rasterWithinTolerance": 90,
     "worstRasterSpread": 0.864,
-    "comparableRasterRows": 124,
+    "comparableRasterRows": 130,
     "synthesisedRows": 15,
     "synthesisedAgreeing": 15,
     "worstSynthesisedSpread": 0.016,
@@ -193,32 +194,21 @@
         }
       }
     ],
-    "notComparable": [
-      {
-        "family": "Inter",
-        "size": 16
+    "notComparable": [],
+    "wholePixelAdvanceWidths": {
+      "chromium": {
+        "readings": 130,
+        "whole": 8
       },
-      {
-        "family": "Inter",
-        "size": 18
+      "firefox": {
+        "readings": 130,
+        "whole": 9
       },
-      {
-        "family": "Inter",
-        "size": 24
-      },
-      {
-        "family": "Inter",
-        "size": 48
-      },
-      {
-        "family": "Merriweather",
-        "size": 24
-      },
-      {
-        "family": "Merriweather",
-        "size": 48
+      "webkit": {
+        "readings": 130,
+        "whole": 8
       }
-    ]
+    }
   },
   "fonts": [
     {
@@ -605,6 +595,14 @@
     {
       "family": "Inter",
       "why": "variable, two axes, modern metrics",
+      "verticalMetrics": [
+        "12/3"
+      ],
+      "widths": {
+        "chromium": 120.9,
+        "firefox": 120.88,
+        "webkit": 120.9
+      },
       "lies": false,
       "degenerate": false,
       "size": 12,
@@ -645,10 +643,18 @@
     {
       "family": "Inter",
       "why": "variable, two axes, modern metrics",
+      "verticalMetrics": [
+        "16/4"
+      ],
+      "widths": {
+        "chromium": 160.36,
+        "firefox": 160.37,
+        "webkit": 161.2
+      },
       "lies": false,
       "degenerate": false,
       "size": 16,
-      "sameFont": false,
+      "sameFont": true,
       "engines": {
         "chromium": {
           "raster": 12,
@@ -685,10 +691,18 @@
     {
       "family": "Inter",
       "why": "variable, two axes, modern metrics",
+      "verticalMetrics": [
+        "17/4"
+      ],
+      "widths": {
+        "chromium": 179.46,
+        "firefox": 179.47,
+        "webkit": 181.34
+      },
       "lies": false,
       "degenerate": false,
       "size": 18,
-      "sameFont": false,
+      "sameFont": true,
       "engines": {
         "chromium": {
           "raster": 13,
@@ -725,10 +739,18 @@
     {
       "family": "Inter",
       "why": "variable, two axes, modern metrics",
+      "verticalMetrics": [
+        "23/6"
+      ],
+      "widths": {
+        "chromium": 235.49,
+        "firefox": 235.48,
+        "webkit": 241.79
+      },
       "lies": false,
       "degenerate": false,
       "size": 24,
-      "sameFont": false,
+      "sameFont": true,
       "engines": {
         "chromium": {
           "raster": 18,
@@ -765,10 +787,18 @@
     {
       "family": "Inter",
       "why": "variable, two axes, modern metrics",
+      "verticalMetrics": [
+        "47/12"
+      ],
+      "widths": {
+        "chromium": 460.88,
+        "firefox": 460.88,
+        "webkit": 483.59
+      },
       "lies": false,
       "degenerate": false,
       "size": 48,
-      "sameFont": false,
+      "sameFont": true,
       "engines": {
         "chromium": {
           "raster": 35,
@@ -805,6 +835,14 @@
     {
       "family": "Roboto",
       "why": "2048 units per em, variable",
+      "verticalMetrics": [
+        "11/3"
+      ],
+      "widths": {
+        "chromium": 113.26,
+        "firefox": 113.28,
+        "webkit": 113.26
+      },
       "lies": false,
       "degenerate": false,
       "size": 12,
@@ -845,6 +883,14 @@
     {
       "family": "Roboto",
       "why": "2048 units per em, variable",
+      "verticalMetrics": [
+        "15/4"
+      ],
+      "widths": {
+        "chromium": 151.01,
+        "firefox": 151.02,
+        "webkit": 151.01
+      },
       "lies": false,
       "degenerate": false,
       "size": 16,
@@ -885,6 +931,14 @@
     {
       "family": "Roboto",
       "why": "2048 units per em, variable",
+      "verticalMetrics": [
+        "17/5"
+      ],
+      "widths": {
+        "chromium": 169.88,
+        "firefox": 169.9,
+        "webkit": 169.88
+      },
       "lies": false,
       "degenerate": false,
       "size": 18,
@@ -925,6 +979,14 @@
     {
       "family": "Roboto",
       "why": "2048 units per em, variable",
+      "verticalMetrics": [
+        "23/6"
+      ],
+      "widths": {
+        "chromium": 226.51,
+        "firefox": 226.5,
+        "webkit": 226.51
+      },
       "lies": false,
       "degenerate": false,
       "size": 24,
@@ -965,6 +1027,14 @@
     {
       "family": "Roboto",
       "why": "2048 units per em, variable",
+      "verticalMetrics": [
+        "46/12"
+      ],
+      "widths": {
+        "chromium": 453.02,
+        "firefox": 453.03,
+        "webkit": 453.02
+      },
       "lies": false,
       "degenerate": false,
       "size": 48,
@@ -1005,6 +1075,14 @@
     {
       "family": "OpenSans",
       "why": "large x-height, very widely deployed",
+      "verticalMetrics": [
+        "13/4"
+      ],
+      "widths": {
+        "chromium": 114.79,
+        "firefox": 114.78,
+        "webkit": 114.79
+      },
       "lies": false,
       "degenerate": false,
       "size": 12,
@@ -1045,6 +1123,14 @@
     {
       "family": "OpenSans",
       "why": "large x-height, very widely deployed",
+      "verticalMetrics": [
+        "17/5"
+      ],
+      "widths": {
+        "chromium": 153.05,
+        "firefox": 153.03,
+        "webkit": 153.05
+      },
       "lies": false,
       "degenerate": false,
       "size": 16,
@@ -1085,6 +1171,14 @@
     {
       "family": "OpenSans",
       "why": "large x-height, very widely deployed",
+      "verticalMetrics": [
+        "19/5"
+      ],
+      "widths": {
+        "chromium": 172.18,
+        "firefox": 172.17,
+        "webkit": 172.18
+      },
       "lies": false,
       "degenerate": false,
       "size": 18,
@@ -1125,6 +1219,14 @@
     {
       "family": "OpenSans",
       "why": "large x-height, very widely deployed",
+      "verticalMetrics": [
+        "26/7"
+      ],
+      "widths": {
+        "chromium": 229.57,
+        "firefox": 229.58,
+        "webkit": 229.57
+      },
       "lies": false,
       "degenerate": false,
       "size": 24,
@@ -1165,6 +1267,14 @@
     {
       "family": "OpenSans",
       "why": "large x-height, very widely deployed",
+      "verticalMetrics": [
+        "51/14"
+      ],
+      "widths": {
+        "chromium": 459.14,
+        "firefox": 459.1,
+        "webkit": 459.14
+      },
       "lies": false,
       "degenerate": false,
       "size": 48,
@@ -1205,6 +1315,14 @@
     {
       "family": "Lato",
       "why": "static, humanist",
+      "verticalMetrics": [
+        "12/3"
+      ],
+      "widths": {
+        "chromium": 118.7,
+        "firefox": 118.7,
+        "webkit": 118.7
+      },
       "lies": false,
       "degenerate": false,
       "size": 12,
@@ -1245,6 +1363,14 @@
     {
       "family": "Lato",
       "why": "static, humanist",
+      "verticalMetrics": [
+        "16/3"
+      ],
+      "widths": {
+        "chromium": 158.26,
+        "firefox": 158.27,
+        "webkit": 158.26
+      },
       "lies": false,
       "degenerate": false,
       "size": 16,
@@ -1285,6 +1411,14 @@
     {
       "family": "Lato",
       "why": "static, humanist",
+      "verticalMetrics": [
+        "18/4"
+      ],
+      "widths": {
+        "chromium": 178.05,
+        "firefox": 178.07,
+        "webkit": 178.05
+      },
       "lies": false,
       "degenerate": false,
       "size": 18,
@@ -1325,6 +1459,14 @@
     {
       "family": "Lato",
       "why": "static, humanist",
+      "verticalMetrics": [
+        "24/5"
+      ],
+      "widths": {
+        "chromium": 237.4,
+        "firefox": 237.38,
+        "webkit": 237.4
+      },
       "lies": false,
       "degenerate": false,
       "size": 24,
@@ -1365,6 +1507,14 @@
     {
       "family": "Lato",
       "why": "static, humanist",
+      "verticalMetrics": [
+        "47/10"
+      ],
+      "widths": {
+        "chromium": 474.79,
+        "firefox": 474.78,
+        "webkit": 474.79
+      },
       "lies": false,
       "degenerate": false,
       "size": 48,
@@ -1405,6 +1555,14 @@
     {
       "family": "IBMPlexSans",
       "why": "a design system's own face",
+      "verticalMetrics": [
+        "12/3"
+      ],
+      "widths": {
+        "chromium": 113.98,
+        "firefox": 113.98,
+        "webkit": 113.98
+      },
       "lies": false,
       "degenerate": false,
       "size": 12,
@@ -1445,6 +1603,14 @@
     {
       "family": "IBMPlexSans",
       "why": "a design system's own face",
+      "verticalMetrics": [
+        "16/4"
+      ],
+      "widths": {
+        "chromium": 151.97,
+        "firefox": 151.98,
+        "webkit": 151.97
+      },
       "lies": false,
       "degenerate": false,
       "size": 16,
@@ -1485,6 +1651,14 @@
     {
       "family": "IBMPlexSans",
       "why": "a design system's own face",
+      "verticalMetrics": [
+        "18/5"
+      ],
+      "widths": {
+        "chromium": 170.96,
+        "firefox": 170.97,
+        "webkit": 170.96
+      },
       "lies": false,
       "degenerate": false,
       "size": 18,
@@ -1525,6 +1699,14 @@
     {
       "family": "IBMPlexSans",
       "why": "a design system's own face",
+      "verticalMetrics": [
+        "25/7"
+      ],
+      "widths": {
+        "chromium": 227.95,
+        "firefox": 227.95,
+        "webkit": 227.95
+      },
       "lies": false,
       "degenerate": false,
       "size": 24,
@@ -1565,6 +1747,14 @@
     {
       "family": "IBMPlexSans",
       "why": "a design system's own face",
+      "verticalMetrics": [
+        "49/13"
+      ],
+      "widths": {
+        "chromium": 455.9,
+        "firefox": 455.92,
+        "webkit": 455.9
+      },
       "lies": false,
       "degenerate": false,
       "size": 48,
@@ -1605,6 +1795,14 @@
     {
       "family": "Lora",
       "why": "serif, moderate contrast",
+      "verticalMetrics": [
+        "12/3"
+      ],
+      "widths": {
+        "chromium": 119.82,
+        "firefox": 119.83,
+        "webkit": 119.82
+      },
       "lies": false,
       "degenerate": false,
       "size": 12,
@@ -1645,6 +1843,14 @@
     {
       "family": "Lora",
       "why": "serif, moderate contrast",
+      "verticalMetrics": [
+        "16/4"
+      ],
+      "widths": {
+        "chromium": 159.76,
+        "firefox": 159.77,
+        "webkit": 159.76
+      },
       "lies": false,
       "degenerate": false,
       "size": 16,
@@ -1685,6 +1891,14 @@
     {
       "family": "Lora",
       "why": "serif, moderate contrast",
+      "verticalMetrics": [
+        "18/5"
+      ],
+      "widths": {
+        "chromium": 179.73,
+        "firefox": 179.7,
+        "webkit": 179.73
+      },
       "lies": false,
       "degenerate": false,
       "size": 18,
@@ -1725,6 +1939,14 @@
     {
       "family": "Lora",
       "why": "serif, moderate contrast",
+      "verticalMetrics": [
+        "24/7"
+      ],
+      "widths": {
+        "chromium": 239.64,
+        "firefox": 239.62,
+        "webkit": 239.64
+      },
       "lies": false,
       "degenerate": false,
       "size": 24,
@@ -1765,6 +1987,14 @@
     {
       "family": "Lora",
       "why": "serif, moderate contrast",
+      "verticalMetrics": [
+        "48/13"
+      ],
+      "widths": {
+        "chromium": 479.28,
+        "firefox": 479.3,
+        "webkit": 479.28
+      },
       "lies": false,
       "degenerate": false,
       "size": 48,
@@ -1805,6 +2035,14 @@
     {
       "family": "PlayfairDisplay",
       "why": "very high contrast, tall caps, short descenders",
+      "verticalMetrics": [
+        "13/3"
+      ],
+      "widths": {
+        "chromium": 115.5,
+        "firefox": 115.48,
+        "webkit": 115.5
+      },
       "lies": false,
       "degenerate": false,
       "size": 12,
@@ -1845,6 +2083,14 @@
     {
       "family": "PlayfairDisplay",
       "why": "very high contrast, tall caps, short descenders",
+      "verticalMetrics": [
+        "17/4"
+      ],
+      "widths": {
+        "chromium": 154,
+        "firefox": 154.02,
+        "webkit": 154
+      },
       "lies": false,
       "degenerate": false,
       "size": 16,
@@ -1885,6 +2131,14 @@
     {
       "family": "PlayfairDisplay",
       "why": "very high contrast, tall caps, short descenders",
+      "verticalMetrics": [
+        "19/5"
+      ],
+      "widths": {
+        "chromium": 173.25,
+        "firefox": 173.27,
+        "webkit": 173.25
+      },
       "lies": false,
       "degenerate": false,
       "size": 18,
@@ -1925,6 +2179,14 @@
     {
       "family": "PlayfairDisplay",
       "why": "very high contrast, tall caps, short descenders",
+      "verticalMetrics": [
+        "26/6"
+      ],
+      "widths": {
+        "chromium": 231,
+        "firefox": 230.98,
+        "webkit": 231
+      },
       "lies": false,
       "degenerate": false,
       "size": 24,
@@ -1965,6 +2227,14 @@
     {
       "family": "PlayfairDisplay",
       "why": "very high contrast, tall caps, short descenders",
+      "verticalMetrics": [
+        "52/12"
+      ],
+      "widths": {
+        "chromium": 462,
+        "firefox": 461.97,
+        "webkit": 462
+      },
       "lies": false,
       "degenerate": false,
       "size": 48,
@@ -2005,6 +2275,14 @@
     {
       "family": "EBGaramond",
       "why": "old-style, small cap height relative to the em",
+      "verticalMetrics": [
+        "12/4"
+      ],
+      "widths": {
+        "chromium": 119.38,
+        "firefox": 119.37,
+        "webkit": 119.38
+      },
       "lies": false,
       "degenerate": false,
       "size": 12,
@@ -2045,6 +2323,14 @@
     {
       "family": "EBGaramond",
       "why": "old-style, small cap height relative to the em",
+      "verticalMetrics": [
+        "16/5"
+      ],
+      "widths": {
+        "chromium": 159.17,
+        "firefox": 159.13,
+        "webkit": 159.17
+      },
       "lies": false,
       "degenerate": false,
       "size": 16,
@@ -2085,6 +2371,14 @@
     {
       "family": "EBGaramond",
       "why": "old-style, small cap height relative to the em",
+      "verticalMetrics": [
+        "18/5"
+      ],
+      "widths": {
+        "chromium": 179.06,
+        "firefox": 179.05,
+        "webkit": 179.06
+      },
       "lies": false,
       "degenerate": false,
       "size": 18,
@@ -2125,6 +2419,14 @@
     {
       "family": "EBGaramond",
       "why": "old-style, small cap height relative to the em",
+      "verticalMetrics": [
+        "24/7"
+      ],
+      "widths": {
+        "chromium": 238.75,
+        "firefox": 238.75,
+        "webkit": 238.75
+      },
       "lies": false,
       "degenerate": false,
       "size": 24,
@@ -2165,6 +2467,14 @@
     {
       "family": "EBGaramond",
       "why": "old-style, small cap height relative to the em",
+      "verticalMetrics": [
+        "48/14"
+      ],
+      "widths": {
+        "chromium": 477.5,
+        "firefox": 477.5,
+        "webkit": 477.5
+      },
       "lies": false,
       "degenerate": false,
       "size": 48,
@@ -2205,6 +2515,14 @@
     {
       "family": "Merriweather",
       "why": "large x-height serif, three axes",
+      "verticalMetrics": [
+        "12/3"
+      ],
+      "widths": {
+        "chromium": 124.49,
+        "firefox": 124.47,
+        "webkit": 124.49
+      },
       "lies": false,
       "degenerate": false,
       "size": 12,
@@ -2245,6 +2563,14 @@
     {
       "family": "Merriweather",
       "why": "large x-height serif, three axes",
+      "verticalMetrics": [
+        "16/4"
+      ],
+      "widths": {
+        "chromium": 165.99,
+        "firefox": 166,
+        "webkit": 165.99
+      },
       "lies": false,
       "degenerate": false,
       "size": 16,
@@ -2285,6 +2611,14 @@
     {
       "family": "Merriweather",
       "why": "large x-height serif, three axes",
+      "verticalMetrics": [
+        "18/5"
+      ],
+      "widths": {
+        "chromium": 186.74,
+        "firefox": 186.73,
+        "webkit": 186.74
+      },
       "lies": false,
       "degenerate": false,
       "size": 18,
@@ -2325,10 +2659,18 @@
     {
       "family": "Merriweather",
       "why": "large x-height serif, three axes",
+      "verticalMetrics": [
+        "24/7"
+      ],
+      "widths": {
+        "chromium": 248.1,
+        "firefox": 248.07,
+        "webkit": 248.98
+      },
       "lies": false,
       "degenerate": false,
       "size": 24,
-      "sameFont": false,
+      "sameFont": true,
       "engines": {
         "chromium": {
           "raster": 18,
@@ -2365,10 +2707,18 @@
     {
       "family": "Merriweather",
       "why": "large x-height serif, three axes",
+      "verticalMetrics": [
+        "47/13"
+      ],
+      "widths": {
+        "chromium": 489.16,
+        "firefox": 489.12,
+        "webkit": 497.97
+      },
       "lies": false,
       "degenerate": false,
       "size": 48,
-      "sameFont": false,
+      "sameFont": true,
       "engines": {
         "chromium": {
           "raster": 36,
@@ -2405,6 +2755,14 @@
     {
       "family": "JetBrainsMono",
       "why": "monospace, tall ascenders",
+      "verticalMetrics": [
+        "12/4"
+      ],
+      "widths": {
+        "chromium": 108,
+        "firefox": 108,
+        "webkit": 108
+      },
       "lies": false,
       "degenerate": false,
       "size": 12,
@@ -2445,6 +2803,14 @@
     {
       "family": "JetBrainsMono",
       "why": "monospace, tall ascenders",
+      "verticalMetrics": [
+        "16/5"
+      ],
+      "widths": {
+        "chromium": 144,
+        "firefox": 144,
+        "webkit": 144
+      },
       "lies": false,
       "degenerate": false,
       "size": 16,
@@ -2485,6 +2851,14 @@
     {
       "family": "JetBrainsMono",
       "why": "monospace, tall ascenders",
+      "verticalMetrics": [
+        "18/5"
+      ],
+      "widths": {
+        "chromium": 162,
+        "firefox": 162,
+        "webkit": 162
+      },
       "lies": false,
       "degenerate": false,
       "size": 18,
@@ -2525,6 +2899,14 @@
     {
       "family": "JetBrainsMono",
       "why": "monospace, tall ascenders",
+      "verticalMetrics": [
+        "24/7"
+      ],
+      "widths": {
+        "chromium": 216,
+        "firefox": 216,
+        "webkit": 216
+      },
       "lies": false,
       "degenerate": false,
       "size": 24,
@@ -2565,6 +2947,14 @@
     {
       "family": "JetBrainsMono",
       "why": "monospace, tall ascenders",
+      "verticalMetrics": [
+        "49/14"
+      ],
+      "widths": {
+        "chromium": 432,
+        "firefox": 432,
+        "webkit": 432
+      },
       "lies": false,
       "degenerate": false,
       "size": 48,
@@ -2605,6 +2995,14 @@
     {
       "family": "SpaceMono",
       "why": "monospace, static, older build",
+      "verticalMetrics": [
+        "13/4"
+      ],
+      "widths": {
+        "chromium": 110.16,
+        "firefox": 110.25,
+        "webkit": 110.16
+      },
       "lies": false,
       "degenerate": false,
       "size": 12,
@@ -2645,6 +3043,14 @@
     {
       "family": "SpaceMono",
       "why": "monospace, static, older build",
+      "verticalMetrics": [
+        "18/6"
+      ],
+      "widths": {
+        "chromium": 146.88,
+        "firefox": 147,
+        "webkit": 146.88
+      },
       "lies": false,
       "degenerate": false,
       "size": 16,
@@ -2685,6 +3091,14 @@
     {
       "family": "SpaceMono",
       "why": "monospace, static, older build",
+      "verticalMetrics": [
+        "20/6"
+      ],
+      "widths": {
+        "chromium": 165.24,
+        "firefox": 165.25,
+        "webkit": 165.24
+      },
       "lies": false,
       "degenerate": false,
       "size": 18,
@@ -2725,6 +3139,14 @@
     {
       "family": "SpaceMono",
       "why": "monospace, static, older build",
+      "verticalMetrics": [
+        "27/9"
+      ],
+      "widths": {
+        "chromium": 220.32,
+        "firefox": 220.25,
+        "webkit": 220.32
+      },
       "lies": false,
       "degenerate": false,
       "size": 24,
@@ -2765,6 +3187,14 @@
     {
       "family": "SpaceMono",
       "why": "monospace, static, older build",
+      "verticalMetrics": [
+        "54/17"
+      ],
+      "widths": {
+        "chromium": 440.64,
+        "firefox": 440.75,
+        "webkit": 440.64
+      },
       "lies": false,
       "degenerate": false,
       "size": 48,
@@ -2805,6 +3235,14 @@
     {
       "family": "Cinzel",
       "why": "all-caps face: cap height IS the x-height",
+      "verticalMetrics": [
+        "12/4"
+      ],
+      "widths": {
+        "chromium": 121.64,
+        "firefox": 121.65,
+        "webkit": 121.64
+      },
       "lies": false,
       "degenerate": false,
       "size": 12,
@@ -2845,6 +3283,14 @@
     {
       "family": "Cinzel",
       "why": "all-caps face: cap height IS the x-height",
+      "verticalMetrics": [
+        "16/6"
+      ],
+      "widths": {
+        "chromium": 162.19,
+        "firefox": 162.17,
+        "webkit": 162.19
+      },
       "lies": false,
       "degenerate": false,
       "size": 16,
@@ -2885,6 +3331,14 @@
     {
       "family": "Cinzel",
       "why": "all-caps face: cap height IS the x-height",
+      "verticalMetrics": [
+        "18/7"
+      ],
+      "widths": {
+        "chromium": 182.47,
+        "firefox": 182.45,
+        "webkit": 182.47
+      },
       "lies": false,
       "degenerate": false,
       "size": 18,
@@ -2925,6 +3379,14 @@
     {
       "family": "Cinzel",
       "why": "all-caps face: cap height IS the x-height",
+      "verticalMetrics": [
+        "23/9"
+      ],
+      "widths": {
+        "chromium": 243.29,
+        "firefox": 243.3,
+        "webkit": 243.29
+      },
       "lies": false,
       "degenerate": false,
       "size": 24,
@@ -2965,6 +3427,14 @@
     {
       "family": "Cinzel",
       "why": "all-caps face: cap height IS the x-height",
+      "verticalMetrics": [
+        "47/18"
+      ],
+      "widths": {
+        "chromium": 486.58,
+        "firefox": 486.55,
+        "webkit": 486.58
+      },
       "lies": false,
       "degenerate": false,
       "size": 48,
@@ -3005,6 +3475,14 @@
     {
       "family": "Bungee",
       "why": "display, extreme vertical metrics",
+      "verticalMetrics": [
+        "12/4"
+      ],
+      "widths": {
+        "chromium": 127.72,
+        "firefox": 127.72,
+        "webkit": 127.72
+      },
       "lies": false,
       "degenerate": false,
       "size": 12,
@@ -3045,6 +3523,14 @@
     {
       "family": "Bungee",
       "why": "display, extreme vertical metrics",
+      "verticalMetrics": [
+        "16/5"
+      ],
+      "widths": {
+        "chromium": 170.29,
+        "firefox": 170.3,
+        "webkit": 170.29
+      },
       "lies": false,
       "degenerate": false,
       "size": 16,
@@ -3085,6 +3571,14 @@
     {
       "family": "Bungee",
       "why": "display, extreme vertical metrics",
+      "verticalMetrics": [
+        "18/5"
+      ],
+      "widths": {
+        "chromium": 191.57,
+        "firefox": 191.55,
+        "webkit": 191.57
+      },
       "lies": false,
       "degenerate": false,
       "size": 18,
@@ -3125,6 +3619,14 @@
     {
       "family": "Bungee",
       "why": "display, extreme vertical metrics",
+      "verticalMetrics": [
+        "24/7"
+      ],
+      "widths": {
+        "chromium": 255.43,
+        "firefox": 255.45,
+        "webkit": 255.43
+      },
       "lies": false,
       "degenerate": false,
       "size": 24,
@@ -3165,6 +3667,14 @@
     {
       "family": "Bungee",
       "why": "display, extreme vertical metrics",
+      "verticalMetrics": [
+        "49/14"
+      ],
+      "widths": {
+        "chromium": 510.86,
+        "firefox": 510.83,
+        "webkit": 510.86
+      },
       "lies": false,
       "degenerate": false,
       "size": 48,
@@ -3205,6 +3715,14 @@
     {
       "family": "Sacramento",
       "why": "script face, enormous ascenders and descenders",
+      "verticalMetrics": [
+        "11/6"
+      ],
+      "widths": {
+        "chromium": 177.29,
+        "firefox": 177.3,
+        "webkit": 177.29
+      },
       "lies": false,
       "degenerate": false,
       "size": 12,
@@ -3245,6 +3763,14 @@
     {
       "family": "Sacramento",
       "why": "script face, enormous ascenders and descenders",
+      "verticalMetrics": [
+        "15/8"
+      ],
+      "widths": {
+        "chromium": 236.39,
+        "firefox": 236.4,
+        "webkit": 236.39
+      },
       "lies": false,
       "degenerate": false,
       "size": 16,
@@ -3285,6 +3811,14 @@
     {
       "family": "Sacramento",
       "why": "script face, enormous ascenders and descenders",
+      "verticalMetrics": [
+        "17/10"
+      ],
+      "widths": {
+        "chromium": 265.94,
+        "firefox": 265.93,
+        "webkit": 265.94
+      },
       "lies": false,
       "degenerate": false,
       "size": 18,
@@ -3325,6 +3859,14 @@
     {
       "family": "Sacramento",
       "why": "script face, enormous ascenders and descenders",
+      "verticalMetrics": [
+        "22/13"
+      ],
+      "widths": {
+        "chromium": 354.59,
+        "firefox": 354.6,
+        "webkit": 354.59
+      },
       "lies": false,
       "degenerate": false,
       "size": 24,
@@ -3365,6 +3907,14 @@
     {
       "family": "Sacramento",
       "why": "script face, enormous ascenders and descenders",
+      "verticalMetrics": [
+        "45/25"
+      ],
+      "widths": {
+        "chromium": 709.17,
+        "firefox": 709.17,
+        "webkit": 709.17
+      },
       "lies": false,
       "degenerate": false,
       "size": 48,
@@ -3405,6 +3955,14 @@
     {
       "family": "Anton",
       "why": "condensed display, very tall caps",
+      "verticalMetrics": [
+        "14/4"
+      ],
+      "widths": {
+        "chromium": 83.9,
+        "firefox": 83.88,
+        "webkit": 83.9
+      },
       "lies": false,
       "degenerate": false,
       "size": 12,
@@ -3445,6 +4003,14 @@
     {
       "family": "Anton",
       "why": "condensed display, very tall caps",
+      "verticalMetrics": [
+        "19/5"
+      ],
+      "widths": {
+        "chromium": 111.87,
+        "firefox": 111.87,
+        "webkit": 111.87
+      },
       "lies": false,
       "degenerate": false,
       "size": 16,
@@ -3485,6 +4051,14 @@
     {
       "family": "Anton",
       "why": "condensed display, very tall caps",
+      "verticalMetrics": [
+        "21/6"
+      ],
+      "widths": {
+        "chromium": 125.85,
+        "firefox": 125.88,
+        "webkit": 125.85
+      },
       "lies": false,
       "degenerate": false,
       "size": 18,
@@ -3525,6 +4099,14 @@
     {
       "family": "Anton",
       "why": "condensed display, very tall caps",
+      "verticalMetrics": [
+        "28/8"
+      ],
+      "widths": {
+        "chromium": 167.8,
+        "firefox": 167.78,
+        "webkit": 167.8
+      },
       "lies": false,
       "degenerate": false,
       "size": 24,
@@ -3565,6 +4147,14 @@
     {
       "family": "Anton",
       "why": "condensed display, very tall caps",
+      "verticalMetrics": [
+        "56/16"
+      ],
+      "widths": {
+        "chromium": 335.6,
+        "firefox": 335.6,
+        "webkit": 335.6
+      },
       "lies": false,
       "degenerate": false,
       "size": 48,
@@ -3605,6 +4195,14 @@
     {
       "family": "NotoSansJP",
       "why": "CJK: no capitals, so what does cap height mean?",
+      "verticalMetrics": [
+        "14/3"
+      ],
+      "widths": {
+        "chromium": 113.76,
+        "firefox": 113.75,
+        "webkit": 113.76
+      },
       "lies": false,
       "degenerate": false,
       "size": 12,
@@ -3645,6 +4243,14 @@
     {
       "family": "NotoSansJP",
       "why": "CJK: no capitals, so what does cap height mean?",
+      "verticalMetrics": [
+        "19/5"
+      ],
+      "widths": {
+        "chromium": 151.68,
+        "firefox": 151.67,
+        "webkit": 151.68
+      },
       "lies": false,
       "degenerate": false,
       "size": 16,
@@ -3685,6 +4291,14 @@
     {
       "family": "NotoSansJP",
       "why": "CJK: no capitals, so what does cap height mean?",
+      "verticalMetrics": [
+        "21/5"
+      ],
+      "widths": {
+        "chromium": 170.64,
+        "firefox": 170.65,
+        "webkit": 170.64
+      },
       "lies": false,
       "degenerate": false,
       "size": 18,
@@ -3725,6 +4339,14 @@
     {
       "family": "NotoSansJP",
       "why": "CJK: no capitals, so what does cap height mean?",
+      "verticalMetrics": [
+        "28/7"
+      ],
+      "widths": {
+        "chromium": 227.51,
+        "firefox": 227.5,
+        "webkit": 227.51
+      },
       "lies": false,
       "degenerate": false,
       "size": 24,
@@ -3765,6 +4387,14 @@
     {
       "family": "NotoSansJP",
       "why": "CJK: no capitals, so what does cap height mean?",
+      "verticalMetrics": [
+        "56/14"
+      ],
+      "widths": {
+        "chromium": 455.03,
+        "firefox": 455.02,
+        "webkit": 455.03
+      },
       "lies": false,
       "degenerate": false,
       "size": 48,
@@ -3805,6 +4435,14 @@
     {
       "family": "NotoSansArabic",
       "why": "Arabic: no capitals, tall marks",
+      "verticalMetrics": [
+        "16/9"
+      ],
+      "widths": {
+        "chromium": 116.14,
+        "firefox": 116.12,
+        "webkit": 116.14
+      },
       "lies": false,
       "degenerate": false,
       "size": 12,
@@ -3845,6 +4483,14 @@
     {
       "family": "NotoSansArabic",
       "why": "Arabic: no capitals, tall marks",
+      "verticalMetrics": [
+        "22/12"
+      ],
+      "widths": {
+        "chromium": 154.85,
+        "firefox": 154.85,
+        "webkit": 154.85
+      },
       "lies": false,
       "degenerate": false,
       "size": 16,
@@ -3885,6 +4531,14 @@
     {
       "family": "NotoSansArabic",
       "why": "Arabic: no capitals, tall marks",
+      "verticalMetrics": [
+        "25/13"
+      ],
+      "widths": {
+        "chromium": 174.2,
+        "firefox": 174.18,
+        "webkit": 174.2
+      },
       "lies": false,
       "degenerate": false,
       "size": 18,
@@ -3925,6 +4579,14 @@
     {
       "family": "NotoSansArabic",
       "why": "Arabic: no capitals, tall marks",
+      "verticalMetrics": [
+        "33/18"
+      ],
+      "widths": {
+        "chromium": 232.27,
+        "firefox": 232.28,
+        "webkit": 232.27
+      },
       "lies": false,
       "degenerate": false,
       "size": 24,
@@ -3965,6 +4627,14 @@
     {
       "family": "NotoSansArabic",
       "why": "Arabic: no capitals, tall marks",
+      "verticalMetrics": [
+        "66/35"
+      ],
+      "widths": {
+        "chromium": 464.54,
+        "firefox": 464.52,
+        "webkit": 464.54
+      },
       "lies": false,
       "degenerate": false,
       "size": 48,
@@ -4005,6 +4675,14 @@
     {
       "family": "NotoSansDevanagari",
       "why": "Devanagari: headline above the letters",
+      "verticalMetrics": [
+        "11/5"
+      ],
+      "widths": {
+        "chromium": 116.14,
+        "firefox": 116.12,
+        "webkit": 116.14
+      },
       "lies": false,
       "degenerate": false,
       "size": 12,
@@ -4045,6 +4723,14 @@
     {
       "family": "NotoSansDevanagari",
       "why": "Devanagari: headline above the letters",
+      "verticalMetrics": [
+        "14/7"
+      ],
+      "widths": {
+        "chromium": 154.85,
+        "firefox": 154.85,
+        "webkit": 154.85
+      },
       "lies": false,
       "degenerate": false,
       "size": 16,
@@ -4085,6 +4771,14 @@
     {
       "family": "NotoSansDevanagari",
       "why": "Devanagari: headline above the letters",
+      "verticalMetrics": [
+        "16/7"
+      ],
+      "widths": {
+        "chromium": 174.2,
+        "firefox": 174.18,
+        "webkit": 174.2
+      },
       "lies": false,
       "degenerate": false,
       "size": 18,
@@ -4125,6 +4819,14 @@
     {
       "family": "NotoSansDevanagari",
       "why": "Devanagari: headline above the letters",
+      "verticalMetrics": [
+        "22/10"
+      ],
+      "widths": {
+        "chromium": 232.27,
+        "firefox": 232.28,
+        "webkit": 232.27
+      },
       "lies": false,
       "degenerate": false,
       "size": 24,
@@ -4165,6 +4867,14 @@
     {
       "family": "NotoSansDevanagari",
       "why": "Devanagari: headline above the letters",
+      "verticalMetrics": [
+        "43/20"
+      ],
+      "widths": {
+        "chromium": 464.54,
+        "firefox": 464.52,
+        "webkit": 464.54
+      },
       "lies": false,
       "degenerate": false,
       "size": 48,
@@ -4205,6 +4915,14 @@
     {
       "family": "NotoSerifThai",
       "why": "Thai: stacked marks above and below",
+      "verticalMetrics": [
+        "13/6"
+      ],
+      "widths": {
+        "chromium": 120.65,
+        "firefox": 120.63,
+        "webkit": 120.65
+      },
       "lies": false,
       "degenerate": false,
       "size": 12,
@@ -4245,6 +4963,14 @@
     {
       "family": "NotoSerifThai",
       "why": "Thai: stacked marks above and below",
+      "verticalMetrics": [
+        "17/9"
+      ],
+      "widths": {
+        "chromium": 160.86,
+        "firefox": 160.82,
+        "webkit": 160.86
+      },
       "lies": false,
       "degenerate": false,
       "size": 16,
@@ -4285,6 +5011,14 @@
     {
       "family": "NotoSerifThai",
       "why": "Thai: stacked marks above and below",
+      "verticalMetrics": [
+        "19/10"
+      ],
+      "widths": {
+        "chromium": 180.97,
+        "firefox": 180.93,
+        "webkit": 180.97
+      },
       "lies": false,
       "degenerate": false,
       "size": 18,
@@ -4325,6 +5059,14 @@
     {
       "family": "NotoSerifThai",
       "why": "Thai: stacked marks above and below",
+      "verticalMetrics": [
+        "26/13"
+      ],
+      "widths": {
+        "chromium": 241.3,
+        "firefox": 241.3,
+        "webkit": 241.3
+      },
       "lies": false,
       "degenerate": false,
       "size": 24,
@@ -4365,6 +5107,14 @@
     {
       "family": "NotoSerifThai",
       "why": "Thai: stacked marks above and below",
+      "verticalMetrics": [
+        "51/26"
+      ],
+      "widths": {
+        "chromium": 482.59,
+        "firefox": 482.57,
+        "webkit": 482.59
+      },
       "lies": false,
       "degenerate": false,
       "size": 48,
@@ -4405,6 +5155,14 @@
     {
       "family": "PTSans",
       "why": "older build, may lack sCapHeight",
+      "verticalMetrics": [
+        "12/3"
+      ],
+      "widths": {
+        "chromium": 105.62,
+        "firefox": 105.63,
+        "webkit": 105.62
+      },
       "lies": false,
       "degenerate": false,
       "size": 12,
@@ -4445,6 +5203,14 @@
     {
       "family": "PTSans",
       "why": "older build, may lack sCapHeight",
+      "verticalMetrics": [
+        "16/4"
+      ],
+      "widths": {
+        "chromium": 140.83,
+        "firefox": 140.85,
+        "webkit": 140.83
+      },
       "lies": false,
       "degenerate": false,
       "size": 16,
@@ -4485,6 +5251,14 @@
     {
       "family": "PTSans",
       "why": "older build, may lack sCapHeight",
+      "verticalMetrics": [
+        "18/5"
+      ],
+      "widths": {
+        "chromium": 158.44,
+        "firefox": 158.42,
+        "webkit": 158.44
+      },
       "lies": false,
       "degenerate": false,
       "size": 18,
@@ -4525,6 +5299,14 @@
     {
       "family": "PTSans",
       "why": "older build, may lack sCapHeight",
+      "verticalMetrics": [
+        "24/7"
+      ],
+      "widths": {
+        "chromium": 211.25,
+        "firefox": 211.23,
+        "webkit": 211.25
+      },
       "lies": false,
       "degenerate": false,
       "size": 24,
@@ -4565,6 +5347,14 @@
     {
       "family": "PTSans",
       "why": "older build, may lack sCapHeight",
+      "verticalMetrics": [
+        "49/13"
+      ],
+      "widths": {
+        "chromium": 422.5,
+        "firefox": 422.5,
+        "webkit": 422.5
+      },
       "lies": false,
       "degenerate": false,
       "size": 48,
@@ -4605,6 +5395,14 @@
     {
       "family": "Ubuntu",
       "why": "UFL licence, 2010-era build",
+      "verticalMetrics": [
+        "11/2"
+      ],
+      "widths": {
+        "chromium": 113.8,
+        "firefox": 113.78,
+        "webkit": 113.8
+      },
       "lies": false,
       "degenerate": false,
       "size": 12,
@@ -4645,6 +5443,14 @@
     {
       "family": "Ubuntu",
       "why": "UFL licence, 2010-era build",
+      "verticalMetrics": [
+        "15/3"
+      ],
+      "widths": {
+        "chromium": 151.73,
+        "firefox": 151.7,
+        "webkit": 151.73
+      },
       "lies": false,
       "degenerate": false,
       "size": 16,
@@ -4685,6 +5491,14 @@
     {
       "family": "Ubuntu",
       "why": "UFL licence, 2010-era build",
+      "verticalMetrics": [
+        "17/3"
+      ],
+      "widths": {
+        "chromium": 170.69,
+        "firefox": 170.68,
+        "webkit": 170.69
+      },
       "lies": false,
       "degenerate": false,
       "size": 18,
@@ -4725,6 +5539,14 @@
     {
       "family": "Ubuntu",
       "why": "UFL licence, 2010-era build",
+      "verticalMetrics": [
+        "22/5"
+      ],
+      "widths": {
+        "chromium": 227.59,
+        "firefox": 227.6,
+        "webkit": 227.59
+      },
       "lies": false,
       "degenerate": false,
       "size": 24,
@@ -4765,6 +5587,14 @@
     {
       "family": "Ubuntu",
       "why": "UFL licence, 2010-era build",
+      "verticalMetrics": [
+        "45/9"
+      ],
+      "widths": {
+        "chromium": 455.18,
+        "firefox": 455.15,
+        "webkit": 455.18
+      },
       "lies": false,
       "degenerate": false,
       "size": 48,
@@ -4805,6 +5635,14 @@
     {
       "family": "AwkwardAbsent",
       "why": "OS/2 downgraded to v1: sCapHeight is not there to read",
+      "verticalMetrics": [
+        "12/3"
+      ],
+      "widths": {
+        "chromium": 118.7,
+        "firefox": 118.7,
+        "webkit": 118.7
+      },
       "lies": false,
       "degenerate": false,
       "size": 12,
@@ -4845,6 +5683,14 @@
     {
       "family": "AwkwardAbsent",
       "why": "OS/2 downgraded to v1: sCapHeight is not there to read",
+      "verticalMetrics": [
+        "16/3"
+      ],
+      "widths": {
+        "chromium": 158.26,
+        "firefox": 158.27,
+        "webkit": 158.26
+      },
       "lies": false,
       "degenerate": false,
       "size": 16,
@@ -4885,6 +5731,14 @@
     {
       "family": "AwkwardAbsent",
       "why": "OS/2 downgraded to v1: sCapHeight is not there to read",
+      "verticalMetrics": [
+        "18/4"
+      ],
+      "widths": {
+        "chromium": 178.05,
+        "firefox": 178.07,
+        "webkit": 178.05
+      },
       "lies": false,
       "degenerate": false,
       "size": 18,
@@ -4925,6 +5779,14 @@
     {
       "family": "AwkwardAbsent",
       "why": "OS/2 downgraded to v1: sCapHeight is not there to read",
+      "verticalMetrics": [
+        "24/5"
+      ],
+      "widths": {
+        "chromium": 237.4,
+        "firefox": 237.38,
+        "webkit": 237.4
+      },
       "lies": false,
       "degenerate": false,
       "size": 24,
@@ -4965,6 +5827,14 @@
     {
       "family": "AwkwardAbsent",
       "why": "OS/2 downgraded to v1: sCapHeight is not there to read",
+      "verticalMetrics": [
+        "47/10"
+      ],
+      "widths": {
+        "chromium": 474.79,
+        "firefox": 474.78,
+        "webkit": 474.79
+      },
       "lies": false,
       "degenerate": false,
       "size": 48,
@@ -5005,6 +5875,14 @@
     {
       "family": "AwkwardZeroed",
       "why": "sCapHeight present and set to zero",
+      "verticalMetrics": [
+        "12/3"
+      ],
+      "widths": {
+        "chromium": 118.7,
+        "firefox": 118.7,
+        "webkit": 118.7
+      },
       "lies": false,
       "degenerate": false,
       "size": 12,
@@ -5045,6 +5923,14 @@
     {
       "family": "AwkwardZeroed",
       "why": "sCapHeight present and set to zero",
+      "verticalMetrics": [
+        "16/3"
+      ],
+      "widths": {
+        "chromium": 158.26,
+        "firefox": 158.27,
+        "webkit": 158.26
+      },
       "lies": false,
       "degenerate": false,
       "size": 16,
@@ -5085,6 +5971,14 @@
     {
       "family": "AwkwardZeroed",
       "why": "sCapHeight present and set to zero",
+      "verticalMetrics": [
+        "18/4"
+      ],
+      "widths": {
+        "chromium": 178.05,
+        "firefox": 178.07,
+        "webkit": 178.05
+      },
       "lies": false,
       "degenerate": false,
       "size": 18,
@@ -5125,6 +6019,14 @@
     {
       "family": "AwkwardZeroed",
       "why": "sCapHeight present and set to zero",
+      "verticalMetrics": [
+        "24/5"
+      ],
+      "widths": {
+        "chromium": 237.4,
+        "firefox": 237.38,
+        "webkit": 237.4
+      },
       "lies": false,
       "degenerate": false,
       "size": 24,
@@ -5165,6 +6067,14 @@
     {
       "family": "AwkwardZeroed",
       "why": "sCapHeight present and set to zero",
+      "verticalMetrics": [
+        "47/10"
+      ],
+      "widths": {
+        "chromium": 474.79,
+        "firefox": 474.78,
+        "webkit": 474.79
+      },
       "lies": false,
       "degenerate": false,
       "size": 48,
@@ -5205,6 +6115,14 @@
     {
       "family": "AwkwardHuge",
       "why": "sCapHeight of 1400 on a 1000-unit em: taller than the em box",
+      "verticalMetrics": [
+        "13/4"
+      ],
+      "widths": {
+        "chromium": 110.16,
+        "firefox": 110.25,
+        "webkit": 110.16
+      },
       "lies": false,
       "degenerate": true,
       "size": 12,
@@ -5245,6 +6163,14 @@
     {
       "family": "AwkwardHuge",
       "why": "sCapHeight of 1400 on a 1000-unit em: taller than the em box",
+      "verticalMetrics": [
+        "18/6"
+      ],
+      "widths": {
+        "chromium": 146.88,
+        "firefox": 147,
+        "webkit": 146.88
+      },
       "lies": false,
       "degenerate": true,
       "size": 16,
@@ -5285,6 +6211,14 @@
     {
       "family": "AwkwardHuge",
       "why": "sCapHeight of 1400 on a 1000-unit em: taller than the em box",
+      "verticalMetrics": [
+        "20/6"
+      ],
+      "widths": {
+        "chromium": 165.24,
+        "firefox": 165.25,
+        "webkit": 165.24
+      },
       "lies": false,
       "degenerate": true,
       "size": 18,
@@ -5325,6 +6259,14 @@
     {
       "family": "AwkwardHuge",
       "why": "sCapHeight of 1400 on a 1000-unit em: taller than the em box",
+      "verticalMetrics": [
+        "27/9"
+      ],
+      "widths": {
+        "chromium": 220.32,
+        "firefox": 220.25,
+        "webkit": 220.32
+      },
       "lies": false,
       "degenerate": true,
       "size": 24,
@@ -5365,6 +6307,14 @@
     {
       "family": "AwkwardHuge",
       "why": "sCapHeight of 1400 on a 1000-unit em: taller than the em box",
+      "verticalMetrics": [
+        "54/17"
+      ],
+      "widths": {
+        "chromium": 440.64,
+        "firefox": 440.75,
+        "webkit": 440.64
+      },
       "lies": false,
       "degenerate": true,
       "size": 48,
@@ -5405,6 +6355,14 @@
     {
       "family": "AwkwardLies",
       "why": "SpaceMono declaring 600 where its own H is 700: plausible, in range, wrong",
+      "verticalMetrics": [
+        "13/4"
+      ],
+      "widths": {
+        "chromium": 110.16,
+        "firefox": 110.25,
+        "webkit": 110.16
+      },
       "lies": true,
       "degenerate": false,
       "size": 12,
@@ -5445,6 +6403,14 @@
     {
       "family": "AwkwardLies",
       "why": "SpaceMono declaring 600 where its own H is 700: plausible, in range, wrong",
+      "verticalMetrics": [
+        "18/6"
+      ],
+      "widths": {
+        "chromium": 146.88,
+        "firefox": 147,
+        "webkit": 146.88
+      },
       "lies": true,
       "degenerate": false,
       "size": 16,
@@ -5485,6 +6451,14 @@
     {
       "family": "AwkwardLies",
       "why": "SpaceMono declaring 600 where its own H is 700: plausible, in range, wrong",
+      "verticalMetrics": [
+        "20/6"
+      ],
+      "widths": {
+        "chromium": 165.24,
+        "firefox": 165.25,
+        "webkit": 165.24
+      },
       "lies": true,
       "degenerate": false,
       "size": 18,
@@ -5525,6 +6499,14 @@
     {
       "family": "AwkwardLies",
       "why": "SpaceMono declaring 600 where its own H is 700: plausible, in range, wrong",
+      "verticalMetrics": [
+        "27/9"
+      ],
+      "widths": {
+        "chromium": 220.32,
+        "firefox": 220.25,
+        "webkit": 220.32
+      },
       "lies": true,
       "degenerate": false,
       "size": 24,
@@ -5565,6 +6547,14 @@
     {
       "family": "AwkwardLies",
       "why": "SpaceMono declaring 600 where its own H is 700: plausible, in range, wrong",
+      "verticalMetrics": [
+        "54/17"
+      ],
+      "widths": {
+        "chromium": 440.64,
+        "firefox": 440.75,
+        "webkit": 440.64
+      },
       "lies": true,
       "degenerate": false,
       "size": 48,
@@ -5605,6 +6595,14 @@
     {
       "family": "AwkwardLiesLato",
       "why": "Lato declaring 1200 where its own H is 1433, on a 2000-unit em",
+      "verticalMetrics": [
+        "12/3"
+      ],
+      "widths": {
+        "chromium": 118.7,
+        "firefox": 118.7,
+        "webkit": 118.7
+      },
       "lies": true,
       "degenerate": false,
       "size": 12,
@@ -5645,6 +6643,14 @@
     {
       "family": "AwkwardLiesLato",
       "why": "Lato declaring 1200 where its own H is 1433, on a 2000-unit em",
+      "verticalMetrics": [
+        "16/3"
+      ],
+      "widths": {
+        "chromium": 158.26,
+        "firefox": 158.27,
+        "webkit": 158.26
+      },
       "lies": true,
       "degenerate": false,
       "size": 16,
@@ -5685,6 +6691,14 @@
     {
       "family": "AwkwardLiesLato",
       "why": "Lato declaring 1200 where its own H is 1433, on a 2000-unit em",
+      "verticalMetrics": [
+        "18/4"
+      ],
+      "widths": {
+        "chromium": 178.05,
+        "firefox": 178.07,
+        "webkit": 178.05
+      },
       "lies": true,
       "degenerate": false,
       "size": 18,
@@ -5725,6 +6739,14 @@
     {
       "family": "AwkwardLiesLato",
       "why": "Lato declaring 1200 where its own H is 1433, on a 2000-unit em",
+      "verticalMetrics": [
+        "24/5"
+      ],
+      "widths": {
+        "chromium": 237.4,
+        "firefox": 237.38,
+        "webkit": 237.4
+      },
       "lies": true,
       "degenerate": false,
       "size": 24,
@@ -5765,6 +6787,14 @@
     {
       "family": "AwkwardLiesLato",
       "why": "Lato declaring 1200 where its own H is 1433, on a 2000-unit em",
+      "verticalMetrics": [
+        "47/10"
+      ],
+      "widths": {
+        "chromium": 474.79,
+        "firefox": 474.78,
+        "webkit": 474.79
+      },
       "lies": true,
       "degenerate": false,
       "size": 48,

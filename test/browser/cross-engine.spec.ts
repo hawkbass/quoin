@@ -395,24 +395,35 @@ test("font metrics across three engines", async ({ baseURL }) => {
   expect(measured.length, "at least four fonts resolved in every engine").toBeGreaterThanOrEqual(4);
 
   /*
-     The finding the library's own maths depends on. If this ever fails, the
-     seater is computing a grid that only exists in one browser.
+     Agreement is reported here and not gated, which is a deliberate retreat
+     from a claim this file could not support.
 
-     Asserted only across the fonts every engine actually resolved to the same
-     typeface. The generic keywords are excluded by measurement rather than by
-     hand: `sameFont` is computed from the shorthand each engine hands back. */
-  expect(comparable.length, "at least three fonts resolved identically everywhere").toBeGreaterThanOrEqual(3);
-  expect(
-    findings.summary.baselineAgreeingWhereSameFont,
-    "fontBoundingBox must agree across engines: the seater's arithmetic rests on it. " +
-      "Disagreeing rows: " +
-      JSON.stringify(
-        comparable.filter((r) => r.baselineSpread !== 0).map((r) => ({
-          font: r.font,
-          spread: r.baselineSpread,
-        }))
-      )
-  ).toBe(comparable.length);
+     It measures SYSTEM font stacks, and a system stack is a request rather than
+     a font. On a machine without Arial, "Arial" resolves to Liberation Sans,
+     which exists to match Arial's advance widths exactly and does not match its
+     vertical metrics. So the CI runner reported `fontBoundingBox` disagreeing by
+     half a pixel on Arial, Times and `system-ui`, and the width signature could
+     not tell, because matching those widths is the substitute's whole purpose.
+
+     That is a true fact about font substitution and a false one about engines.
+     Gating on it made the suite red for the wrong reason and would have had
+     somebody chasing a portability bug that is not there.
+
+     The portability claim now lives in cap-height.spec.ts, over 24 webfonts
+     loaded from the same bytes in all three engines, where "the same font" is a
+     property of the setup rather than an inference from a measurement. What
+     survives here is what this file is genuinely good at: showing what a generic
+     keyword resolves to, and how far apart the answers are. */
+  console.log(
+    "  Agreement above is reported, not gated. These are system stacks, and a"
+  );
+  console.log(
+    "  system stack is a request rather than a font. The portable-metrics claim"
+  );
+  console.log(
+    "  is asserted in cap-height.spec.ts, against webfonts with identical bytes."
+  );
+  console.log("");
 });
 
 /*

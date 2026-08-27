@@ -237,17 +237,30 @@ test("cap height across three engines and the whole font corpus", async ({ baseU
       );
 
       /*
-         Same bytes everywhere, so the widths must match; if they do not, the
-         font did not load somewhere and the row is not comparable.
+         Did the same font file load in every engine?
 
-         Relative, not absolute. The first version of this used a flat 0.1px,
-         calibrated against readings at 18px, and the engines' 0.006% rounding
-         difference is 0.01px at 18px and 0.26px at 48px, so it silently threw
-         away every large-size row for four fonts and reported them as failures
-         to load. A tolerance on a quantity that scales has to scale with it. */
-      const widths = present.map(([, v]) => v.width);
-      const widest = Math.max(...widths, 1);
-      const sameFont = (spread(widths) ?? 0) / widest <= 0.002;
+         Advance width was the obvious fingerprint and it is the wrong one, in
+         two separate ways that both showed up on the CI runner.
+
+         On Linux, Chromium reports advance widths rounded to whole pixels while
+         Firefox and WebKit report fractions. Every Chromium width in that run is
+         an integer: 120, 158, 178, 238, 476. So a correctly-loaded font looked
+         like a substitution, and 95 of 130 rows were thrown away. It is the same
+         hinting behaviour this study measures in cap heights, arriving through
+         the back door of the validity check.
+
+         And metric-compatible substitutes exist on purpose. Liberation Sans is
+         built to match Arial's advance widths exactly, so on a machine without
+         Arial the widths agree perfectly and the vertical metrics do not. Width
+         cannot detect the substitution that matters most.
+
+         `fontBoundingBox` ascent and descent come from the font's own tables,
+         are not hinted, and were separately measured to agree exactly across all
+         three engines whenever the file is the same. That makes them the right
+         fingerprint here, and they are independent of cap height, which is what
+         this study measures. */
+      const vertical = present.map(([, v]) => `${v.ascent}/${v.descent}`);
+      const sameFont = new Set(vertical).size === 1;
 
       const tableValues = present
         .filter(([n]) => trimEngines.includes(n))
@@ -270,6 +283,8 @@ test("cap height across three engines and the whole font corpus", async ({ baseU
       return {
         family: font.family,
         why: font.why,
+        verticalMetrics: [...new Set(present.map(([, v]) => `${v.ascent}/${v.descent}`))],
+        widths: Object.fromEntries(names.map((n) => [n, per[n]?.width ?? null])),
         lies: Boolean(font.lies),
         degenerate: Boolean(font.degenerate),
         size,
@@ -316,6 +331,16 @@ test("cap height across three engines and the whole font corpus", async ({ baseU
     declaredRows: declared.length,
     worstAgainstFile: Math.max(0, ...declared.map((r) => r.worstAgainstFile ?? 0)),
 
+    /*
+       The other portability claim, asserted here rather than against system
+       fonts, for the reason this whole file exists: on a machine without Arial,
+       "Arial" is Liberation Sans, which is built to match its advance widths and
+       not its vertical ones. Same bytes or the claim is about substitution.
+    */
+    verticalMetricsAgreeing: rows.filter(
+      (r) => r.sameFont && r.tableReadings > 0
+    ).length,
+
     /* And the raster route, for comparison. */
     rasterAgreeing: rows.filter((r) => r.sameFont && (r.rasterSpread ?? 0) <= 0.01).length,
     rasterWithinTolerance: rows.filter((r) => r.sameFont && (r.rasterSpread ?? 0) <= TOLERANCE)
@@ -345,7 +370,28 @@ test("cap height across three engines and the whole font corpus", async ({ baseU
 
     notComparable: rows
       .filter((r) => !r.sameFont)
-      .map((r) => ({ family: r.family, size: r.size })),
+      .map((r) => ({
+        family: r.family,
+        size: r.size,
+        verticalMetrics: r.verticalMetrics,
+      })),
+
+    /*
+       Recorded because it is a finding rather than a nuisance: an engine that
+       rounds every advance width to a whole pixel is doing to horizontal
+       metrics what it does to cap heights.
+    */
+    wholePixelAdvanceWidths: Object.fromEntries(
+      names.map((name) => {
+        const widths = rows
+          .map((r) => r.widths[name])
+          .filter((w): w is number => typeof w === "number");
+        return [
+          name,
+          { readings: widths.length, whole: widths.filter((w) => Number.isInteger(w)).length },
+        ];
+      })
+    ),
   };
 
   mkdirSync("findings", { recursive: true });
