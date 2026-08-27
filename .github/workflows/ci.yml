@@ -57,6 +57,71 @@ jobs:
           path: playwright-report/
           retention-days: 7
 
+  # The action, through its own composite interface rather than by running the
+  # script directly.
+  #
+  # test/browser/action.spec.ts drives `node action/run.mjs` with the inputs as
+  # environment variables, which is most of it and not all of it: the mapping in
+  # action.yml from `inputs.widths` to QUOIN_WIDTHS is untested from inside, and
+  # a typo there is invisible until somebody adds the action to a repository. So
+  # this runs it the way a workflow does, against the real site, and then breaks
+  # the page on purpose to prove the gate fires. A gate nobody has watched fail
+  # is not a gate.
+  action:
+    runs-on: ubuntu-latest
+    needs: unit
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm run build:site
+
+      - name: Record a baseline for the built site
+        uses: ./
+        with:
+          urls: /index.html
+          directory: ./site/dist
+          widths: "1280,900"
+          baseline: .quoin-ci-baseline.json
+          comment: "false"
+
+      - name: The same page, unchanged, must find nothing
+        uses: ./
+        with:
+          urls: /index.html
+          directory: ./site/dist
+          widths: "1280,900"
+          baseline: .quoin-ci-baseline.json
+          comment: "false"
+
+      - name: Break the page on purpose
+        run: printf '
+section { border-top: 3px solid red; padding-top: 25px; }
+' >> site/dist/style.css
+
+      - name: And now it has to fail
+        id: broken
+        continue-on-error: true
+        uses: ./
+        with:
+          urls: /index.html
+          directory: ./site/dist
+          widths: "1280,900"
+          baseline: .quoin-ci-baseline.json
+          comment: "false"
+
+      - name: A gate that does not fail is not a gate
+        run: |
+          if [ "${{ steps.broken.outcome }}" != "failure" ]; then
+            echo "::error::the action passed a page it should have failed"
+            exit 1
+          fi
+          echo "The gate fired, which is the point of it."
+
   # Downloads 30MB of fonts from a third party, so it is separated: a failure
   # here is a network failure or an upstream rename, not a defect in this
   # repository, and the two should not look the same on a pull request.

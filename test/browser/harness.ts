@@ -18,6 +18,10 @@ export interface InPage {
   verifyGrid: (o?: unknown) => {
     results: TextNodeResult[];
     report: GridReport;
+    /* The grid actually used, which is the solved one when `origin: "auto"`
+       was asked for. */
+    grid: { pitch: number; tolerance: number; origin: number };
+    originSolved: boolean;
     skippedTransformed: number;
     closedShadowRoots: number;
     frames: number;
@@ -45,6 +49,18 @@ export interface InPage {
     frames: number;
   };
   inShadowRoot: (el: Element) => boolean;
+  verifyRhythm: (o?: unknown) => {
+    total: number;
+    onRhythm: number;
+    accumulated: number;
+    inherited: number;
+    byCause: Record<string, number>;
+    issues: {
+      path: string; selector: string | null; sample: string;
+      height: number; over: number; cause: string;
+      detail: string; fix: string; below: number;
+    }[];
+  };
   gridNativeScale: (font: string, o?: unknown) => {
     font: string;
     resolved: boolean;

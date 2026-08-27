@@ -30,6 +30,7 @@ export {
   seatingPadding,
   summarise,
   gridConfig,
+  bestOrigin,
   DEFAULT_GRID,
   type GridConfig,
   type GridResult,
@@ -50,6 +51,14 @@ export {
 } from "./verify.ts";
 
 export { walk } from "./walk.ts";
+
+export {
+  verifyRhythm,
+  type RhythmReport,
+  type RhythmIssue,
+  type RhythmCause,
+  type RhythmOptions,
+} from "./rhythm.ts";
 
 export {
   gridNativeScale,

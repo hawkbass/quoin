@@ -210,3 +210,98 @@ test("the resolved font is reported, not the one that was asked for", async ({ p
     expect(font, `"${font}" should carry a px size`).toMatch(/\d+(\.\d+)?px/);
   }
 });
+
+/* ------------------------------------------------------------------ *
+   Solving for the origin
+ * ------------------------------------------------------------------ */
+
+test("a page offset by a constant is found rather than reported as nothing", async ({
+  page,
+}) => {
+  /*
+     one-phase.html has a single phase, so one origin serves all of it. Push the
+     whole page down by three pixels and an origin of zero reports nothing on
+     the grid, because zero asks whether baselines sit on multiples of the pitch
+     from the top of the document and every one of them now does not. The page
+     is still on an 8px grid. Its origin is three.
+  */
+  await load(page, "one-phase.html");
+
+  const measured = await page.evaluate(({ grid }) => {
+    document.body.style.paddingTop = "3px";
+    const fixed = window.quoin.verifyGrid(grid);
+    const solved = window.quoin.verifyGrid({ ...grid, origin: "auto" });
+    return {
+      fixed: fixed.report,
+      solved: solved.report,
+      origin: solved.grid.origin,
+      solvedFlag: solved.originSolved,
+      fixedFlag: fixed.originSolved,
+    };
+  }, { grid: GRID });
+
+  expect(measured.fixed.onGrid, "against zero, nothing is on the grid").toBe(0);
+  expect(measured.solved.onGrid, "against its own origin, all of it is").toBe(
+    measured.solved.total
+  );
+  expect(measured.solvedFlag, "and it says the origin was solved").toBe(true);
+  expect(measured.fixedFlag, "which a fixed origin does not claim").toBe(false);
+});
+
+test("solving never reports fewer blocks than a fixed origin would", async ({ page }) => {
+  /*
+     The property that makes the number trustworthy. `auto` maximises, so it can
+     never be beaten by any particular origin, including the one it replaced.
+     Checked against a sweep rather than against itself.
+  */
+  await load(page, "prose.html");
+
+  const worst = await page.evaluate(({ grid }) => {
+    const solved = window.quoin.verifyGrid({ ...grid, origin: "auto" });
+    let best = 0;
+    for (let origin = 0; origin < grid.pitch; origin += 0.25) {
+      best = Math.max(best, window.quoin.verifyGrid({ ...grid, origin }).report.onGrid);
+    }
+    return { solved: solved.report.onGrid, best, total: solved.report.total };
+  }, { grid: GRID });
+
+  expect(worst.total).toBeGreaterThan(3);
+  expect(worst.solved).toBeGreaterThanOrEqual(worst.best);
+});
+
+test("solving does not manufacture a grid on a page that has none", async ({ page }) => {
+  /*
+     The opposite failure, and the one that would make the tool useless: an
+     origin flattering enough to hide real drift. Scatter the leading so every
+     block sits at its own phase, and no origin can seat them.
+  */
+  await load(page, "prose.html");
+
+  const scattered = await page.evaluate(({ grid }) => {
+    document.querySelectorAll("p").forEach((p, i) => {
+      (p as HTMLElement).style.lineHeight = `${20 + i * 1.3}px`;
+    });
+    const solved = window.quoin.verifyGrid({ ...grid, origin: "auto" });
+    return solved.report;
+  }, { grid: GRID });
+
+  expect(scattered.total).toBeGreaterThan(4);
+  expect(
+    scattered.onGrid / scattered.total,
+    "most of a scattered page stays off the grid"
+  ).toBeLessThan(0.5);
+});
+
+test("an empty page does not crash the solver or invent an origin", async ({ page }) => {
+  await load(page, "prose.html");
+
+  const empty = await page.evaluate(({ grid }) => {
+    document.body.textContent = "";
+    const solved = window.quoin.verifyGrid({ ...grid, origin: "auto" });
+    return { total: solved.report.total, origin: solved.grid.origin, flag: solved.originSolved };
+  }, { grid: GRID });
+
+  expect(empty.total).toBe(0);
+  expect(empty.origin, "the origin it was given, not a guess").toBe(0);
+  expect(empty.flag, "nothing was solved").toBe(false);
+});

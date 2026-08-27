@@ -1,5 +1,116 @@
 # Changelog
 
+## 1.4.0
+
+The GitHub Action, rhythm, and an origin that is solved rather than assumed.
+
+1.3.0 could solve a type scale so a page needs no corrections. This release adds
+the two things that make the tool usable by a team rather than a person: a gate
+that stops a page getting worse, and the other half of the measurement, without
+which that gate misses the commonest defect there is.
+
+### Added
+
+**A GitHub Action.** It serves a built directory, measures every page at every
+width, compares against a committed `.quoin-baseline.json`, and leaves one pull
+request comment, edited in place rather than added to on every push.
+
+```yaml
+- uses: hawkbass/quoin@v1
+  with:
+    urls: /index.html
+    directory: ./dist
+    widths: "1280,900,375"
+```
+
+The gate is a regression rather than a floor. `--min 90` is the obvious CI gate
+and it is the wrong primitive: almost no real page is at 90, so the number a team
+can set is the number they are already at, and then the gate does nothing until
+somebody edits it. The corpus says the median page is at 28%. So the first run
+records where you are, and every run after that fails if you go backwards.
+
+The delta is in blocks rather than percent, because a percentage moves when the
+page gains a paragraph, and a tool that blocks a pull request over added copy is
+a tool that gets removed.
+
+**`verifyRhythm(options)` and `quoin rhythm`.** Whether each box is a whole
+number of grid rows tall, and which part of the box is not. Height is border plus
+padding plus content, and each is checked separately in the order somebody can
+act on. It only blames leading on a box that owns text, because `line-height`
+inherits and a wrapper's height is its children's: changing its leading changes
+nothing at all, and the first version pointed at a container as the cause of its
+own child's fraction. Issues rank by how many blocks they move rather than by how
+many pixels, since three pixels at the top of a page moves everything and seven
+at the bottom moves nothing.
+
+**`bestOrigin(baselines, grid)` and `origin: "auto"`, now the default.** An
+origin of zero asks whether baselines sit on multiples of the pitch from the top
+of the document, and a page with a header answers no however carefully it is set,
+because everything below the header moved by the same amount. That page is on a
+grid whose origin is 3, and measuring it against zero reported nothing on the
+grid at all.
+
+**`makeBaseline` and `compareToBaseline`.** The committed record and the
+comparison, exported so the Action's behaviour can be reasoned about outside it.
+
+### Changed
+
+**`--origin` accepts `auto` and defaults to it**, for `check`, `seat` and the
+Action. `seat` resolves it before anything moves: seating to zero would shift
+every block on a page that is merely offset, which is a great deal of correction
+to fix one header's border. Pass `--origin 0` for the old strict reading.
+
+**Rhythm is a gate as well as phase.** A hairline border moves every block below
+it by one pixel, so the page splits into two phases a pixel apart, and on an 8px
+grid with half a pixel of tolerance an origin sitting between those halves is
+within tolerance of both. The phase count does not move at all. Gating on phase
+alone waved through the exact defect this library was written to find.
+
+**The corpus is 212 sites, not 12**, across design systems, documentation,
+editorial, type foundries, studios, products, institutions and universities.
+`npm run corpus` writes `findings/corpus.md`.
+
+### Fixed
+
+**The action's static server wrote its 200 header before reading the file**, so a
+missing page threw with the headers already sent and the run died inside the
+request handler rather than reporting a 404. The same bug was in
+`scripts/serve-site.mjs`.
+
+**The absolute floor was skipped on the first run.** Recording a baseline exited
+zero before the floor was evaluated, so a repository that set `min: 90` on a page
+sitting at 80 got a green build on the one gate it had asked for.
+
+**`bestOrigin` counted candidates with the window rather than with
+`checkBaseline`.** A span exactly two tolerances wide sits on a floating-point
+boundary where the two disagree, and the solver claimed a block the report then
+called off-grid.
+
+### Findings
+
+**Not one site in 212 reaches 90% on an 8px grid.** The best is Fonts In Use at
+89.2%. Seven clear 50%. The median is 28.1%.
+
+**The categories are indistinguishable, and that is the finding.** Best to worst
+runs 32.0% to 24.5%. Type foundries, whose entire trade is typography, land at
+31.9%, which is the same as documentation sites at 30.5%.
+
+**Except in rhythm, where design systems are eight times better than anyone
+else**: a median of 29.7% against 3.7% for type foundries and 2.2% for
+institutions. That is the largest gap in the study, it is exactly what a design
+system is for, and it buys them nothing on phase, where they sit mid-table at
+30.7%. Quantising your CSS gives you rhythm, and rhythm is not phase. The whole
+argument of this library, measured across 27 design systems.
+
+**Solving for the origin is worth 14.6 points of median**, and far more on
+individual sites: The Met reads 0.8% against zero and 48.8% against its own
+origin.
+
+**Leading is the commonest rhythm defect on 106 of the 153 sites scored.** A
+`line-height` that is a ratio rather than a number of rows. `1.5` on 17px is
+25.5px, and every extra line carries the half pixel down the page. It is the
+least visible defect available, because `1.5` looks like a decision.
+
 ## 1.3.0
 
 Solving instead of correcting.

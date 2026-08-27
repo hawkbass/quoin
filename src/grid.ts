@@ -154,3 +154,80 @@ export function summarise(
     distinctDrifts: unique.size,
   };
 }
+
+/**
+ * The grid origin that seats the most baselines on this page.
+ *
+ * An origin of zero asks "are these baselines on multiples of the pitch from
+ * the top of the document", and almost no real page answers yes: a header with
+ * a border, a body padding of 20, anything at all above the first paragraph
+ * shifts every baseline by the same amount. Such a page is on a grid. It is on
+ * a grid whose origin is 3, and measuring it against zero reports nothing on
+ * the grid at all, which is both useless and wrong.
+ *
+ * So this finds the origin the page is actually built on. Each baseline gives a
+ * residue mod pitch, and the question is which window of width `2 * tolerance`
+ * covers the most residues on a circle of circumference `pitch`. An optimal
+ * window can always be slid until its leading edge rests on a point, so the
+ * candidates are the points themselves and a sorted two-pointer settles it.
+ *
+ * What it deliberately does not do is make a page look better than it is. A
+ * page with two type sizes has two phases, and no single origin serves both:
+ * the count it returns is the best available, and the rest is a real defect.
+ */
+export function bestOrigin(
+  baselines: readonly number[],
+  grid: GridConfig = DEFAULT_GRID
+): { origin: number; onGrid: number } {
+  if (baselines.length === 0) return { origin: grid.origin, onGrid: 0 };
+
+  const { pitch, tolerance } = grid;
+  const wrap = (n: number) => ((n % pitch) + pitch) % pitch;
+
+  const residues = baselines.map(wrap).sort((a, b) => a - b);
+  /* Two laps, so a window that straddles the wrap point is contiguous. The
+     configuration refuses a tolerance of half the pitch or more, so a window
+     can never be wide enough to need a third. */
+  const doubled = residues.concat(residues.map((r) => r + pitch));
+  const width = 2 * tolerance;
+
+  let bestCount = -1;
+  let bestOriginValue = grid.origin;
+  let end = 0;
+
+  for (let start = 0; start < residues.length; start++) {
+    if (end < start) end = start;
+    while (end < doubled.length && doubled[end]! <= doubled[start]! + width) end++;
+
+    /* The window count is an upper bound on what this candidate can seat, so a
+       window that cannot beat the best already found needs no further work. */
+    if (end - start <= bestCount) continue;
+
+    /* The midpoint of the residues actually covered, rather than the edge of
+       the window plus a tolerance. It puts the origin as far from both extremes
+       as the span allows, and for a cluster of identical residues it lands on
+       the cluster, which is the number a person reading the report expects. */
+    const candidate = wrap((doubled[start]! + doubled[end - 1]!) / 2);
+
+    /*
+       Counted with `checkBaseline` rather than with the window, because those
+       are two pieces of arithmetic and they have to agree. A span exactly two
+       tolerances wide sits on the boundary, where floating point puts one edge
+       at 0.5000000000000004 and the window's answer becomes one the report
+       cannot reproduce. Whatever the counter says is the number, and a solver
+       that claims a block the report then calls off-grid is a tool disagreeing
+       with itself.
+    */
+    let count = 0;
+    for (const baseline of baselines) {
+      if (checkBaseline(baseline, { ...grid, origin: candidate }).onGrid) count++;
+    }
+
+    if (count > bestCount) {
+      bestCount = count;
+      bestOriginValue = candidate;
+    }
+  }
+
+  return { origin: bestOriginValue, onGrid: Math.max(bestCount, 0) };
+}

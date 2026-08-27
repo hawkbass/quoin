@@ -28,11 +28,14 @@ createServer((request, response) => {
     return;
   }
   try {
+    /* Read first, then write headers: a missing file otherwise throws with the
+       200 already sent, and the catch cannot put a 404 on top of it. */
+    const body = readFileSync(target);
     response.writeHead(200, {
       "content-type": TYPES[extname(target)] ?? "application/octet-stream",
       "cache-control": "no-store",
     });
-    response.end(readFileSync(target));
+    response.end(body);
   } catch {
     response.writeHead(404).end("not here");
   }

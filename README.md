@@ -13,7 +13,7 @@ quoin.css()     // the corrections as a stylesheet you can ship
 
 [![ci](https://github.com/hawkbass/quoin/actions/workflows/ci.yml/badge.svg)](https://github.com/hawkbass/quoin/actions/workflows/ci.yml)
 
-MIT. No dependencies. 17 kB.
+MIT. No dependencies. 24 kB.
 
 ---
 
@@ -549,44 +549,110 @@ used hinted measurements to decide which unhinted measurements were trustworthy.
 
 ## Finding: nobody has a baseline grid
 
-The tool bundles to 17 kB with no dependencies, so it can be dropped into any
-page. Pointed at the reference design systems, homepages at 1280px, half-pixel
-tolerance:
+The tool bundles to 24 kB with no dependencies, so it can be dropped into any
+page. Pointed at 212 sites, homepages at 1280px, half-pixel tolerance, with the
+grid origin solved from each page rather than pinned to zero:
 
-| Design system | Nodes | On a 4px grid | On an 8px grid | Distinct drifts |
-|---|---|---|---|---|
-| Shopify Polaris | 56 | 50.0% | 30.4% | 4 |
-| Atlassian Design | 70 | 47.1% | 14.3% | 16 |
-| Ant Design | 222 | 36.5% | 19.8% | 19 |
-| GOV.UK Design System | 76 | 30.3% | 19.7% | 5 |
-| Material Design 3 | 130 | 30.0% | 16.2% | 5 |
-| **craighawkes.dev** | 108 | 22.2% | 6.5% | **11** |
-| Tailwind CSS | 193 | 19.7% | 11.4% | 18 |
-| IBM Carbon | 52 | 19.2% | 15.4% | 23 |
-| Salesforce Lightning | 58 | 17.2% | 3.4% | 23 |
+| Category | Sites | On an 8px grid | Pinned to origin 0 | Rhythm | Distinct drifts |
+|---|---|---|---|---|---|
+| Institutions | 9 | 32.0% | 13.6% | 2.2% | 22 |
+| Type foundries | 15 | 31.9% | 11.9% | 3.7% | 21 |
+| Design systems | 27 | 30.7% | 14.3% | **29.7%** | 21 |
+| Documentation | 39 | 30.5% | 12.8% | 20.9% | 22 |
+| Academic | 7 | 26.9% | 11.5% | 10.0% | 37 |
+| Studios | 11 | 26.5% | 8.8% | 8.1% | 28 |
+| Product | 24 | 25.8% | 11.4% | 24.9% | 45 |
+| Editorial | 20 | 24.5% | 10.6% | 18.8% | 46.5 |
 
-`npm run corpus` reproduces it. Raw output in `findings/corpus.json`.
+Medians, not means: one site at 4% drags an average and tells you nothing about
+the category. 153 sites scored, 59 dropped. `npm run corpus` reproduces it; the
+full table is in `findings/corpus.md` and the raw readings in
+`findings/corpus.json`.
 
 **None of these sites claims a baseline grid, so being off one is not a defect.**
 The table describes the medium rather than the teams: a convention print has had
-since metal type, which the best resourced design systems in the industry do not
-have either.
+since metal type, which nothing on the web has.
 
-**Read the last column first.** Percentages say how far off a page is. Distinct
-drift values say whether it is off in an *orderly* way. Four or five across a
-whole homepage means the type scale and the spacing scale agree with each other.
-Twenty-three means they are having different conversations.
+**Not one site in 212 reaches 90%.** The best is Fonts In Use at 89.2%, then
+Bureau Borsche at 82.1%, then a gap to Svelte at 60.7%. Seven sites clear 50%.
+The median is 28.1%.
+
+### The categories are the same, and that is the finding
+
+The spread from best to worst category is 32.0% to 24.5%. Type foundries, whose
+entire trade is typography and who sell the fonts everyone else sets, land at
+31.9%, which is not distinguishable from documentation sites at 30.5%. Knowing
+more about type does not put a web page on a grid, because the thing standing in
+the way is not knowledge.
+
+### Except in one column, where design systems are eight times better
+
+Rhythm is whether each box is a whole number of grid rows tall. Design systems
+median **29.7%**, against 3.7% for type foundries and 2.2% for institutions.
+That is the largest gap anywhere in the study, and it is exactly what a design
+system is for: an 8px spacing scale, quantised leading, tokens that are multiples
+of a base unit. It works. It shows up in the measurement.
+
+And it buys them nothing in the other column. Design systems sit at 30.7% on
+phase, in the middle of the table, behind two categories with almost no rhythm at
+all.
+
+**That gap is the entire argument of this library.** Quantising your CSS gives
+you rhythm, and rhythm is not phase. Phase is `L/2 + S(A - D)/2`, and the ascent
+in it belongs to the typeface rather than to your spacing scale, so no amount of
+tidy tokens reaches it. The teams doing the most disciplined vertical spacing on
+the web are doing it correctly and still landing where everyone else lands, and
+the only reason to build this was that the missing half is invisible without
+measuring.
+
+### Solving for the origin is worth 14.6 points
+
+Every site was measured twice. Pinned to an origin of zero the median is 11.9%;
+solved from the page it is 28.1%. Zero asks whether baselines sit on multiples of
+the pitch from the top of the document, and a page with a header answers no
+however carefully it is set, because everything below the header moved by the
+same amount. The Met reads 0.8% against zero and 48.8% against its own origin.
+Salesforce Lightning reads 1.8% and 32.7%.
+
+That measurement is why `origin` defaults to `auto` everywhere. An earlier
+version of this table was taken against zero and understated every row in it.
+
+### Leading is the cause, on two sites in three
+
+Of the 153 sites scored, the commonest rhythm defect on 106 of them is leading:
+a `line-height` that is a ratio rather than a number of rows. `1.5` on 17px is
+25.5px, and every extra line in the paragraph carries the half pixel down the
+page. After that, 30 sites are led by replaced elements with no quantised height,
+9 by borders and 8 by padding.
+
+It is the least visible defect available. `line-height: 1.5` looks like a
+decision. It is a decision, and it is also 25.5px.
+
+**Read the last column too.** Percentages say how far off a page is; distinct
+drift values say whether it is off in an *orderly* way. Twenty across a homepage
+means the type scale and the spacing scale agree with each other. Forty-six, the
+editorial median, means they are having different conversations.
 
 craighawkes.dev sat at **ninety** distinct drifts when the survey first ran, last
 in the table by three times, on the one measurement it had built the instrument
 for. Three causes, all found by measuring: a media query in another file
 restoring a unitless `--leading-normal` at every desktop width, twenty-one 1px
 hairlines each adding a pixel of layout, and a fluid type scale whose fractional
-sizes give fractional ascents.
+sizes give fractional ascents. It now sits at 20 distinct drifts with the highest
+rhythm in the corpus at 44.5%, and at 22.1% on phase, which is below the median.
+Being the surveyor is not the same as being finished.
 
-Dropped rather than scored: Adobe Spectrum (21 text nodes) and GitHub Primer (36)
-render too little at load to characterise. Stripe refuses injected scripts, which
-is a correct content security policy and a real limit on the method.
+### What the 59 dropped rows say about the method
+
+28 sites render fewer than 25 blocks of text at load, which is too thin for a
+percentage to mean anything. 19 were behind a consent dialog, which is a
+different page: measuring it and calling the result somebody's design system
+would be worse than not measuring at all. 12 failed to load in time or refused
+the injected script, which for Stripe and Figma is a correct content security
+policy and a real limit on this method rather than a fault in theirs.
+
+Dismissing 19 consent dialogs automatically would have grown the sample and
+spoiled it, so the dialogs stand and the count is reported instead.
 
 ---
 
@@ -618,17 +684,113 @@ responses.
 
 ---
 
+## Rhythm, the other half
+
+Phase is where a baseline sits inside its own line box, and most of this library
+is about phase. Rhythm is whether each box is a whole number of grid rows tall,
+and it is the half that decides whether a correction survives anything changing.
+
+A block whose height is not a multiple of the pitch shifts every block after it
+by the remainder. That is why one un-quantised box near the top of a page costs
+the whole page, and it is why static corrections stop holding when the viewport
+moves: a block that reflows to a different number of lines changes height by a
+multiple of its leading, which is only harmless if the leading is a whole number
+of rows.
+
+```bash
+npx quoin rhythm https://example.com
+```
+
+```
+  179/402 boxes are a whole number of rows
+
+  header.hero            5px past a row, moves 274 blocks
+    3px of border on an 8px grid
+    Subtract the border from this box's own padding: padding 50px instead of
+    53px keeps the rule and the rhythm.
+
+  p.kicker               4px past a row, moves 273 blocks
+    line-height 27.2px is not a whole number of 8px rows
+    Set line-height to 32px. A block's height is its line count times its
+    leading, so leading off the grid puts every extra line off it too.
+```
+
+Three things it does that a height check does not.
+
+**It says which part of the box is wrong.** Height is border plus padding plus
+content, and each is checked separately, in the order somebody can act on: a
+border is one line of CSS, padding is one line, leading is a decision about the
+type scale, and content taller than its own lines is something further in.
+
+**It only blames leading on a box that owns text.** `line-height` inherits, so a
+wrapper with no words of its own still reports whatever the body set. Blaming
+that is worse than saying nothing, because the wrapper's height is its
+children's and changing its leading changes nothing at all. The first version did
+exactly that.
+
+**It ranks by blocks moved, not by pixels.** Three pixels at the top of a page
+moves everything; seven at the bottom moves nothing. A report sorted by size puts
+the harmless one first. `accumulated` counts only the fractions a box introduces
+itself, because a wrapper that is fractional because its child is has introduced
+nothing, and counting both reports the same pixel twice. On one page a naive sum
+came to 3617px across 1453 boxes, most of it containers inheriting the same
+7.28px from the one inside them, nine levels deep.
+
+---
+
+## Solving for the origin
+
+An origin of zero asks whether baselines sit on multiples of the pitch measured
+from the top of the document. Almost no real page answers yes, and not because
+it is badly set: a header with a border, a body padding of 20, anything at all
+above the first paragraph moves every baseline by the same amount. Such a page
+**is** on a grid. It is on a grid whose origin is 3, and measuring it against
+zero reports nothing on the grid at all.
+
+So `origin` defaults to `auto` and the origin is solved from the page. Each
+baseline gives a residue mod pitch, and the question is which window of width
+`2 x tolerance` covers the most residues on a circle of circumference `pitch`.
+An optimal window can always be slid until its leading edge rests on a point, so
+the candidates are the points themselves and a sorted two-pointer settles it.
+
+It is worth 14.6 points of median across the corpus, and on individual sites far
+more: The Met reads 0.8% against zero and 48.8% against its own origin.
+
+What it deliberately does not do is flatter. A page with two type sizes has two
+phases and no single origin serves both, so the count it returns is the best
+available and the rest is a real defect. The candidate count is computed with
+`checkBaseline`, the same arithmetic the report uses, rather than from the window
+width: a span exactly two tolerances wide sits on a floating-point boundary where
+the two disagree, and a solver that claims a block the report then calls off-grid
+is a tool disagreeing with itself.
+
+```js
+bestOrigin([3, 11, 19, 27], { pitch: 8, tolerance: 0.5, origin: 0 })
+// { origin: 3, onGrid: 4 }
+```
+
+Pass a number to pin it: `--origin 0` for the strict reading, or any value your
+page is actually built on.
+
+---
+
 ## The command line
 
 ```bash
-npx quoin check https://example.com
-npx quoin check https://example.com --pitch 4 --min 90    # exits 1 below the floor
-npx quoin seat  https://example.com -o baseline.css
+npx quoin check  https://example.com
+npx quoin check  https://example.com --pitch 4 --min 90   # exits 1 below the floor
+npx quoin seat   https://example.com -o baseline.css
+npx quoin rhythm https://example.com
+npx quoin scale  --font "EB Garamond" --sizes 16,28,44
 npx quoin engine --browser firefox
 ```
 
 `check` walks a page and reports. `seat` corrects it and prints the stylesheet.
-`engine` tells you whether this browser's cap heights come off the rasteriser.
+`rhythm` says which boxes are not a whole number of rows and why. `scale` solves
+a type scale that needs no correction at all. `engine` tells you whether this
+browser's cap heights come off the rasteriser.
+
+`--origin` takes a number or `auto`, and `auto` is the default.
 
 The library has no dependencies. The CLI drives a real browser, so it needs
 Playwright, and says so plainly if you have not got it.
@@ -696,6 +858,75 @@ govern, so it works everywhere the console does.
 
 ---
 
+## The GitHub Action
+
+```yaml
+- uses: hawkbass/quoin@v1
+  with:
+    urls: |
+      /index.html
+      /about
+    directory: ./dist
+    widths: "1280,900,375"
+    ignore: "h1,.hero"
+```
+
+It serves the built directory, measures every page at every width, compares
+against a committed `.quoin-baseline.json`, and leaves one comment on the pull
+request, edited in place rather than added to on every push.
+
+**The gate is a regression, not a floor.** `--min 90` is the obvious CI gate and
+it is the wrong primitive: almost no real page is at 90, so the number a team can
+actually set is the number they are already at, and then the gate does nothing
+until somebody edits it. The corpus says the median page is at 28%. So the first
+run records where you are and every run after that fails if you go backwards.
+Improvements land freely. An absolute floor is still available through `min`,
+off by default, and it applies on the first run too.
+
+**The delta is in blocks, not percent.** A percentage moves when the page gains
+a paragraph, and a tool that blocks a pull request because somebody added copy is
+a tool that gets removed. A change in the denominator is reported next to the
+count rather than folded into the verdict.
+
+**Rhythm is a gate as well as phase**, and it has to be. A hairline border moves
+every block below it by one pixel, so the page splits into two phases a pixel
+apart; on an 8px grid with half a pixel of tolerance an origin sitting between
+those halves is within tolerance of both, and the phase count does not move at
+all. The first version gated on phase alone and waved through the commonest
+defect there is. The test that catches it is in `test/browser/action.spec.ts`,
+and it asserts the rhythm regression specifically, because writing it the other
+way round is how it passed while being wrong.
+
+```
+### Quoin
+
+**1 reading came off the grid.**
+
+| | Page | Width | On grid | | Δ | Rhythm |
+|---|---|---|---|---|---|---|
+| 🔻 | `index.html` | 1280px | 275/275 | 100% | | 5/7 -2 |
+
+**Where the drift comes from**
+
+- `index.html` html > body > header.hero is 5px past a row, which moves 274
+  blocks. Subtract the border from this box's own padding: padding 50px instead
+  of 53px keeps the rule and the rhythm.
+
+Phase held and rhythm did not. A box that is not a whole number of rows shifts
+everything after it, and it shifts it by a different amount at every viewport,
+so no correction above it survives a reflow.
+```
+
+Corrections are absolute pixel values for one layout, so `widths` takes a list
+and each width is its own reading. A page can be on the grid at one width and off
+it at another, and a single-width gate would not know.
+
+The action is plain Node against the built bundle, with no dependency tree of its
+own: an action that pulls one is an action that breaks on somebody else's
+release.
+
+---
+
 ## API
 
 | | |
@@ -705,6 +936,8 @@ govern, so it works everywhere the console does.
 | `exportCssVerified(result, options?)` | the same, applied and re-measured, escalating only what lost |
 | `checkExport(result, css)` | which declarations the page's own CSS overrules |
 | `verifyGrid(options)` | walk a rendered page, report every line |
+| `verifyRhythm(options)` | which boxes are not a whole number of rows, and why |
+| `bestOrigin(baselines, grid)` | the grid origin that seats the most of them |
 | `walk(root, options?)` | every element owning words, plus what could not be entered |
 | `textBlocks(root, ignore)` | the same, blocks only |
 | `measureFont(shorthand, size?)` | ascent, descent, cap height, x height |
@@ -723,6 +956,8 @@ govern, so it works everywhere the console does.
 | `uniqueSelector(el)` | a selector verified to match exactly that element, or null |
 | `inShadowRoot(el)` | whether a stylesheet can reach it at all |
 | `gridConfig(options)` | validate a grid, or throw |
+| `makeBaseline(entries, version, when)` | a committed record of where a page stands |
+| `compareToBaseline(baseline, fresh, allowed?)` | what moved, in blocks rather than percent |
 
 Drift is signed rather than absolute, on purpose. A page where everything is 3px
 low has one systematic error and one fix. A page where drift alternates has a
@@ -782,10 +1017,10 @@ Then `quoin.check()` in the console.
 ## Tests
 
 ```bash
-npm test              # 43 unit tests: the arithmetic, in Node, no browser
-npm run test:browser  # 132 browser tests across Chromium, Firefox and WebKit
+npm test              # 83 unit tests: the arithmetic, in Node, no browser
+npm run test:browser  # 303 browser tests across Chromium, Firefox and WebKit
 npm run fonts         # download the 24-font corpus
-npm run corpus        # measure twelve live design systems
+npm run corpus        # measure 212 live sites and write findings/corpus.md
 npm run wild          # seat five of them and check the exported CSS holds
 npm run build:extension:test && npx playwright test test/browser/extension.spec.ts
 ```
@@ -805,13 +1040,27 @@ torture page with shadow roots, frames, multi-column, drop capitals, tables,
 right-to-left text, vertical writing, `display: contents`, `content-visibility`,
 fourteen levels of nesting and three hundred generated paragraphs.
 
+The CLI, the extension and the GitHub Action are tested through their real entry
+points rather than by importing a function out of them: the action runs as a
+subprocess with its inputs arriving as environment variables and its outputs read
+back out of a `GITHUB_OUTPUT` file, because that is the only interface a workflow
+has. Two bugs were found that way and neither was reachable from the inside. The
+static server wrote its 200 header before reading the file, so a missing page
+crashed the run instead of reporting a 404, and the absolute floor was skipped
+entirely on the first run, so a page below a floor somebody had deliberately set
+went green.
+
 ---
 
 ## Status
 
-**1.0.** The arithmetic is tested, the seater and the CSS export are tested
+**1.4.** The arithmetic is tested, the seater and the CSS export are tested
 against fixtures that reproduce the cases they exist for and against five live
 design systems, and the cross-engine findings are regenerated from real browsers
-rather than replayed from a recording.
+rather than replayed from a recording. 83 unit tests, 303 browser tests across
+three engines, and a 212-site study that reproduces with one command.
+
+The library, the command line, the browser extension and the GitHub Action are
+each tested through the interface somebody actually uses.
 
 Not published to npm.

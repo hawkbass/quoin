@@ -13,6 +13,7 @@ import {
   type FontMetrics,
 } from "./metrics.ts";
 import {
+  bestOrigin,
   checkBaseline,
   gridConfig,
   summarise,
@@ -51,7 +52,19 @@ export interface TextNodeResult extends GridResult {
   inShadow: boolean;
 }
 
-export interface VerifyOptions extends Partial<GridConfig> {
+export interface VerifyOptions extends Omit<Partial<GridConfig>, "origin"> {
+  /**
+   * Where the grid starts, in px, or `"auto"` to solve for it.
+   *
+   * Zero is the default and it is the right answer only for a page that begins
+   * flush against the top of the document. Anything above the first paragraph
+   * shifts every baseline equally, and such a page is on a grid whose origin is
+   * not zero. `"auto"` finds the origin that seats the most baselines, which is
+   * the number to use when the question is whether a page is internally
+   * consistent rather than whether it agrees with a grid you have already
+   * fixed.
+   */
+  origin?: number | "auto";
   /** Root to walk. Defaults to `document.body`. */
   root?: Element;
   /** Skip elements matching these selectors, and everything inside them. */
@@ -128,6 +141,14 @@ export interface VerifyResult {
   closedShadowRoots: number;
   /** Frames on the page, whose content is a different document. */
   frames: number;
+  /**
+   * True when the origin in `grid` was solved from the page rather than given.
+   *
+   * Worth reporting, because a reading taken against a solved origin answers a
+   * different question from one taken against a fixed origin, and a number
+   * whose question is unstated is a number that gets quoted wrongly.
+   */
+  originSolved: boolean;
 }
 
 /* Only the FIRST line of each block is checked. Every subsequent line sits one
@@ -136,7 +157,15 @@ export interface VerifyResult {
    not has drift that grows down the paragraph and is a leading problem rather
    than a seating one. */
 export function verifyGrid(options: VerifyOptions = {}): VerifyResult {
-  const grid = gridConfig(options);
+  /* The origin cannot be solved before the baselines are measured, and the
+     measurement needs a config. So the page is measured against zero and the
+     results are re-checked once the origin is known: `checkBaseline` is
+     arithmetic on a number already collected, so the second pass touches no
+     DOM and costs nothing. */
+  const solveOrigin = options.origin === "auto";
+  const grid = gridConfig(
+    solveOrigin ? { ...options, origin: 0 } : (options as Partial<GridConfig>)
+  );
   const root = options.root ?? document.body;
   const ignore = options.ignore ?? [];
   const includeTransformed = options.includeTransformed ?? false;
@@ -199,13 +228,23 @@ export function verifyGrid(options: VerifyOptions = {}): VerifyResult {
     });
   }
 
+  let used = grid;
+  if (solveOrigin && results.length > 0) {
+    const solved = bestOrigin(results.map((r) => r.baseline), grid);
+    used = { ...grid, origin: solved.origin };
+    for (const result of results) {
+      Object.assign(result, checkBaseline(result.baseline, used));
+    }
+  }
+
   return {
     results,
     report: summarise(results),
-    grid,
+    grid: used,
     skippedTransformed,
     closedShadowRoots: walked.closedShadowRoots,
     frames: walked.frames,
+    originSolved: solveOrigin && results.length > 0,
   };
 }
 

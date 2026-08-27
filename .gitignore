@@ -17,3 +17,7 @@ test/browser/fixtures/fonts/*.woff2
 # Only needed to sign a self-hosted .crx. The store issues its own id.
 extension-signing-key.pem
 dist-extension-test/
+
+# Written by `node action/run.mjs` when the action is exercised locally.
+quoin-results.json
+.quoin-ci-baseline.json

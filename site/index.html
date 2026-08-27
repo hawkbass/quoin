@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <title>Quoin: a baseline grid for the web</title>
-<meta name="description" content="It puts a web page on a baseline grid. Seats every line on a rendered page, re-measures each correction, and exports CSS you can ship without the JavaScript. MIT, no dependencies, 17 kB.">
+<meta name="description" content="It puts a web page on a baseline grid. Seats every line on a rendered page, re-measures each correction, and exports CSS you can ship without the JavaScript. MIT, no dependencies, 24 kB.">
 <link rel="canonical" href="https://quoin.dev/">
 
 <meta property="og:type" content="website">
@@ -44,7 +44,7 @@
      ============================================================ -->
 <header class="hero">
   <div class="shell">
-    <p class="kicker">Quoin <span class="ver" data-version>1.1</span> &middot; MIT &middot; no dependencies &middot; 17 kB</p>
+    <p class="kicker">Quoin <span class="ver" data-version>1.1</span> &middot; MIT &middot; no dependencies &middot; 24 kB</p>
 
     <h1>It puts a web page on a <em>baseline grid</em>.</h1>
 
@@ -133,42 +133,36 @@
     <div class="column">
       <h2>Nobody's site is on a baseline grid</h2>
       <p>
-        Seventeen of the best-designed sites on the web, measured at 1280px with
-        Quoin. Four are type foundries or typography tools. One is the homepage
-        of the typeface half the industry sets its interface in.
+        Two hundred and twelve sites, measured at 1280px with Quoin: design
+        systems, documentation, editorial, type foundries, studios, products,
+        museums and universities. 153 rendered enough to score.
+      </p>
+      <p class="lede">
+        <strong>Not one of them reaches 90%.</strong> The median is 28%.
       </p>
     </div>
 
     <div class="tablewrap">
       <table>
-        <caption>1280&times;900, half-pixel tolerance, nodes under a transform excluded. Reproduce with <code>npm run corpus</code>.</caption>
+        <caption>Medians by category. 1280&times;900, half-pixel tolerance, grid origin solved per page. Reproduce with <code>npm run corpus</code>.</caption>
         <thead>
           <tr>
-            <th scope="col">Site</th>
-            <th scope="col">Text&nbsp;nodes</th>
-            <th scope="col">4px grid</th>
+            <th scope="col">Category</th>
+            <th scope="col">Sites</th>
             <th scope="col">8px grid</th>
+            <th scope="col">Rhythm</th>
             <th scope="col">Distinct drifts</th>
           </tr>
         </thead>
         <tbody>
-          <tr><th scope="row">Fontshare</th><td>94</td><td>44%</td><td><i style="width:24%"></i>24%</td><td class="ok">5</td></tr>
-          <tr><th scope="row">Linear</th><td>276</td><td>40%</td><td><i style="width:22%"></i>22%</td><td>38</td></tr>
-          <tr><th scope="row">Motion</th><td>312</td><td>30%</td><td><i style="width:18%"></i>18%</td><td>82</td></tr>
-          <tr><th scope="row">Type Scale</th><td>33</td><td>30%</td><td><i style="width:18%"></i>18%</td><td>22</td></tr>
-          <tr><th scope="row">Capsize</th><td>49</td><td>20%</td><td><i style="width:16%"></i>16%</td><td>30</td></tr>
-          <tr><th scope="row">Inter <span class="dim">rsms.me</span></th><td>3263</td><td>25%</td><td><i style="width:15%"></i>15%</td><td class="bad">251</td></tr>
-          <tr><th scope="row">Bun</th><td>217</td><td>27%</td><td><i style="width:15%"></i>15%</td><td>58</td></tr>
-          <tr><th scope="row">Resend</th><td>197</td><td>34%</td><td><i style="width:15%"></i>15%</td><td>33</td></tr>
-          <tr><th scope="row">Modern Font Stacks</th><td>2079</td><td>27%</td><td><i style="width:14%"></i>14%</td><td>73</td></tr>
-          <tr><th scope="row">Astro</th><td>178</td><td>31%</td><td><i style="width:12%"></i>12%</td><td>26</td></tr>
-          <tr><th scope="row">Turso</th><td>188</td><td>29%</td><td><i style="width:11%"></i>11%</td><td>18</td></tr>
-          <tr><th scope="row">Biome</th><td>130</td><td>16%</td><td><i style="width:8%"></i>8%</td><td>38</td></tr>
-          <tr><th scope="row">Klim Type Foundry</th><td>147</td><td>52%</td><td><i style="width:8%"></i>8%</td><td>34</td></tr>
-          <tr><th scope="row">Zed</th><td>284</td><td>21%</td><td><i style="width:8%"></i>8%</td><td>52</td></tr>
-          <tr><th scope="row">Utopia</th><td>43</td><td>19%</td><td><i style="width:7%"></i>7%</td><td>18</td></tr>
-          <tr><th scope="row">Every Layout</th><td>93</td><td>12%</td><td><i style="width:4%"></i>4%</td><td>47</td></tr>
-          <tr><th scope="row">Grilli Type</th><td>96</td><td>15%</td><td><i style="width:3%"></i>3%</td><td>29</td></tr>
+          <tr><th scope="row">Institutions</th><td>9</td><td><i style="width:32%"></i>32.0%</td><td>2.2%</td><td>22</td></tr>
+          <tr><th scope="row">Type foundries</th><td>15</td><td><i style="width:32%"></i>31.9%</td><td>3.7%</td><td class="ok">21</td></tr>
+          <tr><th scope="row">Design systems</th><td>27</td><td><i style="width:31%"></i>30.7%</td><td class="ok">29.7%</td><td class="ok">21</td></tr>
+          <tr><th scope="row">Documentation</th><td>39</td><td><i style="width:31%"></i>30.5%</td><td>20.9%</td><td>22</td></tr>
+          <tr><th scope="row">Academic</th><td>7</td><td><i style="width:27%"></i>26.9%</td><td>10.0%</td><td>37</td></tr>
+          <tr><th scope="row">Studios</th><td>11</td><td><i style="width:27%"></i>26.5%</td><td>8.1%</td><td>28</td></tr>
+          <tr><th scope="row">Products</th><td>24</td><td><i style="width:26%"></i>25.8%</td><td>24.9%</td><td class="bad">45</td></tr>
+          <tr><th scope="row">Editorial</th><td>20</td><td><i style="width:25%"></i>24.5%</td><td>18.8%</td><td class="bad">47</td></tr>
         </tbody>
       </table>
     </div>
@@ -177,15 +171,35 @@
       <p>
         <strong>None of these teams claims a baseline grid, so being off one is
         not a defect.</strong> The table describes the medium rather than the
-        teams: a convention print has had since metal type, which the best
-        resourced design systems in the industry do not have either.
+        teams: a convention print has had since metal type, which nothing on the
+        web has.
       </p>
       <p>
-        <strong>Read the last column first.</strong> The percentage says how far
-        off a page is. Distinct drift values say whether it is off in an
-        <em>orderly</em> way. Four or five across a whole homepage means the
-        type scale and the spacing scale agree with each other, and one origin
-        would fix the lot. Fifty means they are having different conversations.
+        <strong>The categories are the same, and that is the finding.</strong>
+        Best to worst runs 32.0% to 24.5%. Type foundries, whose entire trade is
+        typography and who sell the fonts everyone else sets, land where the
+        documentation sites land. Knowing more about type does not put a page on
+        a grid, because the thing in the way is not knowledge.
+      </p>
+      <p>
+        <strong>Except in one column.</strong> Rhythm is whether each box is a
+        whole number of grid rows tall. Design systems median 29.7% against 3.7%
+        for the foundries, eight times better and the largest gap in the study.
+        That is exactly what a design system is for, and it buys them nothing on
+        phase, where they sit mid-table.
+      </p>
+      <p>
+        Quantising your CSS gives you rhythm. Rhythm is not phase. The teams
+        doing the most disciplined vertical spacing on the web are doing it
+        correctly and still landing where everyone else lands, and that gap is
+        the whole reason this exists.
+      </p>
+      <p>
+        <strong>Leading is the cause on 106 of the 153.</strong> A
+        <code>line-height</code> that is a ratio rather than a number of rows.
+        <code>1.5</code> on 17px is 25.5px, and every extra line carries the half
+        pixel down the page. It is the least visible defect available, because
+        <code>1.5</code> looks like a decision.
       </p>
     </div>
   </div>

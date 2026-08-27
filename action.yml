@@ -1,0 +1,141 @@
+name: Quoin
+description: Measure pages against a baseline grid, and fail when they come off it.
+author: Craig Hawkes
+
+branding:
+  icon: align-justify
+  color: gray-dark
+
+inputs:
+  urls:
+    description: |
+      Pages to measure, one per line. A relative path is served from `directory`.
+    required: true
+  directory:
+    description: |
+      A built site to serve, for relative URLs. Leave empty to measure absolute
+      URLs only.
+    required: false
+    default: ""
+  pitch:
+    description: Grid pitch, in px.
+    required: false
+    default: "8"
+  widths:
+    description: |
+      Viewport widths to measure at, comma separated. Corrections are absolute
+      pixel values for one layout, so a page can be on the grid at one width and
+      off it at another.
+    required: false
+    default: "1280"
+  origin:
+    description: |
+      Where the grid starts, in px, or `auto` to solve for the origin the page
+      is already built on. Auto by default: zero asks whether baselines sit on
+      multiples of the pitch from the top of the document, and a page with a
+      header answers no however well it is set.
+    required: false
+    default: "auto"
+  ignore:
+    description: |
+      Selectors to leave out, comma separated. Display type usually belongs
+      here: a headline at 4rem is a shape rather than a line of reading.
+    required: false
+    default: ""
+  baseline:
+    description: |
+      Path to the committed baseline file. The gate is a regression against this
+      rather than an absolute floor, because almost no real page starts near one
+      and a floor set to today's number does nothing until somebody edits it.
+    required: false
+    default: ".quoin-baseline.json"
+  allowed-drop:
+    description: |
+      How many blocks may come off the grid before this fails. Sub-pixel layout
+      moves one between runs for reasons unrelated to the change under review.
+    required: false
+    default: "1"
+  update-baseline:
+    description: Write the readings to the baseline file instead of judging them.
+    required: false
+    default: "false"
+  min:
+    description: |
+      Optional absolute floor, as a percentage. Off by default: the baseline is
+      the primitive that gets adopted.
+    required: false
+    default: ""
+  comment:
+    description: Post the comparison as a pull request comment.
+    required: false
+    default: "true"
+  rhythm:
+    description: |
+      Also measure rhythm, meaning whether each box is a whole number of rows
+      tall. Rhythm is what decides whether a correction survives a reflow.
+    required: false
+    default: "true"
+  fail-on-regression:
+    description: Fail the job when a page comes off the grid.
+    required: false
+    default: "true"
+
+outputs:
+  clean:
+    description: "\"true\" when nothing regressed."
+    value: ${{ steps.run.outputs.clean }}
+  regressed:
+    description: How many page-and-width readings got worse.
+    value: ${{ steps.run.outputs.regressed }}
+  markdown:
+    description: The comparison as Markdown.
+    value: ${{ steps.run.outputs.markdown }}
+  results:
+    description: Path to the JSON readings.
+    value: ${{ steps.run.outputs.results }}
+
+runs:
+  using: composite
+  steps:
+    - name: Install the browser Quoin drives
+      shell: bash
+      run: npx --yes playwright@1.60.0 install --with-deps chromium
+
+    - name: Measure
+      id: run
+      shell: bash
+      env:
+        QUOIN_URLS: ${{ inputs.urls }}
+        QUOIN_DIRECTORY: ${{ inputs.directory }}
+        QUOIN_PITCH: ${{ inputs.pitch }}
+        QUOIN_WIDTHS: ${{ inputs.widths }}
+        QUOIN_ORIGIN: ${{ inputs.origin }}
+        QUOIN_IGNORE: ${{ inputs.ignore }}
+        QUOIN_BASELINE: ${{ inputs.baseline }}
+        QUOIN_ALLOWED_DROP: ${{ inputs['allowed-drop'] }}
+        QUOIN_UPDATE_BASELINE: ${{ inputs['update-baseline'] }}
+        QUOIN_MIN: ${{ inputs.min }}
+        QUOIN_RHYTHM: ${{ inputs.rhythm }}
+        QUOIN_FAIL: ${{ inputs['fail-on-regression'] }}
+      run: node "${{ github.action_path }}/action/run.mjs"
+
+    - name: Comment on the pull request
+      if: ${{ inputs.comment == 'true' && github.event_name == 'pull_request' && steps.run.outputs.markdown != '' }}
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        BODY: ${{ steps.run.outputs.markdown }}
+      run: |
+        # One comment per pull request, edited in place. A bot that adds a new
+        # comment on every push buries the conversation it is commenting on.
+        marker='<!-- quoin-baseline-grid -->'
+        existing=$(gh api "repos/${GITHUB_REPOSITORY}/issues/${{ github.event.pull_request.number }}/comments" \
+          --jq "[.[] | select(.body | contains(\"$marker\"))] | .[0].id // empty" || true)
+        printf '%s\n\n%s\n' "$marker" "$BODY" > /tmp/quoin-comment.md
+        if [ -n "$existing" ]; then
+          gh api --method PATCH "repos/${GITHUB_REPOSITORY}/issues/comments/${existing}" \
+            -F body=@/tmp/quoin-comment.md >/dev/null
+        else
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/issues/${{ github.event.pull_request.number }}/comments" \
+            -F body=@/tmp/quoin-comment.md >/dev/null
+        fi

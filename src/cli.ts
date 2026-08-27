@@ -21,11 +21,12 @@ quoin: it puts a web page on a baseline grid
   quoin seat  <url>          seat it, and print the CSS that does the same
   quoin engine [url]         what this engine's font metrics do
   quoin scale                solve a type scale that needs no correction
+  quoin rhythm <url>         which boxes are not a whole number of rows, and why
 
 Options
   --pitch <px>               grid pitch                        (default 8)
   --tolerance <px>           how far off still counts as on    (default 0.5)
-  --origin <px>              where the grid starts             (default 0)
+  --origin <px|auto>         where the grid starts          (default auto)
   --ignore <selectors>       comma-separated, skipped entirely
   --viewport <WxH>           browser size                (default 1280x900)
   --browser <name>           chromium | firefox | webkit  (default chromium)
@@ -46,12 +47,19 @@ Examples
   npx quoin seat https://example.com -o baseline.css
   npx quoin engine --browser firefox
   npx quoin scale --font "EB Garamond" --sizes 16,20,28,40
+  npx quoin rhythm https://example.com
 `;
 
 interface Options {
   pitch: number;
   tolerance: number;
-  origin: number;
+  /* A number, or "auto" to solve for the origin the page is already built on.
+
+     Auto by default, because zero asks whether baselines sit on multiples of
+     the pitch from the top of the document, and a page with a header answers no
+     however well it is set. Reporting nought per cent for a page that is on an
+     8px grid starting at 3 is not a stricter reading, it is a wrong one. */
+  origin: number | "auto";
   ignore: string[];
   viewport: { width: number; height: number };
   browser: "chromium" | "firefox" | "webkit";
@@ -75,7 +83,7 @@ function parseArgs(argv: string[]): { command: string; url: string | null; optio
   const options: Options = {
     pitch: 8,
     tolerance: 0.5,
-    origin: 0,
+    origin: "auto",
     ignore: [],
     viewport: { width: 1280, height: 900 },
     browser: "chromium",
@@ -115,7 +123,16 @@ function parseArgs(argv: string[]): { command: string; url: string | null; optio
         break;
       case "--pitch": options.pitch = number(); break;
       case "--tolerance": options.tolerance = number(); break;
-      case "--origin": options.origin = number(); break;
+      case "--origin": {
+        /* `--origin auto` is the default and is still accepted explicitly, so a
+           script that wants to be unambiguous can say so. */
+        const raw = next();
+        if (raw === "auto") { options.origin = "auto"; break; }
+        const value = Number(raw);
+        if (!Number.isFinite(value)) fail(`--origin needs a number or "auto", got ${raw}`);
+        options.origin = value;
+        break;
+      }
       case "--wait": options.wait = number(); break;
       case "--min": options.min = number(); break;
       case "--ignore":
@@ -231,6 +248,10 @@ interface InPage {
   verifyGrid: (o: unknown) => {
     results: TextNodeResult[];
     report: GridReport;
+    /* Carries the origin actually used, which is the solved one when the
+       caller asked for `auto`. */
+    grid: { pitch: number; tolerance: number; origin: number };
+    originSolved: boolean;
     skippedTransformed: number;
     closedShadowRoots: number;
     frames: number;
@@ -239,6 +260,17 @@ interface InPage {
   exportCss: (r: SeatResult, o?: unknown) => string;
   offGrid: (r: TextNodeResult[], limit?: number) => TextNodeResult[];
   capHeightIsRasterised: () => boolean;
+  verifyRhythm: (o: unknown) => {
+    total: number;
+    onRhythm: number;
+    accumulated: number;
+    inherited: number;
+    byCause: Record<string, number>;
+    issues: {
+      over: number; cause: string; below: number; path: string;
+      detail: string; fix: string; height: number;
+    }[];
+  };
   gridNativeScale: (font: string, o: unknown) => {
     font: string;
     phase: number;
@@ -345,9 +377,16 @@ switch (command) {
 
     const data = await page.evaluate(
       ({ o, mode, important }) => {
-        const before = quoin.verifyGrid(o).report;
-        const seated = quoin.seatPage({ ...(o as object), mode });
-        const after = quoin.verifyGrid(o).report;
+        /* The seater takes a fixed origin, so an auto origin is resolved to the
+           number the page is already built on before anything moves. Seating to
+           zero instead would shift every block on a page that is merely offset,
+           which is a great deal of correction to fix a header's border. */
+        const first = quoin.verifyGrid(o);
+        const resolved = { ...(o as object), origin: first.grid.origin };
+
+        const before = first.report;
+        const seated = quoin.seatPage({ ...resolved, mode });
+        const after = quoin.verifyGrid(resolved).report;
         const css = quoin.exportCss(seated, { important });
 
         const levers = seated.blocks.reduce<Record<string, number>>((acc, b) => {
@@ -438,6 +477,64 @@ switch (command) {
         : "\n  Cap height here comes from the drawn glyph and does not travel.\n" +
             "  Compute and apply it in this browser, never ship the number.\n"
     );
+    break;
+  }
+
+  case "rhythm": {
+    if (!url) fail("rhythm needs a URL");
+    const { browser, page } = await open(url, options);
+
+    const data = await page.evaluate(
+      (o) => quoin.verifyRhythm(o),
+      { ...gridOptions, limit: 40 }
+    );
+
+    await browser.close();
+
+    if (options.json) {
+      console.log(JSON.stringify({ url, ...data }, null, 2));
+      break;
+    }
+
+    const share = percent(data.onRhythm, data.total);
+    console.log(`\n  ${url}`);
+    console.log(
+      `  ${data.onRhythm} of ${data.total} boxes are a whole number of ` +
+      `${options.pitch}px rows  (${share}%)`
+    );
+    console.log(
+      `  ${data.accumulated}px of drift introduced, across ${data.total - data.onRhythm - data.inherited} boxes`
+    );
+    if (data.inherited) {
+      console.log(`  ${data.inherited} more inherited it from their contents`);
+    }
+
+    const causes = Object.entries(data.byCause).filter(([, n]) => n > 0);
+    if (causes.length) {
+      console.log("\n  " + causes.map(([k, n]) => `${k} ${n}`).join(", "));
+    }
+
+    console.log("");
+    for (const issue of data.issues.slice(0, 12)) {
+      console.log(
+        `  +${String(issue.over).padEnd(6)}${issue.cause.padEnd(10)}` +
+        `moves ${String(issue.below).padStart(4)} blocks   ${issue.path.slice(0, 44)}`
+      );
+      console.log(`      ${issue.detail}`);
+      console.log(`      ${issue.fix}`);
+      console.log("");
+    }
+
+    console.log(
+      "  Rhythm is what makes a correction survive a reflow. A box that is a\n" +
+      "  whole number of rows can wrap to any number of lines without moving\n" +
+      "  anything below it. One that is not moves everything, at every width.\n"
+    );
+
+    if (options.min !== null && share < options.min) {
+      console.error(`quoin: ${share}% is below the ${options.min}% floor`);
+      process.exit(1);
+    }
     break;
   }
 
