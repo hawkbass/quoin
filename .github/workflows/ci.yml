@@ -79,6 +79,10 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+      # Building the site seats it with a real browser, so this job needs one
+      # before it can produce anything for the action to measure. The action
+      # installs its own, but that happens inside `uses: ./`, which is later.
+      - run: npx playwright install --with-deps chromium
       - run: npm run build:site
 
       - name: Record a baseline for the built site
