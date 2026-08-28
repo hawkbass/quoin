@@ -15,6 +15,18 @@ same page measured 6 of 12 on one machine and 12 of 12 on another; CI on Linux
 disagreed with the machine it was written on, which is how it surfaced. The test
 was asserting an incidental condition as a fact.
 
+Pinning that was not enough on its own. With the break placed deliberately,
+WebKit on Linux still read 14 of 14 where WebKit on Windows read 6 of 14, so the
+truncation is now measured directly rather than scored. Read that way both
+engines truncate, always, and they differ only in what they align to the column
+top: Chromium the border box, WebKit the first line box, 3.73px apart under
+`text-box-trim`. The gap left behind is the space minus that overhang, and
+whether it is a whole number of rows is a property of the font. Sometimes it
+lands in phase and the page scores perfectly with the bug still in it.
+
+Which sharpens the argument for padding. It is not that it fixes one engine. It
+is that with a margin, whether your columns hold is out of your hands.
+
 Constructing the condition rather than waiting for it separates two mechanisms
 that were tangled together:
 

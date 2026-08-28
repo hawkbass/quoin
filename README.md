@@ -725,25 +725,40 @@ a column grid, and the thing it is celebrated for is that a line in the left
 column and a line in the right column sit on the same rule. This had never looked
 at it.
 
-Two separate things go wrong, and the first version of this section ran them
-together. Setting twelve paragraphs in two columns and reading whatever came out
-measures where the browser chose to balance the break, which is a function of the
-font: the same page read 6 of 12 on one machine and 12 of 12 on another, and the
-first was written up as a fact. Both mechanisms are constructed now rather than
-waited for, and the conclusion changed.
+**A margin at the top of a column is truncated, in both engines, always.**
+css-break-3 truncates it at an unforced break, which is every break the browser
+chooses for itself. The first column keeps its space because the top of the flow
+is not a break; every column after it loses it. Forcing a break with
+`break-before: column` preserves the margin, which is the spec's own distinction
+and confirms the mechanism from the other side.
 
-**One: a margin at the top of a fragment is truncated.** css-break-3 truncates it
-when the break is unforced, which is every break the browser chooses itself. The
-second column starts its first paragraph without the space that was doing the
-work. Forcing the break with `break-before: column` preserves the margin, which
-is the spec's own distinction and confirms the mechanism from the other side.
+The two engines differ only in what they line up with the top of the column.
+Chromium puts the block's border box there, WebKit its first line box, and under
+`text-box-trim` those sit 3.73px apart:
+
+```
+                        column 1    column 2    space
+Chromium                20.75px      0.00px    20.75px
+WebKit                  20.75px      3.73px    20.75px
+```
+
+**What it costs you is a coin flip, and that is the real argument for padding.**
+The gap left behind is the space minus that overhang, and whether that happens to
+be a whole number of rows is a property of the font's cap height. Sometimes it
+lands in phase and the page scores perfectly with the bug still in it. This was
+found the hard way: the same two-column page read 6 of 14 on Windows and 14 of 14
+on Linux, same engine, same version. Nothing was intermittent and nothing was
+fixed in between. The font was different, so the residue was different.
+
+So the useful claim is not that columns score badly. It is that with a margin,
+whether they score badly is out of your hands.
 
 **Two: a paragraph split across the boundary starts its continuation off the
-grid, in WebKit.** Padding does not help, because padding is not the problem.
-Not splitting the paragraph is.
+grid, in WebKit.** Padding does not help, because padding is not the problem. Not
+splitting the paragraph is.
 
-So the recipe is both halves: padding for the space, `break-inside: avoid` on the
-blocks.
+The recipe is therefore both halves, padding for the space and `break-inside:
+avoid` on the blocks:
 
 ```
                                   2 columns   3 columns   4 columns
@@ -753,8 +768,8 @@ margin, avoid split                 6/14        5/14        6/14
 padding, avoid split               14/14       14/14       14/14   both engines
 ```
 
-Swept across four widths and three column counts in both engines: `padding` plus
-`break-inside: avoid` is 12 of 12 perfect. Padding alone is enough in Chromium.
+Swept across four widths and three column counts in both engines, `padding` plus
+`break-inside: avoid` is perfect in all twelve.
 
 ```bash
 npx quoin fit --design design.json --columns
@@ -763,16 +778,16 @@ npx quoin fit --design design.json --columns
 `--columns` implies `--space padding`, because `break-inside` on its own does not
 stop the margin being truncated and half a recipe is worse than none.
 
-**The earlier claim that WebKit could not do this at all was wrong.** It came
-from measuring the balanced-break page, where WebKit happened to break
-mid-paragraph and was failing for the second reason while being read as failing
-for the first. WebKit needs one thing Chromium does not, and then it holds.
+**An earlier version of this section said WebKit could not do columns at all.**
+That was wrong. It came from a page whose breaks the browser was free to place,
+where WebKit happened to break mid-paragraph and was failing for the second
+reason while being read as failing for the first.
 
-`margin` stays the default, and `break-inside: avoid` is off unless asked for.
-On a block with a background or a border margin and padding are not
+`margin` stays the default, and `break-inside: avoid` is off unless asked for. On
+a block with a background or a border margin and padding are not
 interchangeable, and `break-inside` changes how a page prints whether or not it
-has columns. Neither is a thing to change quietly. The emitted CSS points at
-this when it writes a margin.
+has columns. Neither is a thing to change quietly. The emitted CSS points at this
+when it writes a margin.
 
 ### What does not break it
 

@@ -149,10 +149,35 @@ test.describe.configure({ mode: "serial" });
    One: the margin is truncated at an unforced break
  * ------------------------------------------------------------------ */
 
-test("a margin at the top of a column fragment is truncated, and it costs half the page", async ({
+test("a truncated margin is what takes a column off the grid, wherever it happens", async ({
   browser,
   browserName,
 }) => {
+  /*
+     This asserts the mechanism rather than a score, because the score is not
+     the same everywhere and the mechanism is.
+
+     Twice this test was rewritten after CI disagreed with the machine it was
+     written on. First it depended on where the browser balanced the break,
+     which is a function of the font. Then, with that pinned, WebKit on Linux
+     read 14 of 14 with a margin where WebKit on Windows read 6 of 14.
+
+     Measuring the truncation directly rather than scoring the page explains
+     both. Every column starts at the same y, the content top of the multicol
+     box, so the first block in a column has either its full space above it or
+     it does not. Read that way, both engines truncate, always. What differs is
+     what they line up with the column top: Chromium the block's border box,
+     WebKit its first line box, which under `text-box-trim` sit 3.73px apart.
+
+     So the truncation is invariant and the damage is not. The gap it leaves is
+     the space minus that overhang, and whether that is a whole number of rows
+     depends on the font's cap height. Sometimes it lands in phase and the page
+     scores perfectly with the bug still present, which is exactly what Linux
+     was showing. A score was never going to be a stable thing to assert.
+
+     That is also the real argument for padding. It is not that it fixes one
+     engine; it is that it takes a font-dependent coin flip out of the page.
+  */
   const fitted = await fit(browser, "margin");
   if (fitted.unavailable) {
     test.skip(true, `${browserName} has no text-box-trim`);
@@ -162,19 +187,90 @@ test("a margin at the top of a column fragment is truncated, and it costs half t
   const recipe: Recipe = { property: "margin", avoidSplit: true };
 
   const one = await measure(browser, pageWith(step, recipe, 1));
-  const two = await measure(browser, pageWith(step, recipe, 2));
-
-  /* The condition the finding needs, asserted rather than assumed. Without
-     this the test passes whenever the browser happens to break mid-paragraph,
-     which is what made it disagree with itself across machines. */
-  expect(two.atColumnTop, "no paragraph started at the top of a later column").toBeGreaterThan(0);
-  expect(two.split, "break-inside: avoid should have stopped every split").toBe(0);
-
   expect(one.onGrid, "one column is on the grid").toBe(one.total);
-  expect(
-    two.onGrid,
-    `two columns read ${two.onGrid}/${two.total}, so the margin was not truncated after all`
-  ).toBeLessThan(two.total);
+
+  const page = await browser.newPage({ viewport: { width: 1100, height: 900 } });
+  await page.setContent(pageWith(step, recipe, 2));
+  await page.evaluate(() => document.fonts?.ready);
+  await page.addScriptTag({ content: BUNDLE });
+
+  const seen = await page.evaluate(
+    ({ pitch, space }) => {
+      const container = document.querySelector("main")!;
+      const containerTop = container.getBoundingClientRect().top;
+      const blocks = [...document.querySelectorAll("p")];
+      const lefts = blocks.map((el) => Math.round(el.getBoundingClientRect().left));
+      const columns = [...new Set(lefts)].sort((a, b) => a - b);
+
+      /* For each column, the first block in it, and whether its space survived. */
+      const firsts = columns.map((left) => {
+        const index = lefts.indexOf(left);
+        const box = blocks[index]!.getBoundingClientRect();
+        const offset = box.top - containerTop;
+        return {
+          left,
+          offset: Math.round(offset * 100) / 100,
+          /* Preserved means the whole space is there. Truncated means it is
+             substantially gone, which is flush in Chromium and the trim
+             overhang in WebKit; the test does not care which, only that the
+             space did not survive. Anything between the two is a reading
+             neither word describes, and it fails rather than being rounded
+             into whichever is convenient. */
+          preserved: Math.abs(offset - space) < 0.5,
+          truncated: offset < space / 2,
+        };
+      });
+
+      const measured = window.quoin.verifyGrid({ pitch, origin: "auto" });
+      return {
+        columns: columns.length,
+        firsts,
+        split: blocks.filter((el) => el.getClientRects().length > 1).length,
+        onGrid: measured.report.onGrid,
+        total: measured.report.total,
+      };
+    },
+    { pitch: PITCH, space: step.space }
+  );
+  await page.close();
+
+  /* The conditions the reading depends on. */
+  expect(seen.columns, "the page did not lay out in two columns").toBe(2);
+  expect(seen.split, "break-inside: avoid should have stopped every split").toBe(0);
+  for (const first of seen.firsts) {
+    expect(
+      first.truncated || first.preserved,
+      `a column's first block sat ${first.offset}px down, which is neither flush ` +
+        `nor its ${step.space}px space, so this reading means nothing`
+    ).toBe(true);
+  }
+
+  const [first, ...rest] = seen.firsts;
+  console.log(
+    `\n  ${browserName}: column 1 at ${first!.offset}px, later columns at ` +
+      `${rest.map((c) => c.offset).join(", ")}px, space is ${step.space}px, ` +
+      `page reads ${seen.onGrid}/${seen.total}\n`
+  );
+
+  /* The claim, and it holds on every engine and platform tested: the first
+     column keeps its space because the top of the flow is not a fragment
+     break, and every column after it loses it because that is what css-break-3
+     says happens at an unforced one. */
+  expect(first!.preserved, `column 1 sat ${first!.offset}px down, not its ${step.space}px`).toBe(
+    true
+  );
+  for (const column of rest) {
+    expect(
+      column.truncated,
+      `a later column kept ${column.offset}px of its ${step.space}px space, ` +
+        "so the margin was not truncated after all"
+    ).toBe(true);
+  }
+
+  /* Deliberately not asserted: what that costs. The gap left behind is the
+     space minus the engine's overhang, and whether that is a whole number of
+     rows is a property of the font. Asserting a score here is what made this
+     test disagree with itself across two machines. */
 });
 
 /* ------------------------------------------------------------------ *
