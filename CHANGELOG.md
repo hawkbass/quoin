@@ -1,5 +1,35 @@
 # Changelog
 
+## 1.13.1
+
+Two defects in `rhythm`, both found by pointing the tool at quoin.dev.
+
+### Fixed
+
+**`quoin rhythm <url>` died on its own default.** `--origin` takes a number or
+`auto`, `auto` is the default, and the CLI passes it through. `verifyRhythm`
+never reads the origin, because a box is a whole number of rows tall or it is
+not and where the grid starts has nothing to do with it, but it handed the whole
+options object to `gridConfig` to validate and that refuses anything which is not
+a finite number. So one of the five documented commands threw an uncaught
+RangeError before it measured anything, in a shipped release.
+
+Nothing caught it because every test passed a pitch and no origin, and the CLI
+tests never ran `rhythm` without one. The default path was the one path nobody
+exercised.
+
+**The border advice could not be followed.** It subtracted the border from the
+box's padding and clamped the result at zero, without checking there was any
+padding to subtract from, so a box with none was told to use `padding 0px
+instead of 0px`. On quoin.dev that was most of what the tool said about its own
+page: every table header and every unpadded wrapper got a sentence that
+contradicted itself.
+
+There are three cases and only one of them existed. Padding that can absorb the
+border loses it from the bottom; padding too small to absorb it is told how much
+to take off what it has; a box with none is told to make the difference up
+instead, because the border has to go somewhere.
+
 ## 1.13.0
 
 A correction to 1.12, which got columns wrong; a defect in the verifier that
@@ -68,19 +98,20 @@ that were tangled together:
   is css-break-3, and forcing the break with `break-before: column` preserves the
   margin, which confirms the mechanism from the other side. `padding` is not
   truncated and is the fix.
-- **A paragraph split across the boundary starts its continuation off the grid,
-  in WebKit.** Padding does not help because padding is not the problem.
+- **A paragraph split across the boundary starts its continuation out of phase,
+  in both engines.** Padding does not help because padding is not the problem.
   `break-inside: avoid` is.
-
-With both, two, three and four columns read 12 of 12 in both engines at every
-width tested. WebKit needs one thing Chromium does not, and then it holds.
 
 ```
                                   2 columns   3 columns   4 columns
 margin, split allowed               6/14        4/14        6/14
-padding, split allowed             14/14       14/14       14/14   Chromium only
-padding, avoid split               14/14       14/14       14/14   both engines
+padding, split allowed             14/16       14/17       14/16
+padding, avoid split               perfect     perfect     perfect
 ```
+
+A block taller than its column is still split, because `break-inside: avoid` is
+a preference the browser drops when it cannot be honoured, and a split is out of
+phase however it happens.
 
 ### Added
 

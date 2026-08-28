@@ -101,6 +101,11 @@ function px(value: string): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+/* Two decimal places, because a sub-pixel border reads as noise otherwise. */
+function tidy(value: number): number {
+  return Math.round(value * 100) / 100;
+}
+
 function remainder(value: number, pitch: number): number {
   const over = ((value % pitch) + pitch) % pitch;
   /* Within a hundredth of a row either side counts as landing on it: sub-pixel
@@ -163,13 +168,36 @@ function diagnose(
      box's own padding rather than to remove it.
   */
   if (borderOver > 0) {
+    /*
+       Take it out of the padding when there is padding to take it out of.
+
+       This used to say so unconditionally, clamping the result at zero, so a
+       box with no padding was told `padding 0px instead of 0px`. On quoin.dev
+       that was most of the advice the tool gave about its own page: every table
+       header and every unpadded wrapper got a sentence that contradicted
+       itself. Advice that cannot be followed is worse than none, because
+       somebody reads it twice before deciding the tool is wrong.
+
+       With no padding to spend, the border has to be made up rather than
+       absorbed, so the box grows to the next row instead.
+    */
+    const bottom = px(style.paddingBottom);
+    const fix =
+      padding >= borderOver
+        ? bottom >= borderOver
+          ? `Subtract the border from this box's own padding: ` +
+            `padding-bottom ${tidy(bottom - borderOver)}px instead of ${tidy(bottom)}px ` +
+            `keeps the rule and the rhythm.`
+          : `Subtract the border from this box's own padding, ${borderOver}px off ` +
+            `the ${padding}px it has, and it keeps both the rule and the rhythm.`
+        : `There is no padding to take it out of, so make it up instead: ` +
+          `${tidy(pitch - borderOver)}px of padding takes this box to the next row ` +
+          `and keeps the rule.`;
+
     return {
       cause: "border",
       detail: `${borders}px of border on a ${pitch}px grid`,
-      fix:
-        `Subtract the border from this box's own padding: ` +
-        `padding ${Math.max(0, px(style.paddingBottom) - borderOver)}px instead of ` +
-        `${px(style.paddingBottom)}px keeps the rule and the rhythm.`,
+      fix,
     };
   }
 
@@ -227,7 +255,20 @@ function diagnose(
 
 /** Every box that is not a whole number of grid rows tall, and why. */
 export function verifyRhythm(options: RhythmOptions = {}): RhythmReport {
-  const grid = gridConfig(options);
+  /*
+     Rhythm has no origin, so it does not get to refuse one.
+
+     A box is a whole number of rows tall or it is not, and where the grid
+     starts has nothing to do with it. Nothing below reads `origin`. But this
+     asked `gridConfig` to validate the whole options object, which refuses
+     anything that is not a finite number, and `auto` is both the documented
+     default for `--origin` and what the CLI passes. So `quoin rhythm <url>`
+     died on its own default with an uncaught RangeError, in a shipped release,
+     in one of the five commands the README lists.
+
+     Found by pointing the tool at quoin.dev.
+  */
+  const grid = gridConfig({ ...options, origin: 0 });
   const root = options.root ?? document.body;
   const limit = options.limit ?? 100;
 
