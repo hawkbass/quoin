@@ -1,5 +1,40 @@
 # Changelog
 
+## 1.21.1
+
+The other three plugins, audited the way the PostCSS one was.
+
+### The audit
+
+1.21.0 found the PostCSS plugin making pages worse while its tests passed, and
+the reason was that they asserted its output rather than its effect. So the same
+question was put to the other three: is this verified end to end, or only against
+itself?
+
+**The Vite plugin was not, and now is.** Its second half serves the fitted tokens
+as a module you import, which is what a design system keeping its scale in JSON
+needs, and that had only ever been tested against its own output. There is a real
+project in the suite now: scaffolded, built with `vite build`, served, opened and
+measured. It reads 5 of 5 on the grid at every width.
+
+**The extension and the Action were already done properly.** The extension loads
+a real Manifest V3 build into a real Chromium profile and clicks the buttons; the
+Action goes through its entry point as a subprocess with inputs as environment
+variables and outputs read back out of a `GITHUB_OUTPUT` file. Both run in CI,
+21 tests and 8. Nothing to fix, which is worth recording: the point of an audit
+is the answer, not the finding.
+
+### Finding
+
+**A fit is a fit for the font it was given.** Every space closes a cap height, a
+cap height belongs to one font, and a page that falls back to another is fitted
+for a font nobody is looking at. The same Vite project without its `@font-face`
+reads 2 of 5 where it read 5 of 5 with it.
+
+Not a defect and not fixable at build time, because nothing there can know
+whether a font will load. It is a condition of the method, so it is measured,
+pinned by a test, and said in the emitted CSS where somebody will see it.
+
 ## 1.21.0
 
 The PostCSS plugin made pages worse. It said it made them better.
