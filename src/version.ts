@@ -6,4 +6,4 @@
 
    `test/unit/version.test.ts` fails if this and package.json disagree. */
 
-export const VERSION = "1.16.0";
+export const VERSION = "1.17.0";

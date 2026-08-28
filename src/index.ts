@@ -55,3 +55,25 @@ export {
   type CompareResult,
   type Verdict,
 } from "./baseline.ts";
+
+export {
+  figmaToDesign,
+  FigmaError,
+  type FigmaDesign,
+  type FigmaOptions,
+} from "./figma.ts";
+
+export {
+  readPdfText,
+  baselinesFromTop,
+  PdfError,
+  type PdfPage,
+  type PdfTextRun,
+} from "./pdf.ts";
+
+export {
+  verifyColumns,
+  type ColumnReport,
+  type ColumnEdge,
+  type ColumnOptions,
+} from "./columns.ts";

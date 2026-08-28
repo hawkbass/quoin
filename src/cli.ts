@@ -51,6 +51,8 @@ Options
   --print-margin <pt>        the @page margin, for print. Solved when omitted
   --grid-columns <n>         columns for the horizontal check. Solved when omitted
   --gutter <px>              the gutter between them. Solved when omitted
+  --figma                    read --design as a Figma export (usually detected)
+  --figma-minimum <n>        nodes a combination needs to count  (default 1)
   --from <url>               read the design off a page instead, for fit
   --near <px>                how far from those is acceptable (default 3)
   --json                     machine-readable output
@@ -107,6 +109,10 @@ interface Options {
   gridColumns: number | null;
   /* The gutter between them, in px. Solved when null. */
   gutter: number | null;
+  /* Treat --design as a Figma export, rather than letting it be detected. */
+  figma: boolean;
+  /* How many nodes a combination needs before it counts as a step. */
+  figmaMinimum: number;
 }
 
 function fail(message: string): never {
@@ -139,6 +145,8 @@ function parseArgs(argv: string[]): { command: string; url: string | null; optio
     columns: false,
     gridColumns: null,
     gutter: null,
+    figma: false,
+    figmaMinimum: 1,
   };
 
   const positional: string[] = [];
@@ -215,6 +223,17 @@ function parseArgs(argv: string[]): { command: string; url: string | null; optio
           fail(`--space wants margin or padding, got ${value}`);
         }
         options.space = value;
+        break;
+      }
+      case "--figma":
+        options.figma = true;
+        break;
+      case "--figma-minimum": {
+        const value = Number.parseInt(next(), 10);
+        if (!Number.isFinite(value) || value < 1) {
+          fail(`--figma-minimum wants a count of 1 or more, got ${value}`);
+        }
+        options.figmaMinimum = value;
         break;
       }
       case "--grid-columns": {
@@ -1008,6 +1027,48 @@ switch (command) {
         `the design is not valid JSON\n  ` +
           (error instanceof Error ? error.message : String(error))
       );
+    }
+
+    /*
+       A Figma file is converted first, and recognised without being told.
+
+       An agent handed a design file should not have to know which flag turns it
+       into the right shape, and the shape is unmistakable: a Quoin design has
+       families, and a Figma export has a `document` with children or a `nodes`
+       map keyed by node id. Neither ever has the other's. `--figma` forces it
+       for the case where the detection is wrong, which is the case nobody has
+       hit yet and which should still have an answer.
+    */
+    const looksLikeFigma =
+      parsed !== null &&
+      typeof parsed === "object" &&
+      (("document" in parsed && typeof (parsed as Record<string, unknown>).document === "object") ||
+        ("nodes" in parsed && typeof (parsed as Record<string, unknown>).nodes === "object"));
+
+    if (options.figma || looksLikeFigma) {
+      const { figmaToDesign, FigmaError } = await import("./figma.ts");
+      try {
+        const converted = figmaToDesign(parsed, { minimum: options.figmaMinimum });
+        for (const warning of converted.warnings) {
+          console.error(`quoin: ${warning}`);
+        }
+        if (!options.json) {
+          console.log(
+            `
+  ${converted.nodes} text nodes, ${converted.covered} covered by ` +
+              `${converted.families.length} ` +
+              `${converted.families.length === 1 ? "family" : "families"}` +
+              (converted.rare.length
+                ? `
+  ${converted.rare.length} one-off combinations left out`
+                : "")
+          );
+        }
+        parsed = { families: converted.families };
+      } catch (error) {
+        if (error instanceof FigmaError) fail(error.message);
+        throw error;
+      }
     }
 
     /*

@@ -1,5 +1,55 @@
 # Changelog
 
+## 1.17.0
+
+The design, before anybody writes the CSS.
+
+### Added
+
+**A Figma file is a design this can fit.** `quoin fit --design figma.json` takes
+Figma's own node JSON, from the REST API or from a plugin, and turns it into a
+design. The whole file response works, so does its `document`, so does a single
+frame from `/nodes`, and it is detected rather than flagged, because an agent
+handed a design file should not have to know which flag turns it into the right
+shape.
+
+Text nodes become steps grouped by family, size and leading. The space comes out
+of the bounding boxes, because a designer's spacing lives in the layout rather
+than in the type styles.
+
+Which matters more than the convenience. Until now the only ways to hand the
+fitter a design were to write the JSON yourself or to point it at a site that
+already existed, and neither is what somebody has when they are working from a
+drawing. That is the case where fitting is worth most: a correction is a repair
+applied to something already wrong, and a design fitted first needs none.
+
+Three decisions worth stating:
+
+- **Hidden layers are skipped.** A hidden layer is a design somebody rejected,
+  and fitting a page to include it is fitting it to a decision already taken.
+- **`INTRINSIC` leading is treated as absent, not as a decision.** Figma reports
+  a resolved `lineHeightPx` whatever the unit, and for INTRINSIC that figure is
+  whatever the font's metrics came to rather than anything anybody chose.
+- **One node is enough to be a step.** The page reader wants two, because on a
+  page a one-off is usually a widget. In a design file it is a style somebody
+  drew, and a display size appears once because there is one hero. An early
+  default of two dropped the display and the standfirst from a five-style design
+  and reported it as covered.
+
+**AGENTS.md**, written for something that cannot ask a follow-up question. The
+pipeline, the schema, what to measure off an image and in what order, what the
+output means, and the four things that waste the most time. It refuses one thing
+in particular: there is nowhere to put an estimated cap height, deliberately,
+because a cap height guessed to within five per cent is a baseline wrong by half
+a row.
+
+### Fixed
+
+**A tie between two gaps goes to the smaller one.** A step used twice has two
+gaps above it and no majority, and taking whichever the sort put first read a
+76px section break as the rhythm for a 13px caption and asked for a 79px space.
+The repeated gap is the rhythm; the odd large one is a section boundary.
+
 ## 1.16.0
 
 The other axis.

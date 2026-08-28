@@ -1744,6 +1744,58 @@ at -10000px was the worst issue on quoin.dev by four thousand pixels, which is a
 report about the tool rather than about the page.
 
 
+---
+
+## For agents, and for anybody working from a design
+
+The receiving end of this has always been a JSON design, and until now the only
+ways to produce one were to write it by hand or to point the tool at a site that
+already existed. Neither is what somebody has when they are working from a
+drawing, which is the case where fitting is worth most: a design fitted before
+anybody writes CSS needs no corrections at all.
+
+**[AGENTS.md](AGENTS.md)** is the whole of it, written for something that cannot
+ask a follow-up question. The short version:
+
+```bash
+echo '<design json>' | npx quoin fit --design - --pitch 8
+```
+
+### From a Figma file
+
+Hand it the JSON. It is detected, so there is no flag to get right.
+
+```bash
+curl -H "X-Figma-Token: $TOKEN"   "https://api.figma.com/v1/files/$KEY" > design.json
+npx quoin fit --design design.json --pitch 8
+```
+
+The whole file response works, so does its `document`, so does a single frame
+from `/nodes`. Text nodes become steps grouped by family, size and leading, and
+the space comes from the gaps between bounding boxes, because a designer's
+spacing lives in the layout rather than in the type styles.
+
+Two decisions worth stating. **Hidden layers are skipped**, because a hidden
+layer is a design somebody rejected. And **leading set to `INTRINSIC` is treated
+as absent rather than as a decision**: Figma reports a resolved figure for it,
+but that figure is whatever the font's metrics came to at that size, not
+anything anybody chose, and fitting to it fits the page to an accident of the
+typeface.
+
+The minimum is one node, not two. On a page a combination used once is usually a
+widget or a third party; in a design file it is a style somebody drew on purpose,
+and a display size appears exactly once because there is one hero. An early
+default of two quietly dropped the display and the standfirst from a five-style
+design.
+
+### From an image
+
+There is no vision in this library and there should not be. The documentation
+says what to measure and in what order, and refuses one thing in particular:
+there is nowhere to put an estimated cap height, deliberately. It is measured
+from the font, because a cap height guessed to within five per cent is a
+baseline wrong by half a row.
+
 ## The command line
 
 ```bash
@@ -1813,6 +1865,8 @@ Reporting:
 --print-margin <pt>   the @page margin, for print. Solved when omitted
 --grid-columns <n>    columns for the horizontal check. Solved when omitted
 --gutter <px>         the gutter between them. Solved when omitted
+--figma               read --design as a Figma export. Usually detected
+--figma-minimum <n>   nodes a combination needs to count as a step (default 1)
 --json                machine-readable output
 ```
 
