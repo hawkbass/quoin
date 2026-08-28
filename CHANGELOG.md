@@ -1,5 +1,59 @@
 # Changelog
 
+## 1.18.0
+
+Which grid, rather than how to fit this one.
+
+### Added
+
+**`quoin pitch --design <file>`.** Everybody picks an 8px grid because everybody
+picks an 8px grid, and nothing has ever told a designer what that convention
+costs them.
+
+It is the one question about a grid that can be answered before a font is
+chosen. The cost of a grid is entirely the leading it moves, a leading snaps to
+the nearest whole number of rows without anybody needing to know what the type
+looks like, and the space is not a cost at all: it is chosen rather than moved,
+and it closes the cap height whatever the pitch is. So no browser, no font, no
+network. It is arithmetic and it runs instantly.
+
+**The relationship is not monotonic**, which is what makes it worth computing
+rather than reasoning about. A finer grid has a smaller worst case, so it ought
+to be cheaper, and usually is. But a major-third scale of six sizes costs 4.0px
+at a 6px pitch and 6.4px at 4px, because where the leadings happen to fall
+matters more than how far they can be from a row.
+
+**`--budget` asks the question with something in it.** Cheapest is the wrong
+question on its own: a finer grid nearly always costs less and a 1px grid costs
+nothing, because it constrains nothing. A grid is worth having because it is
+coarse. So the tool prints the whole table and, given a budget, names the
+coarsest pitch that comes in under it.
+
+### Finding: what the convention costs, across 173 sites
+
+The corpus was re-read for this, each site's design taken off the page and
+costed at every pitch.
+
+```
+  median cost at 8px         17.52px
+  median cost at its best     6.00px
+```
+
+**A coarser grid than 8px would also have cost less on 80 of the 173.** That is
+the number worth reporting and the only one here that is not partly an artefact
+of arithmetic: "4px is cheapest on 144 of 173" is close to a tautology, because
+it is cheapest by constraining least. A coarser grid costing less is a design
+paying twice, once in compromise and once in a grid that holds the page together
+less than it could have.
+
+It splits by what kind of site it is, and not in the direction you would guess:
+studios 91%, type foundries 80%, institutions 63%, against product 33% and
+editorial 30%. The sites that care most visibly about type are the ones most
+likely to be paying for a finer grid than they need, which is the rhythm survey's
+finding seen from the other side.
+
+Stored in `findings/pitch.json`, with the method.
+
 ## 1.17.0
 
 The design, before anybody writes the CSS.

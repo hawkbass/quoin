@@ -20,6 +20,24 @@ browser to read the font's cap height, or reads it out of the font file if you
 give it one, and it exits non-zero with a message naming the entry if the design
 is wrong.
 
+## Choosing the grid, before you fit to it
+
+If nobody has already committed to a pitch, ask what each one costs before you
+pick. It is arithmetic, so it is instant and needs no font:
+
+```bash
+npx quoin pitch --design design.json --budget 6
+```
+
+Eight is the conventional pitch, not a derived one, and it is often not the
+cheapest. A design can cost twice as much at 8px as at 7px, and a *coarser* grid
+than eight is sometimes cheaper as well, which means a grid that constrains more
+and compromises less.
+
+Do not ask for the cheapest and stop there. A finer grid nearly always costs
+less, and a 1px grid costs nothing because it constrains nothing. `--budget` asks
+the question that has something in it: the coarsest grid you can afford.
+
 ## The design you hand it
 
 Everything is optional except `size`.

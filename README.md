@@ -1687,6 +1687,7 @@ means when they say "the grid". This had never looked at it either.
 
 ```bash
 npx quoin columns https://example.com
+npx quoin pitch   --design design.json --budget 6
 ```
 
 The defect it finds has the same shape as the vertical one, and the same cause.
@@ -1796,6 +1797,97 @@ there is nowhere to put an estimated cap height, deliberately. It is measured
 from the font, because a cap height guessed to within five per cent is a
 baseline wrong by half a row.
 
+---
+
+## Finding: eight is the conventional pitch, not the right one
+
+Everybody picks an 8px grid because everybody picks an 8px grid. Nothing has ever
+told a designer what that convention costs them, and it is the one question about
+a grid that can be answered before a font is chosen.
+
+```bash
+npx quoin pitch --design design.json --budget 6
+```
+
+The cost of a grid is entirely the leading it moves. A leading snaps to the
+nearest whole number of rows without anybody needing to know what the type looks
+like, and the space is not a cost at all: it is chosen rather than moved, and it
+closes the cap height whatever the pitch is. So this needs no browser, no font
+and no network. It is arithmetic, and it runs instantly.
+
+```
+  pitch    total    worst    already whole
+  4px      5.3px    1.6px    0 of 5
+  6px      9.5px    2.8px    0 of 5
+  7px      5.3px    1.5px    0 of 5
+  8px      10.7px   3.5px    0 of 5
+  10px     8.1px    3.6px    0 of 5
+```
+
+Two things in that table are worth stopping on. **7px costs half what 8px costs**
+for the same design. And **10px, which is coarser, costs less than 8px too**, so
+this design could have had a grid that constrains more and compromises less.
+
+**The relationship is not monotonic**, which is what makes it worth computing
+rather than reasoning about. A finer grid has a smaller worst case, so it ought
+to be cheaper, and usually is. But a major-third scale of six sizes costs 4.0px
+at a 6px pitch and 6.4px at 4px, because where the leadings happen to fall
+matters more than how far they can be from a row.
+
+### What the convention costs, across 173 sites
+
+The corpus was re-read for this: each site's design taken off the page with
+`inferDesign`, then costed at every pitch. 173 of the 212 have a design of three
+sizes or more that can be read.
+
+```
+  median cost at 8px         17.52px, across the sizes a site sets
+  median cost at its best     6.00px
+```
+
+**A coarser grid than 8px would also have cost less on 80 of the 173.** That is
+the number worth reporting, and the only one in this section that is not partly
+an artefact of arithmetic. A finer grid has a smaller worst case, so of course
+most sites cost less at 4px than at 8px, and "4px is cheapest on 144 of 173" is
+close to a tautology: it is cheapest because it constrains least. But a *coarser*
+grid costing less is a design paying twice, once in compromise and once in a grid
+that holds the page together less than it could have.
+
+It splits by what kind of site it is, and not in the direction you would guess:
+
+```
+  studio            10/11   91%
+  type-foundry      12/15   80%
+  institution       10/16   63%
+  design-system     13/29   45%
+  documentation     15/40   38%
+  academic           4/11   36%
+  product            8/24   33%
+  editorial          8/27   30%
+```
+
+The sites that care most visibly about type are the ones most likely to be
+paying for a finer grid than they need. That is the same finding as the rhythm
+survey seen from the other side: a design system is disciplined about the grid
+and sets four sizes on it, and a studio sets eleven expressive ones and takes
+whatever pitch the convention handed them.
+
+Slack pays 62.31px at 8px and 53.03px at 10px. Production Type pays 49.34px
+against 37.16px. PatternFly pays 13px against 5px, which is to say it could have
+had a grid a quarter coarser for a third of the compromise.
+
+### Cheapest is the wrong question
+
+A finer grid nearly always costs less, and a 1px grid costs nothing because it
+constrains nothing. A grid is worth having because it is coarse. So the tool
+reports the whole table and takes `--budget`, which asks the question with
+something in it: **the coarsest grid you can afford.**
+
+```
+For 6px of leading, the coarsest grid you can have is 6px,
+and it costs 4px across 6 sizes.
+```
+
 ## The command line
 
 ```bash
@@ -1816,7 +1908,8 @@ a type scale that needs no correction at all. `fit` takes a design and returns i
 unchanged with the spacing that puts it on the grid at every width. `engine` tells
 you whether this browser's cap heights come off the rasteriser. `print` renders
 the page to PDF and reads the baselines back out of the file. `columns` measures
-the other axis, and says whether the column module divides.
+the other axis, and says whether the column module divides. `pitch` says which
+grid a design can afford, before a font is chosen.
 
 ### The flags
 
@@ -1867,6 +1960,7 @@ Reporting:
 --gutter <px>         the gutter between them. Solved when omitted
 --figma               read --design as a Figma export. Usually detected
 --figma-minimum <n>   nodes a combination needs to count as a step (default 1)
+--budget <px>         leading you are willing to spend, for pitch
 --json                machine-readable output
 ```
 

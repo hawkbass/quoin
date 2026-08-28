@@ -28,6 +28,7 @@ quoin: it puts a web page on a baseline grid
   quoin fit                  fit a whole design to one grid, every family at once
   quoin print <url>          render it to PDF and read the baselines back out
   quoin columns <url>        the other axis: does the column module divide
+  quoin pitch                which grid this design can afford, before any font
 
 Options
   --pitch <px>               grid pitch                        (default 8)
@@ -53,6 +54,7 @@ Options
   --gutter <px>              the gutter between them. Solved when omitted
   --figma                    read --design as a Figma export (usually detected)
   --figma-minimum <n>        nodes a combination needs to count  (default 1)
+  --budget <px>              leading you will spend, for pitch
   --from <url>               read the design off a page instead, for fit
   --near <px>                how far from those is acceptable (default 3)
   --json                     machine-readable output
@@ -67,6 +69,7 @@ Examples
   npx quoin rhythm https://example.com
   npx quoin print https://example.com
   npx quoin columns https://example.com
+  npx quoin pitch --design design.json --budget 6
 `;
 
 interface Options {
@@ -113,6 +116,8 @@ interface Options {
   figma: boolean;
   /* How many nodes a combination needs before it counts as a step. */
   figmaMinimum: number;
+  /* Leading you are willing to spend, for pitch. */
+  budget: number | null;
 }
 
 function fail(message: string): never {
@@ -147,6 +152,7 @@ function parseArgs(argv: string[]): { command: string; url: string | null; optio
     gutter: null,
     figma: false,
     figmaMinimum: 1,
+    budget: null,
   };
 
   const positional: string[] = [];
@@ -223,6 +229,14 @@ function parseArgs(argv: string[]): { command: string; url: string | null; optio
           fail(`--space wants margin or padding, got ${value}`);
         }
         options.space = value;
+        break;
+      }
+      case "--budget": {
+        const value = Number.parseFloat(next());
+        if (!Number.isFinite(value) || value < 0) {
+          fail(`--budget wants a number of px, got ${value}`);
+        }
+        options.budget = value;
         break;
       }
       case "--figma":
@@ -817,6 +831,126 @@ switch (command) {
         process.exit(1);
       }
     }
+    break;
+  }
+  case "pitch": {
+    /*
+       Which grid, rather than how to fit this one.
+
+       Everybody picks 8 because everybody picks 8, and nothing has ever told a
+       designer what that convention costs them. It is the one question about a
+       grid that can be answered before a font is chosen: the cost of a grid is
+       entirely the leading it moves, and a leading snaps to the nearest whole
+       number of rows without anybody needing to know what the type looks like.
+
+       So no browser, no font, no network. It is arithmetic.
+    */
+    if (!options.design) fail("pitch needs a design: --design <file|->");
+
+    let raw: string;
+    try {
+      raw =
+        options.design === "-"
+          ? readFileSync(0, "utf8")
+          : readFileSync(options.design, "utf8");
+    } catch (error) {
+      fail(
+        `could not read the design from ${options.design === "-" ? "stdin" : options.design}\n  ` +
+          (error instanceof Error ? error.message : String(error))
+      );
+    }
+
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(raw);
+    } catch (error) {
+      fail(`the design is not valid JSON\n  ` + (error instanceof Error ? error.message : String(error)));
+    }
+
+    /* A Figma export answers this too, and the answer is more useful there:
+       nothing has been built yet, so the pitch is still a decision. */
+    const isFigma =
+      parsed !== null &&
+      typeof parsed === "object" &&
+      (("document" in parsed && typeof (parsed as Record<string, unknown>).document === "object") ||
+        ("nodes" in parsed && typeof (parsed as Record<string, unknown>).nodes === "object"));
+
+    if (options.figma || isFigma) {
+      const { figmaToDesign, FigmaError } = await import("./figma.ts");
+      try {
+        const converted = figmaToDesign(parsed, { minimum: options.figmaMinimum });
+        for (const warning of converted.warnings) console.error(`quoin: ${warning}`);
+        parsed = { families: converted.families };
+      } catch (error) {
+        if (error instanceof FigmaError) fail(error.message);
+        throw error;
+      }
+    }
+
+    const { normaliseDesign, DesignError } = await import("./design-input.ts");
+    let normalised;
+    try {
+      normalised = normaliseDesign(parsed);
+    } catch (error) {
+      if (error instanceof DesignError) fail(error.message);
+      throw error;
+    }
+
+    const steps = normalised.families.flatMap((family) => family.steps);
+    if (steps.length === 0) fail("that design has no sizes in it");
+
+    const { surveyPitches } = await import("./fit-core.ts");
+    const survey = surveyPitches(steps, {
+      ...(options.budget === null ? {} : { budget: options.budget }),
+    });
+
+    if (options.json) {
+      console.log(JSON.stringify({ steps: steps.length, ...survey }, null, 2));
+      break;
+    }
+
+    console.log(
+      `\n  ${steps.length} ${steps.length === 1 ? "size" : "sizes"} across ` +
+        `${normalised.families.length} ` +
+        `${normalised.families.length === 1 ? "family" : "families"}\n`
+    );
+    console.log("  pitch    total    worst    already whole");
+    for (const entry of survey.costs) {
+      const mark = entry.pitch === survey.cheapest.pitch ? " <- cheapest" : "";
+      console.log(
+        `  ${String(entry.pitch + "px").padEnd(9)}` +
+          `${String(entry.cost + "px").padEnd(9)}` +
+          `${String(entry.worst + "px").padEnd(9)}` +
+          `${entry.exact} of ${entry.steps}${mark}`
+      );
+    }
+
+    /*
+       The cheapest is the wrong question on its own and the table above is why:
+       a finer grid usually costs less, and a 1px grid costs nothing because it
+       constrains nothing. A grid is worth having because it is coarse.
+    */
+    console.log("");
+    if (survey.coarsestAffordable) {
+      console.log(
+        `  For ${options.budget}px of leading, the coarsest grid you can have is ` +
+          `${survey.coarsestAffordable.pitch}px,\n  and it costs ` +
+          `${survey.coarsestAffordable.cost}px across ${steps.length} sizes.`
+      );
+    } else if (options.budget !== null) {
+      console.log(
+        `  Nothing tried comes in under ${options.budget}px. The cheapest is ` +
+          `${survey.cheapest.pitch}px at ${survey.cheapest.cost}px.`
+      );
+    } else {
+      console.log(
+        `  ${survey.cheapest.pitch}px is the cheapest at ${survey.cheapest.cost}px, but cheapest\n` +
+          "  is not the question. A finer grid nearly always costs less and a 1px\n" +
+          "  grid costs nothing, because it constrains nothing. Pass --budget to ask\n" +
+          "  the question worth asking: the coarsest grid you can afford."
+      );
+    }
+    console.log("");
     break;
   }
   case "rhythm": {

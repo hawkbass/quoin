@@ -20,6 +20,8 @@ import {
   leadingFor,
   fitWith,
   fittedScaleToCss,
+  pitchCost,
+  surveyPitches,
   type CapSource,
   type FamilyRequest,
 } from "../../src/fit-core.ts";
@@ -519,4 +521,119 @@ test("the space says what it closes, not just that it closes a cap", () => {
 
   const plain = fittedScaleToCss(fitWith(DESIGN, CAPS, { pitch: 8 }));
   assert.match(plain, /closes a [\d.]+px cap residue \*\//);
+});
+
+/* ------------------------------------------------------------------ *
+   Which pitch
+ * ------------------------------------------------------------------ */
+
+test("a pitch costs only the leading it moves", () => {
+  /* No cap heights, no font, no browser. The space is not a cost: it is chosen
+     rather than moved, and it closes the cap height whatever the pitch is. */
+  const cost = pitchCost([{ size: 16, leading: 25.5 }, { size: 24, leading: 32 }], 8);
+  assert.equal(cost.cost, 1.5, "25.5 to 24 is 1.5, and 32 was already a whole row");
+  assert.equal(cost.worst, 1.5);
+  assert.equal(cost.exact, 1);
+  assert.equal(cost.steps, 2);
+});
+
+test("a design already on the grid costs nothing at that pitch", () => {
+  const steps = [{ size: 16, leading: 24 }, { size: 24, leading: 32 }, { size: 40, leading: 48 }];
+  assert.equal(pitchCost(steps, 8).cost, 0);
+  assert.equal(pitchCost(steps, 8).exact, 3);
+});
+
+test("the cheapest pitch is not always the finest, which is the point", () => {
+  /*
+     If it were, this would not be worth computing: a finer grid has a smaller
+     worst case, so it ought to win every time. Where the leadings happen to fall
+     matters more than how far they can be from a row, and that is not something
+     to reason about from a distance.
+  */
+  const steps = [
+    { size: 16, ratio: 1.5 }, { size: 20, ratio: 1.5 }, { size: 25, ratio: 1.4 },
+    { size: 31, ratio: 1.3 }, { size: 39, ratio: 1.2 }, { size: 49, ratio: 1.1 },
+  ];
+  const four = pitchCost(steps, 4).cost;
+  const six = pitchCost(steps, 6).cost;
+  assert.ok(
+    six < four,
+    `a 6px pitch costs ${six} and a 4px pitch ${four}, so finer is cheaper after all`
+  );
+});
+
+test("the survey reports every pitch and names the cheapest", () => {
+  const steps = [{ size: 16, leading: 24 }, { size: 21, leading: 31 }];
+  const survey = surveyPitches(steps, { pitches: [4, 6, 8, 12] });
+
+  assert.equal(survey.costs.length, 4);
+  assert.deepEqual(survey.costs.map((c) => c.pitch), [4, 6, 8, 12]);
+
+  const cheapest = Math.min(...survey.costs.map((c) => c.cost));
+  assert.equal(survey.cheapest.cost, cheapest);
+});
+
+test("a tie for cheapest goes to the first tried, which is the finest", () => {
+  /* Not arbitrary: the list is ascending, and where two pitches cost the same
+     the coarser one is the better answer, which `coarsestAffordable` is for. */
+  const steps = [{ size: 16, leading: 24 }];
+  const survey = surveyPitches(steps, { pitches: [4, 8, 12] });
+  assert.equal(survey.cheapest.cost, 0);
+  assert.equal(survey.cheapest.pitch, 4);
+});
+
+test("the coarsest affordable pitch is the question worth asking", () => {
+  /*
+     Cost alone recommends the finest grid every time, and it is right and
+     useless: a 1px grid costs nothing because it constrains nothing. A grid is
+     worth having because it is coarse.
+  */
+  const steps = [
+    { size: 16, leading: 24 }, { size: 20, leading: 30 }, { size: 25, leading: 35 },
+    { size: 31, leading: 40 }, { size: 39, leading: 47 }, { size: 49, leading: 54 },
+  ];
+  const survey = surveyPitches(steps, { budget: 6 });
+
+  assert.ok(survey.coarsestAffordable, "nothing came in under 6px");
+  assert.ok(
+    survey.coarsestAffordable!.cost <= 6,
+    `it offered ${survey.coarsestAffordable!.pitch}px at ${survey.coarsestAffordable!.cost}px`
+  );
+
+  /* And it is genuinely the coarsest: nothing above it is affordable. */
+  for (const entry of survey.costs) {
+    if (entry.pitch > survey.coarsestAffordable!.pitch) {
+      assert.ok(
+        entry.cost > 6,
+        `${entry.pitch}px costs ${entry.cost}px and is coarser, so it should have been chosen`
+      );
+    }
+  }
+});
+
+test("a budget nothing meets is said rather than fudged", () => {
+  const survey = surveyPitches([{ size: 17, leading: 25.5 }], { budget: 0.1 });
+  assert.equal(survey.coarsestAffordable, null);
+  assert.ok(survey.cheapest.cost > 0.1);
+});
+
+test("no budget means no recommendation, because there is no answer without one", () => {
+  const survey = surveyPitches([{ size: 17, leading: 25.5 }]);
+  assert.equal(survey.coarsestAffordable, null);
+});
+
+test("a pitch of zero is refused rather than dividing by it", () => {
+  for (const bad of [0, -8, Number.NaN, Number.POSITIVE_INFINITY]) {
+    assert.throws(() => pitchCost([{ size: 16 }], bad), /pitch/i);
+  }
+});
+
+test("a step with no leading at all is costed against the default ratio", () => {
+  /* 1.5 is what `leadingFor` assumes, and costing it differently here would
+     make the survey disagree with the fit it is meant to inform. */
+  const cost = pitchCost([{ size: 16 }], 8);
+  const { leading, wanted } = leadingFor({ size: 16 }, 8);
+  assert.equal(wanted, 24);
+  assert.equal(leading, 24);
+  assert.equal(cost.cost, 0);
 });

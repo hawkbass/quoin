@@ -581,3 +581,108 @@ export function fittedScaleToCss(fitted: FittedScale): string {
 
   return lines.join("\n");
 }
+
+/* ------------------------------------------------------------------ *
+   Which pitch
+ * ------------------------------------------------------------------ */
+
+export interface PitchCost {
+  pitch: number;
+  /** Leading movement, summed over every step, in px. */
+  cost: number;
+  /** The largest single leading change, in px. */
+  worst: number;
+  /** Steps whose leading was already a whole number of rows. */
+  exact: number;
+  steps: number;
+}
+
+/**
+ * What a pitch would cost this design, in leading.
+ *
+ * No cap heights, no browser, no font. The cost of a grid is entirely the
+ * leading it moves, and a leading snaps to the nearest whole number of rows
+ * without anybody needing to know what the type looks like. The space is not a
+ * cost: it is chosen rather than moved, and it closes the cap height whatever
+ * the pitch is.
+ *
+ * Which makes this the one question about a grid that can be answered before a
+ * font is picked.
+ */
+export function pitchCost(steps: readonly DesignStep[], pitch: number): PitchCost {
+  if (!(pitch > 0) || !Number.isFinite(pitch)) {
+    throw new RangeError(`quoin: pitch must be a positive number, got ${pitch}`);
+  }
+
+  let cost = 0;
+  let worst = 0;
+  let exact = 0;
+
+  for (const step of steps) {
+    const { leading, wanted } = leadingFor(step, pitch);
+    const moved = Math.abs(leading - wanted);
+    cost += moved;
+    if (moved > worst) worst = moved;
+    if (moved < 1e-9) exact++;
+  }
+
+  return {
+    pitch,
+    cost: Math.round(cost * 1000) / 1000,
+    worst: Math.round(worst * 1000) / 1000,
+    exact,
+    steps: steps.length,
+  };
+}
+
+export interface PitchSurvey {
+  costs: PitchCost[];
+  /** The cheapest pitch tried. */
+  cheapest: PitchCost;
+  /**
+   * The coarsest pitch whose cost is within `budget`.
+   *
+   * The answer a designer actually wants. Cost alone would recommend the finest
+   * grid every time, and it would be right and useless: a 1px grid costs nothing
+   * because it constrains nothing. A grid is worth having because it is coarse,
+   * so the question is not which pitch is cheapest but which is the coarsest one
+   * you can afford.
+   *
+   * Null when nothing tried fits the budget.
+   */
+  coarsestAffordable: PitchCost | null;
+}
+
+/**
+ * The cost of every pitch worth trying, so the trade is visible.
+ *
+ * The relationship is not monotonic, which is what makes this worth computing
+ * rather than reasoning about. A finer grid has a smaller worst case, so it
+ * ought to be cheaper, and usually is. But a major-third scale of six sizes
+ * costs 4.0px at a 6px pitch and 6.4px at 4px, because where the leadings
+ * happen to fall matters more than how far they can be from a row.
+ */
+export function surveyPitches(
+  steps: readonly DesignStep[],
+  options: { pitches?: readonly number[]; budget?: number } = {}
+): PitchSurvey {
+  const pitches = options.pitches ?? [4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 16, 18, 20, 24];
+  const costs = pitches.map((pitch) => pitchCost(steps, pitch));
+
+  const cheapest = costs.reduce((best, entry) =>
+    entry.cost < best.cost - 1e-9 ? entry : best
+  );
+
+  const budget = options.budget;
+  const coarsestAffordable =
+    budget === undefined
+      ? null
+      : costs
+          .filter((entry) => entry.cost <= budget + 1e-9)
+          .reduce<PitchCost | null>(
+            (best, entry) => (best === null || entry.pitch > best.pitch ? entry : best),
+            null
+          );
+
+  return { costs, cheapest, coarsestAffordable };
+}
