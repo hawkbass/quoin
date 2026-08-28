@@ -122,6 +122,25 @@
     <p class="pull">
       So: CSS for the rhythm, this for the phase.
     </p>
+
+    <p>
+      Both of those are the vertical. A baseline grid sits inside a column grid
+      and the column grid is the half a designer usually means by the word, so
+      <code>quoin columns</code> measures that too. It has the same defect and
+      the same cause: 1104px divided three ways with 40px gutters is a module of
+      341.33px, every division after the first sits on a fraction, and no care
+      taken with the markup moves it because the container width settled it
+      before any markup existed.
+    </p>
+
+    <p>
+      This page was 15.4% aligned on a fractional module when the check was
+      written. The gutter is 48px now, which divides the shell whole at two,
+      three, four and six columns, and which is six grid rows: the two axes are
+      measured in the same unit rather than in two conventions that happened to
+      sit next to each other. <button type="button" class="link" id="inlineColumns">Show the columns</button>
+      and you can see the one this page is set on.
+    </p>
   </div>
 </section>
 
@@ -618,6 +637,7 @@ quoin.css()</code></pre>
         <p class="footnote" id="liveWhere"></p>
         <p class="footnote">
           <button type="button" class="link" id="footGrid">Show the grid on this page</button>
+          <button type="button" class="link" id="footColumns">Show the columns</button>
         </p>
       </div>
       <div>

@@ -1,5 +1,41 @@
 # Changelog
 
+## 1.22.0
+
+The column grid, on the site that argues for grids.
+
+### The site
+
+`quoin columns` shipped in 1.16.0 and quoin.dev had never been measured against
+it. It read **15.4% aligned on a module of 150.67px**, which is the horizontal
+version of the leading it spent three releases fixing.
+
+**The gutter is 48px now, not 40.** 1104px of shell divided by a 40px gutter
+comes to 341.33px at three columns and 150.67 at six. A 48px gutter divides it
+whole at two, three, four and six: 528, 336, 240, 144. It is also six grid rows,
+which is the point: the vertical rhythm and the horizontal module were two
+separate conventions in that stylesheet and there was no reason for them to be.
+
+**The measure is 33rem, not 36.** 576px is twelve modules and no gutter, a column
+start rather than a column end, so a paragraph filling it stopped halfway across
+a gutter. 528 is six columns and five gutters exactly, and 67 characters of EB
+Garamond at 18px against 73 at the old width. The grid asked for the change and
+typography had no objection.
+
+**15.4% to 27.7%, and the module is a whole number.** What is left is table
+cells, whose widths are their contents' rather than the grid's.
+
+### Shown, not just measured
+
+The page has drawn its own baseline grid since the beginning and only ever the
+vertical half. It draws the columns now, from the same custom properties the
+layout uses rather than from a picture of one, so what you see is the grid the
+page is actually set on.
+
+Drawn as bands rather than as lines, because a column grid is bands and a
+baseline grid is rules, and drawing both as rules would make two different things
+look like one.
+
 ## 1.21.1
 
 The other three plugins, audited the way the PostCSS one was.

@@ -198,10 +198,31 @@
 
   function selfGrid() {
     var button = document.getElementById("footGrid");
-    if (!button) return;
-    button.addEventListener("click", function () {
-      var on = document.body.classList.toggle("grid-on");
-      button.textContent = on ? "Hide the grid" : "Show the grid on this page";
+    if (button) {
+      button.addEventListener("click", function () {
+        var on = document.body.classList.toggle("grid-on");
+        button.textContent = on ? "Hide the grid" : "Show the grid on this page";
+      });
+    }
+
+    /* The other axis. Separate toggles rather than one, because they answer
+       separate questions and a page is often right about one and wrong about
+       the other. */
+    var columnButtons = [
+      document.getElementById("footColumns"),
+      document.getElementById("inlineColumns"),
+    ].filter(Boolean);
+
+    columnButtons.forEach(function (columns) {
+      columns.addEventListener("click", function () {
+        var on = document.body.classList.toggle("columns-on");
+        /* Both buttons say the same thing, because they toggle the same thing
+           and a control that lies about the state it is in is worse than one
+           that is not there. */
+        columnButtons.forEach(function (other) {
+          other.textContent = on ? "Hide the columns" : "Show the columns";
+        });
+      });
     });
   }
 

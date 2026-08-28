@@ -31,7 +31,21 @@
   --serif: "EB Garamond", Georgia, "Times New Roman", serif;
   --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Consolas, monospace;
 
-  --measure: 36rem;
+  /*
+     33rem, not 36, and the grid picked it rather than the other way round.
+
+     576px is twelve modules of 48 and no gutter, which is a column start rather
+     than a column end, so a paragraph filling it stops halfway across a gutter.
+     528 is six columns and five gutters exactly. It is also 67 characters of EB
+     Garamond at 18px against 73 at the old width, which is the better of the two
+     measures anyway: the grid asked for the change and typography had no
+     objection.
+  */
+  /* The column grid this page is set on, named so the overlay can draw the
+     same one the layout uses rather than a picture of one. */
+  --gutter: 48px;
+  --column: 144px;
+  --measure: 33rem;
   --shell: 72rem;
 }
 
@@ -65,6 +79,38 @@ body::after {
     to bottom, rgba(122, 74, 32, 0.28) 0 1px, transparent 1px var(--pitch));
 }
 body.grid-on::after { opacity: 1; }
+
+/*
+   The other axis, drawn the same way.
+
+   A baseline grid is a vertical rhythm inside a column grid and this page only
+   ever showed you the vertical half. The columns are real: 1104px of shell,
+   48px gutters, six columns of 144px, and 48 is six rows so the two axes are
+   measured in the same unit rather than in two conventions that happen to sit
+   next to each other.
+
+   Drawn as the columns themselves rather than as lines, because a column grid
+   is bands and a baseline grid is rules, and showing both as rules would make
+   two different things look like one.
+*/
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: min(100% - 48px, var(--shell) - 48px);
+  transform: translateX(-50%);
+  z-index: 89;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 140ms linear;
+  background-image: repeating-linear-gradient(
+    to right,
+    rgba(122, 74, 32, 0.10) 0 var(--column),
+    transparent var(--column) calc(var(--column) + var(--gutter)));
+}
+body.columns-on::before { opacity: 1; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }
@@ -420,10 +466,22 @@ table.compact tbody th { font-size: 15px; }
 .findings p { color: #C9BFB0; }
 .findings code { background: rgba(247, 243, 234, 0.10); color: var(--paper-lift); }
 
+/*
+   48, not 40, and it is the horizontal half of the same argument.
+
+   The shell is 1104px of content. Divided by a 40px gutter it comes to 341.33px
+   at three columns and 150.67 at six, so every division after the first sits on
+   a fraction and nothing downstream can recover it. A 48px gutter divides it
+   whole at two, three, four and six: 528, 336, 240, 144.
+
+   It is also six rows, which is the point. The vertical rhythm and the
+   horizontal module were two separate conventions in this stylesheet and there
+   was no reason for them to be.
+*/
 .cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
-  gap: 40px;
+  gap: 48px;
   margin-top: 40px;
 }
 .cards article { border-top: 2px solid var(--brass); padding-top: 14px; }
@@ -495,7 +553,7 @@ table.compact tbody th { font-size: 15px; }
 .ways {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
-  gap: 40px;
+  gap: 48px;
   margin: 32px 0 40px;
 }
 .ways article { border-top: 2px solid var(--rule-hard); padding-top: 14px; }
@@ -524,7 +582,7 @@ footer { padding: 56px 0 64px; background: var(--paper); }
 .footgrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
-  gap: 40px;
+  gap: 48px;
   padding-top: 5px;
   border-top: 3px solid var(--rule-hard);
 }
