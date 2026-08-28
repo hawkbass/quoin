@@ -213,3 +213,74 @@ test("the emitted CSS uses whichever property was chosen", async ({ page, browse
     /Use padding-top instead/
   );
 });
+
+/* ------------------------------------------------------------------ *
+   What does not break it
+ * ------------------------------------------------------------------ */
+
+test("the browser's own baseline alignment does not knock a fit off", async ({
+  browser,
+  browserName,
+}) => {
+  /*
+     Columns turned out to be a real blind spot, so the other places the browser
+     does baseline work of its own were checked too. None of them is a problem,
+     and a negative result is worth keeping: it is the difference between "we
+     never looked" and "we looked and it holds".
+
+     Flex and grid with `align-items: baseline` shift items to line their
+     baselines up, a table row aligns its cells, and a list marker sits on the
+     first line's baseline. All of them move things, and none of them moves
+     things off a grid the blocks were already on.
+  */
+  const fitted = await fit(browser, "margin");
+  if (fitted.unavailable) {
+    test.skip(true, `${browserName} has no text-box-trim`);
+    return;
+  }
+  const step = fitted.families[0]!.steps[0]!;
+
+  /* A second size, so baseline alignment has something to align. */
+  const big = { ...step, size: 28, leading: 32, space: step.space };
+
+  const shell = (body: string) => `<!doctype html><meta charset="utf-8"><style>
+    html { font-family: serif } body { margin: 0 }
+    main { width: 92%; max-width: 900px; margin: 0 auto }
+    .a { font-size:${step.size}px; line-height:${step.leading}px; margin:${step.space}px 0 0 }
+    .b { font-size:${big.size}px; line-height:${big.leading}px; margin:${big.space}px 0 0 }
+    :is(p,div,td,th,li) { text-box-trim: trim-both; text-box-edge: cap alphabetic }
+  </style><main>${body}</main>`;
+
+  const cases: [string, string][] = [
+    [
+      "flex with align-items baseline",
+      `<div style="display:flex;gap:24px;align-items:baseline">
+         <p class="a">Seventeen in a flex row.</p><p class="b">Twenty-eight beside it.</p>
+       </div><p class="a">A paragraph below the row.</p>`,
+    ],
+    [
+      "grid with align-items baseline",
+      `<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:baseline">
+         <p class="a">Seventeen in a grid cell.</p><p class="b">Twenty-eight beside it.</p>
+       </div><p class="a">A paragraph below the grid.</p>`,
+    ],
+    [
+      "a table row",
+      `<table style="border-collapse:collapse;width:100%"><tr>
+         <td class="a">Seventeen in a cell.</td><td class="b">Twenty-eight in the next.</td>
+       </tr></table><p class="a">A paragraph below the table.</p>`,
+    ],
+    [
+      "a list",
+      `<ul style="margin:0;padding:0 0 0 24px">
+         <li class="a">An item at seventeen.</li><li class="a">A second item.</li>
+       </ul><p class="a">A paragraph below the list.</p>`,
+    ],
+  ];
+
+  for (const [label, body] of cases) {
+    const report = await measure(browser, shell(body));
+    expect(report.total, `${label} rendered`).toBeGreaterThan(2);
+    expect(report.onGrid, `${label}: ${report.onGrid}/${report.total}`).toBe(report.total);
+  }
+});

@@ -753,6 +753,23 @@ get.
 two are not interchangeable and changing somebody's box model is not a thing to
 do quietly. The emitted CSS points at this when it writes a margin.
 
+### What does not break it
+
+Columns turned out to be a blind spot, so the other places the browser does
+baseline work of its own were checked too, and none of them is a problem. Flex
+and grid with `align-items: baseline` shift items to line their baselines up, a
+table row aligns its cells, and a list marker sits on the first line. All of them
+move things and none of them moves anything off a grid it was already on.
+
+A negative result, kept because it is the difference between never having looked
+and having looked.
+
+While there: `initial-letter` does nothing. Chromium reports
+`CSS.supports("initial-letter", "3")` as true and the layout ignores it, so a
+paragraph with a sunk capital is exactly the height of one without. Drop caps are
+still a float and a hand-calculated line-height, which is the same answer as ten
+years ago.
+
 ---
 
 ## Finding: a grid costs two pixels a size
