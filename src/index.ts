@@ -40,6 +40,12 @@ export {
 } from "./fit-core.ts";
 
 export {
+  normaliseDesign,
+  DesignError,
+  type NormaliseResult,
+} from "./design-input.ts";
+
+export {
   makeBaseline,
   compareToBaseline,
   comparisonToMarkdown,

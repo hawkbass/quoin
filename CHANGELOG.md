@@ -1,5 +1,47 @@
 # Changelog
 
+## 1.7.0
+
+Taking a design in the shape somebody actually has it.
+
+`fitScale` wanted families with fonts and steps, which is the shape the
+arithmetic needs and not the shape anybody arrives with. A Figma export calls it
+`fontSize` and `lineHeight` in px strings, a token file is flat, and an agent
+reading a screenshot has a list of measurements and no idea what this library
+calls things. All three are the same information.
+
+### Added
+
+**`normaliseDesign(input)`, used by `quoin fit`.** Accepts `font`,
+`fontFamily`, `family` or `stack`; `steps`, `sizes`, `scale` or `tokens`;
+`size` or `fontSize`; `leading` or `lineHeight`; `space`, `spacing`,
+`marginTop` or `gap`. Points convert. A bare number is a step, because a flat
+token file is nothing else. A unitless line-height is a ratio and a number of
+pixels is not, since CSS spells it that way and the two stop overlapping at four.
+
+Anything interpreted is reported on stderr, so `--json` stays clean and a guess
+is still impossible to miss.
+
+### Changed
+
+**A relative length is refused rather than assumed.** A rem is 16px only if
+nothing changed the root size, and a design saying 1.0625rem against an 18px root
+means 19.125px. Guessing produces a fit that looks right, which is the one
+outcome worth avoiding.
+
+**Every error names the entry it is about**, in dotted path form. An agent
+cannot ask a follow-up question, so an error that does not say which step was
+wrong and what was expected costs a round trip and sometimes a confidently wrong
+answer.
+
+### Findings
+
+**Cap height does not move with a variable font axis.** Six variable families at
+three weights and two optical sizes, in Chromium and WebKit: identical every
+time. `text-box-edge: cap` uses the static `sCapHeight`, so reading the default
+instance out of a file is correct for variable fonts too, and a bold heading
+shares a phase with regular body text at the same size.
+
 ## 1.6.0
 
 Fitting without a browser, which is what makes it usable in a build.

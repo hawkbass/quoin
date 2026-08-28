@@ -233,3 +233,100 @@ test("a fit from the file matches a fit from the browser", async ({ page, browse
     ).toBeLessThan(0.05);
   }
 });
+
+test("cap height does not move with a variable font's axes", async ({ page, browserName }) => {
+  /*
+     `fitFromFiles` reads the OS/2 table, which describes the default instance.
+     If an engine resolved cap height per instance, every fit for a variable font
+     set at anything other than its default would be wrong, and most fonts
+     shipped today are variable.
+
+     Measured across six variable families at three weights and two optical
+     sizes: the cap height does not move at all, in either engine.
+     `text-box-edge: cap` uses the static `sCapHeight`.
+
+     There is a second thing that follows and it is worth having. A bold heading
+     and a regular paragraph at the same size share a phase, so a design can set
+     weight freely without disturbing the fit.
+  */
+  const fonts = corpus();
+  test.skip(fonts.length === 0, "no font corpus: run `npm run fonts`");
+
+  await page.goto("/prose.html");
+  await page.addScriptTag({ content: BUNDLE });
+
+  const supported = await page.evaluate(() => CSS.supports("text-box-trim", "trim-both"));
+  test.skip(!supported, `${browserName} has no text-box-trim`);
+
+  /* Fonts the parser flagged as variable, which `corpus()` filters out, so they
+     are re-read here rather than borrowed from it. */
+  const variable = readdirSync(FONTS)
+    .filter((f) => /\.(ttf|otf)$/i.test(f))
+    .map((file) => {
+      try {
+        return { file, metrics: readFontMetrics(readFileSync(join(FONTS, file))) };
+      } catch {
+        return null;
+      }
+    })
+    .filter((entry): entry is { file: string; metrics: ReturnType<typeof readFontMetrics> } =>
+      Boolean(entry?.metrics.variable && entry.metrics.capHeight !== null)
+    );
+
+  test.skip(variable.length === 0, "no variable fonts in the corpus");
+
+  for (const { file, metrics } of variable) {
+    const bytes = readFileSync(join(FONTS, file));
+    const family = `QuoinVar-${file.replace(/[^a-zA-Z0-9]/g, "")}`;
+
+    const measured = await page.evaluate(
+      async ({ family, base64 }) => {
+        const face = new FontFace(
+          family,
+          `url(data:font/truetype;base64,${base64}) format("truetype")`
+        );
+        try {
+          await face.load();
+        } catch {
+          return null;
+        }
+        document.fonts.add(face);
+        await document.fonts.ready;
+
+        const at = (variation: string) => {
+          const el = document.createElement("div");
+          el.style.cssText =
+            `position:absolute;visibility:hidden;font-family:"${family}";` +
+            "font-size:1000px;line-height:1000px;" +
+            "text-box-trim:trim-both;text-box-edge:cap alphabetic;" +
+            (variation ? `font-variation-settings:${variation};` : "");
+          el.textContent = "H";
+          document.body.appendChild(el);
+          const height = el.getBoundingClientRect().height / 1000;
+          el.remove();
+          return height;
+        };
+
+        return {
+          base: at(""),
+          light: at('"wght" 300'),
+          bold: at('"wght" 700'),
+          small: at('"opsz" 8'),
+          large: at('"opsz" 60'),
+        };
+      },
+      { family, base64: bytes.toString("base64") }
+    );
+
+    if (!measured) continue;
+
+    const declared = metrics.capHeight! / metrics.unitsPerEm;
+
+    for (const [axis, value] of Object.entries(measured)) {
+      expect(
+        Math.abs(value - declared),
+        `${file} at ${axis}: drew ${value.toFixed(4)} em against a declared ${declared.toFixed(4)}`
+      ).toBeLessThan(0.001);
+    }
+  }
+});

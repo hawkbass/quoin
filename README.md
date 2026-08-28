@@ -937,20 +937,100 @@ fitted should pass it explicitly with `--design`.
 
 ### For agents
 
-`quoin fit --design - --json` reads a design on stdin and writes the whole result
-as JSON, including `leadingWas`, `leadingMoved` and the cap height every figure
-was derived from. An agent working from a Figma file or a screenshot has the same
-problem a person does and no one to ask, so everything the answer rests on is in
-the output rather than in the prose around it.
-
-The contract is small on purpose. Give it a family, a font stack and a list of
-sizes; get back those sizes, a leading, a space, and a record of what moved.
-Seating type to a grid stops being a matter of taste once the pitch is fixed and
-becomes arithmetic, and this is the arithmetic.
+An agent working from a Figma file or a screenshot has the same problem a person
+does and nobody to ask. So the contract is data in, data out, and everything the
+answer rests on is in the output rather than in the prose around it.
 
 ```bash
 cat design.json | npx quoin fit --design - --json
 ```
+
+**It takes the shape you already have.** A Figma export calls it `fontSize` and
+`lineHeight`, in px strings; a token file is flat; a screenshot gives you a list
+of measurements and no names. All of those are accepted:
+
+```json
+{
+  "pitch": 8,
+  "families": [{
+    "role": "heading",
+    "fontFamily": "Lato",
+    "file": "./fonts/Lato.ttf",
+    "sizes": [
+      { "label": "Display/Large", "fontSize": "44px", "lineHeight": 1.1, "marginTop": "48px" },
+      { "label": "Display/Small", "fontSize": "27pt", "lineHeight": "36px" },
+      13.5
+    ]
+  }]
+}
+```
+
+`font` / `fontFamily` / `family` / `stack`. `steps` / `sizes` / `scale` /
+`tokens`. `size` / `fontSize`. `leading` / `lineHeight`. `space` / `spacing` /
+`marginTop` / `gap`. `name` / `label` / `token`. A unitless line-height is read
+as a ratio and a number of pixels is not, because CSS spells it that way and the
+two stop overlapping at four. Points convert. Anything interpreted is reported on
+stderr, so `--json` stays clean and the guess is still impossible to miss.
+
+**It refuses what it cannot know.** A `rem` is 16px only if nothing changed the
+root size, and a design saying `1.0625rem` against an 18px root means 19.125px.
+Guessing there produces a fit that looks right, which is the one outcome worth
+avoiding, so it is an error instead.
+
+**Every error names the entry.** An agent cannot ask a follow-up question, so an
+error that does not say which step was wrong and what was expected costs a round
+trip and sometimes a confidently wrong answer:
+
+```
+design.families[0].steps[0].size: "1.0625rem" is relative. Give it in px,
+because a rem depends on a root size this cannot see and guessing would
+produce a fit that looks right
+
+design.families[0]: no font. Give it as "font", with the CSS family exactly
+as the page will set it
+
+design: found steps but no font. Every family needs the CSS family it is set
+in, because the cap height that decides the spacing belongs to the typeface
+```
+
+**What comes back.** Every size, unchanged. A leading, snapped, with
+`leadingWas` and `leadingMoved` so the agent can decide whether a shift from
+25.5 to 24 is acceptable and say so rather than guess. A space, with the `cap`
+and `residue` it was derived from. And the CSS.
+
+```json
+{
+  "grid": { "pitch": 8, "tolerance": 0.5, "origin": 0 },
+  "origin": 0,
+  "cost": 1.5,
+  "unavailable": false,
+  "families": [{
+    "role": "body", "font": "Lato", "resolved": true,
+    "steps": [{
+      "name": "body", "size": 17,
+      "leading": 24, "leadingWas": 25.5, "leadingMoved": -1.5, "rows": 3,
+      "space": 27.819, "spaceWas": 24, "spaceMoved": 3.819,
+      "cap": 12.181, "residue": 4.181
+    }]
+  }],
+  "css": "..."
+}
+```
+
+`cost` is the total leading movement across the design, and it is the number to
+show a person: zero means the design was already on whole rows and nothing was
+compromised at all.
+
+**The three ways in.** `--design <file>` when there is a design.
+`--design <file>` with a `file` on each family when there is no browser, which
+runs in about 76ms. `--from <url>` when there is a site instead of a design, and
+the design has to be read off the page first.
+
+**What to do with the answer.** Set the sizes and leadings as given, and the
+spaces as `margin-top`, never `margin-bottom`: the space closes the cap height of
+the block it comes *before*. Add the trim the CSS carries. That is the whole
+integration, and it holds at every width without media queries, so there is
+nothing to regenerate when the copy changes.
 
 ### Without a browser at all
 
@@ -1245,6 +1325,7 @@ release.
 | `inferDesign(options)` | read a design off a rendered page, in the shape `fitScale` takes |
 | `fitFromFiles(families, files, options)` | the same fit from font files, with no browser |
 | `readFontMetrics(bytes)` | units per em and cap height from a TTF, OTF or WOFF |
+| `normaliseDesign(input)` | a design in whatever shape you have it, in the shape `fitScale` wants |
 | `fittedScaleToCss(fitted)` | that fit as CSS, with the trim it depends on |
 | `scaleToCss(scale)` | that scale as custom properties, with its origin |
 | `uniqueSelector(el)` | a selector verified to match exactly that element, or null |

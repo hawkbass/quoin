@@ -704,25 +704,53 @@ switch (command) {
       }[];
     };
 
+    let raw: string;
     try {
-      const raw =
-        source === "-"
-          ? readFileSync(0, "utf8")
-          : readFileSync(source, "utf8");
-      design = JSON.parse(raw);
+      raw = source === "-" ? readFileSync(0, "utf8") : readFileSync(source, "utf8");
     } catch (error) {
       fail(
-        `could not read the design from ${source === "-" ? "stdin" : source}
-  ` +
+        `could not read the design from ${source === "-" ? "stdin" : source}\n  ` +
           (error instanceof Error ? error.message : String(error))
       );
     }
 
-    if (!design.families?.length) {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(raw);
+    } catch (error) {
       fail(
-        'the design needs a "families" array, each with a role, a font and steps'
+        `the design is not valid JSON\n  ` +
+          (error instanceof Error ? error.message : String(error))
       );
     }
+
+    /*
+       Normalised rather than required in one exact spelling.
+
+       A person exporting from Figma has `fontSize` and `lineHeight` in px
+       strings; a design system has a flat token file; an agent reading a
+       screenshot has a list of measurements and no idea what this library calls
+       them. All three are the same information, and an agent cannot ask a
+       follow-up question, so an error that does not name the entry and say what
+       was expected costs a round trip and sometimes a wrong answer instead.
+    */
+    const { normaliseDesign, DesignError } = await import("./design-input.ts");
+    let normalised;
+    try {
+      normalised = normaliseDesign(parsed);
+    } catch (error) {
+      if (error instanceof DesignError) fail(error.message);
+      throw error;
+    }
+
+    design = {
+      ...(parsed as Record<string, unknown>),
+      families: normalised.families,
+    } as typeof design;
+
+    /* Anything that had to be interpreted is said out loud on stderr, so it does
+       not pollute `--json` and is still impossible to miss. */
+    for (const note of normalised.notes) console.error(`quoin: ${note}`);
 
     /*
        When every family names a font file, none of this needs a browser.
@@ -737,13 +765,13 @@ switch (command) {
        you which font actually rendered where a file only tells you about the
        file. This is the answer when a page does not exist yet.
     */
-    if (design.families.every((family) => family.file)) {
+    if (normalised.families.every((family) => family.file)) {
       const { fitFromFiles } = await import("./fit-file.ts");
       const { inflateSync } = await import("node:zlib");
       const { dirname: dirOf, resolve: resolveFrom } = await import("node:path");
       const base = source === "-" ? process.cwd() : dirOf(source);
 
-      const files = design.families.map((family) => {
+      const files = normalised.families.map((family) => {
         const path = resolveFrom(base, family.file as string);
         try {
           return { font: family.font, bytes: new Uint8Array(readFileSync(path)) };
@@ -755,7 +783,7 @@ switch (command) {
         }
       });
 
-      const result = fitFromFiles(design.families, files, {
+      const result = fitFromFiles(normalised.families, files, {
         pitch: design.pitch ?? options.pitch,
         tolerance: design.tolerance ?? options.tolerance,
         inflate: (compressed) => new Uint8Array(inflateSync(compressed)),
@@ -824,7 +852,7 @@ switch (command) {
         return { result, css: window.quoinFit.fittedScaleToCss(result) };
       },
       {
-        families: design.families,
+        families: normalised.families,
         grid: {
           pitch: design.pitch ?? options.pitch,
           tolerance: design.tolerance ?? options.tolerance,

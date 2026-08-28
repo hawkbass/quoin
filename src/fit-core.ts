@@ -34,6 +34,13 @@ export interface FamilyRequest {
   /** The CSS family, exactly as it will be set on the page. */
   font: string;
   steps: DesignStep[];
+  /**
+   * The font file this family is set in, when there is one.
+   *
+   * Carried through so a design read from JSON can be fitted without a browser.
+   * Ignored by the in-page fitter, which measures what actually rendered.
+   */
+  file?: string;
 }
 
 export interface FittedStep {
