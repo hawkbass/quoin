@@ -91,6 +91,7 @@ export function fitScale(
   options: Partial<GridConfig> & {
     edge?: string;
     spaceProperty?: "margin" | "padding";
+    columns?: boolean;
   } = {}
 ): FittedScale {
   if (!canReadFontTableCapHeight()) {
@@ -98,6 +99,7 @@ export function fitScale(
       grid: { pitch: options.pitch ?? 8, tolerance: options.tolerance ?? 0.5, origin: 0 },
       edge: options.edge ?? "cap alphabetic",
       spaceProperty: options.spaceProperty ?? "margin",
+      columns: options.columns ?? false,
       origin: 0,
       families: families.map((f) => ({
         role: f.role,

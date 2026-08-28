@@ -291,3 +291,85 @@ test("the margin form points at columns and the padding form does not", () => {
   assert.match(padding, /padding-top/);
   assert.doesNotMatch(padding, /Use padding-top instead/);
 });
+
+/* ------------------------------------------------------------------ *
+   Columns
+ * ------------------------------------------------------------------ */
+
+test("columns is off unless it is asked for", () => {
+  /* It changes how a page prints whether or not it has columns, so inferring it
+     would be this library altering pagination behind somebody's back. */
+  assert.equal(fitWith(DESIGN, CAPS, { pitch: 8 }).columns, false);
+  assert.equal(fitWith(DESIGN, CAPS, { pitch: 8, columns: true }).columns, true);
+});
+
+test("columns puts break-inside on the rules, and only on the rules", () => {
+  /* Only a design with selectors has rules to put it on. A design from JSON has
+     custom properties and nothing to attach a fragmentation rule to, and saying
+     so in the comment is the honest output rather than a rule for nobody. */
+  const withSelectors: FamilyRequest[] = [
+    {
+      role: "body",
+      font: "Test",
+      steps: [{ name: "body", size: 17, ratio: 1.5, space: 24, selector: "p" }],
+    },
+  ];
+
+  const on = fittedScaleToCss(
+    fitWith(withSelectors, CAPS, { pitch: 8, spaceProperty: "padding", columns: true })
+  );
+  assert.match(on, /p \{[^}]*break-inside: avoid/s);
+
+  const off = fittedScaleToCss(
+    fitWith(withSelectors, CAPS, { pitch: 8, spaceProperty: "padding" })
+  );
+  assert.doesNotMatch(off, /^\s*break-inside: avoid;$/m);
+});
+
+test("the note says what was emitted rather than what to go and add", () => {
+  const asked = fittedScaleToCss(
+    fitWith(DESIGN, CAPS, { pitch: 8, spaceProperty: "padding", columns: true })
+  );
+  assert.match(asked, /other half of columns/);
+
+  const notAsked = fittedScaleToCss(
+    fitWith(DESIGN, CAPS, { pitch: 8, spaceProperty: "padding" })
+  );
+  assert.match(notAsked, /For columns, add break-inside/);
+});
+
+test("every emitted stylesheet still parses with break-inside in it", () => {
+  /* The column note broke the parser once by putting the comment terminator in
+     the wrong place, so anything added to that block is parsed here rather than
+     matched as a string. */
+  for (const columns of [false, true]) {
+    for (const spaceProperty of ["margin", "padding"] as const) {
+      const css = fittedScaleToCss(
+        fitWith(
+          [
+            {
+              role: "body",
+              font: "Test",
+              steps: [{ name: "body", size: 17, ratio: 1.5, space: 24, selector: "p" }],
+            },
+          ],
+          CAPS,
+          { pitch: 8, spaceProperty, columns }
+        )
+      );
+      /* Comments balanced, braces balanced: the two ways that block has failed. */
+      const opens = (css.match(/\/\*/g) ?? []).length;
+      const closes = (css.match(/\*\//g) ?? []).length;
+      assert.equal(opens, closes, `columns ${columns}, ${spaceProperty}: ${opens} vs ${closes}`);
+
+      const stripped = css.replace(/\/\*[\s\S]*?\*\//g, "");
+      let depth = 0;
+      for (const char of stripped) {
+        if (char === "{") depth++;
+        if (char === "}") depth--;
+        assert.ok(depth >= 0, `columns ${columns}, ${spaceProperty}: unbalanced braces`);
+      }
+      assert.equal(depth, 0, `columns ${columns}, ${spaceProperty}: unbalanced braces`);
+    }
+  }
+});

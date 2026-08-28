@@ -121,17 +121,33 @@ export interface FittedScale {
    * `margin` by default, because it is what a stylesheet usually already uses
    * and changing it alters nothing about the box.
    *
-   * `padding` is what survives a column break. A margin at the top of a column
-   * fragment is truncated, so a fitted page that reads 12 of 12 in one column
-   * reads 6 of 12 in two; with padding it reads 12 of 12 in one, two and three.
-   * That holds in Chromium. WebKit fragments differently and no lever tested
-   * survives it, so multi-column is an engine limitation there rather than a
-   * choice this makes.
+   * `padding` is what survives a column break. css-break-3 truncates a margin
+   * at the top of a fragment when the break is unforced, so a fitted page that
+   * reads 12 of 12 in one column reads 6 of 12 in two; padding is not
+   * truncated, and with it the page reads 12 of 12 across two, three and four.
+   *
+   * WebKit needs one thing more, because a paragraph that is itself split
+   * across the boundary starts its continuation off the grid. `break-inside:
+   * avoid` on the blocks prevents the split and takes both engines to 12 of 12
+   * at every width and column count tested.
    *
    * On a block with a background or a border the two are not interchangeable,
    * which is why this is a decision rather than a default.
    */
   spaceProperty: "margin" | "padding";
+  /**
+   * Whether the emitted rules carry `break-inside: avoid`.
+   *
+   * Off by default, because it is a fragmentation decision rather than a
+   * typographic one and it changes how the page prints whether or not it has
+   * columns. On, together with `spaceProperty: "padding"`, it is the whole
+   * recipe: two, three and four columns read 12 of 12 in both engines at every
+   * width tested.
+   *
+   * It is stated rather than inferred. Emitting it because a page might have
+   * columns would be this library changing pagination behind somebody's back.
+   */
+  columns: boolean;
   /**
    * Where the grid starts, in px.
    *
@@ -212,12 +228,14 @@ export function fitWith(
   options: Partial<GridConfig> & {
     edge?: string;
     spaceProperty?: "margin" | "padding";
+    columns?: boolean;
   } = {}
 ): FittedScale {
   const grid = gridConfig(options);
   const pitch = grid.pitch;
   const edge = options.edge ?? "cap alphabetic";
   const spaceProperty = options.spaceProperty ?? "margin";
+  const columns = options.columns ?? false;
 
   let cost = 0;
   let anyCap = false;
@@ -269,6 +287,7 @@ export function fitWith(
     grid,
     edge,
     spaceProperty,
+    columns,
     origin: 0,
     families: fitted,
     cost: Math.round(cost * 1000) / 1000,
@@ -413,6 +432,7 @@ export function fittedScaleToCss(fitted: FittedScale): string {
         `  line-height: var(--leading-${step.name});`,
         `  ${fitted.spaceProperty}-top: var(--space-${step.name});`,
         ...(fitted.spaceProperty === "margin" ? ["  margin-bottom: 0;"] : []),
+        ...(fitted.columns ? ["  break-inside: avoid;"] : []),
         "  text-box-trim: trim-both;",
         `  text-box-edge: ${fitted.edge};`,
         "}"
@@ -449,7 +469,15 @@ export function fittedScaleToCss(fitted: FittedScale): string {
             " * a column fragment is truncated, which takes a fitted page from 12 of 12",
             " * to 6 of 12 across two columns; padding survives it.",
           ]
-        : []),
+        : [
+            " *",
+            fitted.columns
+              ? " * Set break-inside: avoid on them too, which is the other half of columns."
+              : " * For columns, add break-inside: avoid to the blocks as well.",
+            " * Padding alone holds in Chromium; WebKit puts a paragraph split across the",
+            " * boundary off the grid, and not splitting one is the fix. With both, two,",
+            " * three and four columns read 12 of 12 in either engine.",
+          ]),
       " */"
     );
   }

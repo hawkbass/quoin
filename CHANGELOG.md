@@ -1,5 +1,71 @@
 # Changelog
 
+## 1.13.0
+
+A correction to 1.12, which got columns wrong, and the flags gate that the
+correction exposed.
+
+### Corrected
+
+**Multi-column works in WebKit. 1.12 said it did not, and that was wrong.**
+
+The claim came from setting twelve paragraphs in two columns and reading whatever
+came out. Where the browser balances the break is a function of the font, so the
+same page measured 6 of 12 on one machine and 12 of 12 on another; CI on Linux
+disagreed with the machine it was written on, which is how it surfaced. The test
+was asserting an incidental condition as a fact.
+
+Constructing the condition rather than waiting for it separates two mechanisms
+that were tangled together:
+
+- **A margin at the top of a fragment is truncated at an unforced break.** That
+  is css-break-3, and forcing the break with `break-before: column` preserves the
+  margin, which confirms the mechanism from the other side. `padding` is not
+  truncated and is the fix.
+- **A paragraph split across the boundary starts its continuation off the grid,
+  in WebKit.** Padding does not help because padding is not the problem.
+  `break-inside: avoid` is.
+
+With both, two, three and four columns read 12 of 12 in both engines at every
+width tested. WebKit needs one thing Chromium does not, and then it holds.
+
+```
+                                  2 columns   3 columns   4 columns
+margin, split allowed               6/14        4/14        6/14
+padding, split allowed             14/14       14/14       14/14   Chromium only
+padding, avoid split               14/14       14/14       14/14   both engines
+```
+
+### Added
+
+**`--columns` on the CLI, and `columns` on the fitter.** Emits `break-inside:
+avoid` alongside the padding. It implies `--space padding`, because
+`break-inside` on its own does not stop the margin being truncated and half a
+recipe is worse than none. Off by default: it changes how a page prints whether
+or not it has columns, and inferring it would be this library altering
+pagination behind somebody's back.
+
+**Every CLI flag is now checked against the README, both directions.** The
+commands were gated both ways and the flags were not, so `--columns` could have
+shipped working and undocumented with the suite green. Adding the gate found
+eight flags already in that state: `--tolerance`, `--wait`, `--ignore`,
+`--viewport`, `--mode`, `--near`, `--out` and `--important`. All eight are
+written up now, and the README has a flag reference rather than one example line.
+
+### Also
+
+**The other places the browser does baseline work of its own were checked.** Flex
+and grid with `align-items: baseline`, a table row aligning its cells, a list
+marker on the first line: all move things, none moves anything off a grid it was
+already on. Three of three in both engines. A negative result, kept because it is
+the difference between never having looked and having looked.
+
+**`initial-letter` does nothing in Chromium.** `CSS.supports("initial-letter",
+"3")` reports true and the layout ignores it, so a paragraph with a sunk capital
+measures exactly the height of one without. Drop caps are still a float and a
+hand-calculated line-height.
+
+
 ## 1.12.0
 
 Columns, which is the case a baseline grid is famous for and which this had never

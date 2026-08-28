@@ -42,6 +42,7 @@ Options
   --design <file|->          a design as JSON, for fit. Use - for stdin
   --edge <text-box-edge>     default "cap alphabetic"; ex and text also work
   --space <margin|padding>   which property carries the space (default margin)
+  --columns                  emit break-inside: avoid too, for a page in columns
   --from <url>               read the design off a page instead, for fit
   --near <px>                how far from those is acceptable (default 3)
   --json                     machine-readable output
@@ -88,6 +89,8 @@ interface Options {
   edge: string | null;
   /* Which property carries the space. Padding is what survives a column break. */
   space: "margin" | "padding" | null;
+  /* Whether to emit break-inside: avoid, which is the other half of columns. */
+  columns: boolean;
 }
 
 function fail(message: string): never {
@@ -116,6 +119,7 @@ function parseArgs(argv: string[]): { command: string; url: string | null; optio
     from: null,
     edge: null,
     space: null,
+    columns: false,
   };
 
   const positional: string[] = [];
@@ -194,6 +198,12 @@ function parseArgs(argv: string[]): { command: string; url: string | null; optio
         options.space = value;
         break;
       }
+      case "--columns":
+        /* Implies padding, because break-inside on its own does not stop the
+           margin being truncated and half a recipe is worse than none. */
+        options.columns = true;
+        if (options.space === null) options.space = "padding";
+        break;
       case "--sizes": {
         const raw = next();
         const parsed = raw.split(",").map((v) => Number.parseFloat(v.trim()));
@@ -646,6 +656,7 @@ switch (command) {
           tolerance: options.tolerance,
           edge: options.edge ?? "cap alphabetic",
           spaceProperty: options.space ?? "margin",
+          columns: options.columns,
         }
       );
 
@@ -881,6 +892,7 @@ switch (command) {
           tolerance: design.tolerance ?? options.tolerance,
           edge: options.edge ?? (design as { edge?: string }).edge ?? "cap alphabetic",
           spaceProperty: options.space ?? "margin",
+          columns: options.columns,
         },
       }
     );

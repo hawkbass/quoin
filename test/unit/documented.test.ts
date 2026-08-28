@@ -155,3 +155,53 @@ test("the version in the changelog is the version being shipped", () => {
     `package.json is ${version} and the changelog's newest entry is ${first![1]}`
   );
 });
+
+test("every flag the CLI accepts is mentioned in the README", () => {
+  /* Added after `--columns` went in. The commands were checked both ways and
+     the flags were not, so a flag could be shipped, work, and be findable only
+     by reading the source. That is the same defect as an undocumented command
+     and it was invisible to this file until now.
+
+     The README is prose rather than a table, so this asks only that the flag
+     appears somewhere in it: enough to catch one that was never written up,
+     without dictating where it gets explained. */
+  const usage = readFileSync("src/cli.ts", "utf8");
+  const readme = readFileSync("README.md", "utf8");
+
+  const flags = [...new Set([...usage.matchAll(/case "(--[a-z-]+)":/g)].map((m) => m[1]!))];
+  assert.ok(flags.length >= 15, `only found ${flags.length} flags in the CLI`);
+
+  /* `--help` is answered by the CLI itself and needs no prose. */
+  const undocumented = flags.filter(
+    (flag) => flag !== "--help" && !readme.includes(flag)
+  );
+  assert.deepEqual(
+    undocumented,
+    [],
+    `the CLI accepts ${undocumented.join(", ")} and the README never mentions ${
+      undocumented.length === 1 ? "it" : "them"
+    }`
+  );
+});
+
+test("the flags the README tells people to use are flags the CLI has", () => {
+  /* The other direction, and the one that actually misleads somebody: a flag in
+     the README that the CLI does not handle is a command line that fails. */
+  const usage = readFileSync("src/cli.ts", "utf8");
+  const readme = readFileSync("README.md", "utf8");
+
+  /* Only flags inside a shell block, so prose mentioning a CSS property or a
+     hyphenated phrase is not mistaken for one. */
+  const shell = [...readme.matchAll(/```bash\n([\s\S]*?)```/g)].map((m) => m[1]!).join("\n");
+  const used = [...new Set(
+    [...shell.matchAll(/(?:^|\s)(--[a-z-]+)/g)].map((m) => m[1]!)
+  )];
+  assert.ok(used.length >= 5, `only found ${used.length} flags in the README's examples`);
+
+  for (const flag of used) {
+    assert.ok(
+      usage.includes(`case "${flag}":`),
+      `the README shows \`${flag}\`, which the CLI does not handle`
+    );
+  }
+});

@@ -1,6 +1,6 @@
 {
   "name": "quoin",
-  "version": "1.12.0",
+  "version": "1.13.0",
   "description": "It puts a web page on a baseline grid. Seats every line of text on a rendered page, re-measures each correction, and exports CSS you can ship without the JavaScript.",
   "keywords": [
     "baseline-grid",

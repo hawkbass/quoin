@@ -725,33 +725,54 @@ a column grid, and the thing it is celebrated for is that a line in the left
 column and a line in the right column sit on the same rule. This had never looked
 at it.
 
-**It does not hold by default, and the reason is specific.** The space that
-closes a block's cap residue is a `margin-top`, and a margin at the top of a
-column fragment is truncated: the second column starts its first paragraph
-without the space that was doing the work.
+Two separate things go wrong, and the first version of this section ran them
+together. Setting twelve paragraphs in two columns and reading whatever came out
+measures where the browser chose to balance the break, which is a function of the
+font: the same page read 6 of 12 on one machine and 12 of 12 on another, and the
+first was written up as a fact. Both mechanisms are constructed now rather than
+waited for, and the conclusion changed.
+
+**One: a margin at the top of a fragment is truncated.** css-break-3 truncates it
+when the break is unforced, which is every break the browser chooses itself. The
+second column starts its first paragraph without the space that was doing the
+work. Forcing the break with `break-before: column` preserves the margin, which
+is the spec's own distinction and confirms the mechanism from the other side.
+
+**Two: a paragraph split across the boundary starts its continuation off the
+grid, in WebKit.** Padding does not help, because padding is not the problem.
+Not splitting the paragraph is.
+
+So the recipe is both halves: padding for the space, `break-inside: avoid` on the
+blocks.
 
 ```
-                       1 column   2 columns   3 columns
-margin-top              12/12       6/12        8/12
-padding-top             12/12      12/12       12/12
+                                  2 columns   3 columns   4 columns
+margin, split allowed               6/14        4/14        6/14
+padding, split allowed             14/14       14/14       14/14   Chromium only
+margin, avoid split                 6/14        5/14        6/14
+padding, avoid split               14/14       14/14       14/14   both engines
 ```
 
-Padding is not truncated, and in Chromium that is the whole fix. So the space can
-be carried by either property:
+Swept across four widths and three column counts in both engines: `padding` plus
+`break-inside: avoid` is 12 of 12 perfect. Padding alone is enough in Chromium.
 
 ```bash
-npx quoin fit --design design.json --space padding
+npx quoin fit --design design.json --columns
 ```
 
-**In WebKit nothing tested fixes it.** It fragments differently, and margin,
-padding, `break-inside: avoid` and `box-decoration-break: slice` all leave it at
-7 of 12. Multi-column is an engine limitation there rather than a choice this
-library is making, and the test says so rather than asserting a pass it does not
-get.
+`--columns` implies `--space padding`, because `break-inside` on its own does not
+stop the margin being truncated and half a recipe is worse than none.
 
-`margin` stays the default, because on a block with a background or a border the
-two are not interchangeable and changing somebody's box model is not a thing to
-do quietly. The emitted CSS points at this when it writes a margin.
+**The earlier claim that WebKit could not do this at all was wrong.** It came
+from measuring the balanced-break page, where WebKit happened to break
+mid-paragraph and was failing for the second reason while being read as failing
+for the first. WebKit needs one thing Chromium does not, and then it holds.
+
+`margin` stays the default, and `break-inside: avoid` is off unless asked for.
+On a block with a background or a border margin and padding are not
+interchangeable, and `break-inside` changes how a page prints whether or not it
+has columns. Neither is a thing to change quietly. The emitted CSS points at
+this when it writes a margin.
 
 ### What does not break it
 
@@ -1502,8 +1523,55 @@ npx quoin engine --browser firefox
 `check` walks a page and reports. `seat` corrects it and prints the stylesheet.
 `rhythm` says which boxes are not a whole number of rows and why. `scale` solves
 a type scale that needs no correction at all. `fit` takes a design and returns it
-unchanged with the spacing that puts it on the grid at every width. `engine` tells you whether this
-browser's cap heights come off the rasteriser.
+unchanged with the spacing that puts it on the grid at every width. `engine` tells
+you whether this browser's cap heights come off the rasteriser.
+
+### The flags
+
+The grid itself:
+
+```bash
+--pitch <px>          the row height (default 8)
+--origin <px|auto>    where the grid starts (default auto)
+--tolerance <px>      how far off a baseline may be and still count (default 0.5)
+--edge <text-box-edge>   default "cap alphabetic"; ex and text also work
+```
+
+Reading a page:
+
+```bash
+--viewport <w>x<h>    the size to measure at, repeatable for several
+--wait <ms>           how long to give the page after load
+--ignore <selector>   blocks to leave out, repeatable
+--browser <name>      chromium, firefox or webkit
+```
+
+Writing the correction:
+
+```bash
+--out, -o <file>      write to a file instead of stdout
+--mode <class|attr>   how seat addresses the blocks it corrects
+--important           add !important, for correcting past a stylesheet you do not own
+--space <margin|padding>   which property carries the space (default margin)
+--columns             emit break-inside: avoid too, for a page in columns
+```
+
+Solving a design:
+
+```bash
+--design <file|->     a design as JSON. Use - for stdin
+--from <url>          read the design off a page instead
+--font <family>       the family to solve for, for scale
+--sizes <a,b,c>       the sizes to solve, for scale
+--near <px>           how far from those is acceptable (default 3)
+```
+
+Reporting:
+
+```bash
+--min <percent>       exit 1 below this, for CI
+--json                machine-readable output
+```
 
 `--origin` takes a number or `auto`, and `auto` is the default.
 

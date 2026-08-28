@@ -2,20 +2,26 @@
 
    Everything else in this library is one column deep. A print baseline grid sits
    inside a column grid, and the thing it is celebrated for is that a line in the
-   left column and a line in the right column sit on the same rule. Quoin had
-   never looked at it.
+   left column and a line in the right column sit on the same rule.
 
-   It does not hold by default, and the reason is specific. The space that closes
-   a block's cap residue is a `margin-top`, and a margin at the top of a column
-   fragment is truncated: the second column starts its first paragraph without
-   the space that was doing the work. A page reading 12 of 12 in one column reads
-   6 of 12 in two.
+   Two separate things go wrong, and the first version of this file confused
+   them, because it set twelve paragraphs in two columns and read whatever came
+   out. Where the browser chooses to balance the break is a function of the font,
+   so the same page measured 6 of 12 on one machine and 12 of 12 on another, and
+   the test asserted the first as a fact. Both mechanisms are now constructed
+   rather than waited for.
 
-   Padding is not truncated. In Chromium that fixes it completely, at one, two
-   and three columns. In WebKit nothing tested fixes it, because it fragments
-   differently, so multi-column is an engine limitation there rather than a
-   choice this library is making. Both halves are asserted, because "it works"
-   and "it works in one engine" are different claims. */
+   One: css-break-3 truncates a margin at the top of a fragment when the break is
+   unforced. `break-inside: avoid` makes every break land at a paragraph
+   boundary, so the condition holds in any engine with any font. Padding is not
+   truncated, which is the fix.
+
+   Two: a paragraph split across the boundary starts its continuation off the
+   grid in WebKit. Padding does not help, because padding is not the problem; not
+   splitting the paragraph is.
+
+   Together, padding for the space and `break-inside: avoid` on the blocks, two,
+   three and four columns read 12 of 12 in both engines at every width tested. */
 
 import { test, expect } from "@playwright/test";
 import { readFileSync } from "node:fs";
@@ -65,9 +71,16 @@ async function fit(
   return result;
 }
 
-function pageWith(step: Step, property: "margin" | "padding", columns: number): string {
+interface Recipe {
+  /** `margin` or `padding` carries the space. */
+  property: "margin" | "padding";
+  /** Whether a paragraph may be split across the column boundary. */
+  avoidSplit: boolean;
+}
+
+function pageWith(step: Step, recipe: Recipe, columns: number, paragraphs = 14): string {
   const spacing =
-    property === "margin"
+    recipe.property === "margin"
       ? `margin:${step.space}px 0 0`
       : `margin:0;padding:${step.space}px 0 0`;
 
@@ -76,10 +89,11 @@ function pageWith(step: Step, property: "margin" | "padding", columns: number): 
     main { width: 92%; max-width: 1000px; margin: 0 auto;
            ${columns > 1 ? `column-count: ${columns}; column-gap: 40px` : ""} }
     p { font-size: ${step.size}px; line-height: ${step.leading}px; ${spacing};
+        ${recipe.avoidSplit ? "break-inside: avoid;" : ""}
         text-box-trim: trim-both; text-box-edge: cap alphabetic }
   </style><main>
   ${Array.from(
-    { length: 12 },
+    { length: paragraphs },
     (_, i) =>
       `<p>Paragraph ${i + 1}, written at enough length that it wraps onto several ` +
       `lines inside a narrow column and fewer in a wide one, which is the whole ` +
@@ -88,18 +102,40 @@ function pageWith(step: Step, property: "margin" | "padding", columns: number): 
   </main>`;
 }
 
+interface Reading {
+  onGrid: number;
+  total: number;
+  /** Paragraphs starting at the top of a column that is not the first. */
+  atColumnTop: number;
+  /** Paragraphs the browser split across a boundary. */
+  split: number;
+}
+
 async function measure(
   browser: import("@playwright/test").Browser,
-  html: string
-): Promise<{ onGrid: number; total: number }> {
-  const page = await browser.newPage({ viewport: { width: 1100, height: 900 } });
+  html: string,
+  width = 1100
+): Promise<Reading> {
+  const page = await browser.newPage({ viewport: { width, height: 900 } });
   await page.setContent(html);
   await page.evaluate(() => document.fonts?.ready);
   await page.addScriptTag({ content: BUNDLE });
   const report = await page.evaluate(
     ({ pitch }) => {
       const measured = window.quoin.verifyGrid({ pitch, origin: "auto" });
-      return { onGrid: measured.report.onGrid, total: measured.report.total };
+      const blocks = [...document.querySelectorAll("p")];
+      const lefts = blocks.map((el) => Math.round(el.getBoundingClientRect().left));
+      const firstColumn = Math.min(...lefts);
+      const top = Math.min(...blocks.map((el) => el.getBoundingClientRect().top));
+      return {
+        onGrid: measured.report.onGrid,
+        total: measured.report.total,
+        atColumnTop: blocks.filter((el, i) => {
+          const box = el.getBoundingClientRect();
+          return lefts[i] !== firstColumn && box.top - top < 2;
+        }).length,
+        split: blocks.filter((el) => el.getClientRects().length > 1).length,
+      };
     },
     { pitch: PITCH }
   );
@@ -109,21 +145,30 @@ async function measure(
 
 test.describe.configure({ mode: "serial" });
 
+/* ------------------------------------------------------------------ *
+   One: the margin is truncated at an unforced break
+ * ------------------------------------------------------------------ */
+
 test("a margin at the top of a column fragment is truncated, and it costs half the page", async ({
   browser,
   browserName,
 }) => {
-  /* The finding. One column is fine; two is not, and the difference is entirely
-     the space that closes each block's cap residue going missing at the break. */
   const fitted = await fit(browser, "margin");
   if (fitted.unavailable) {
     test.skip(true, `${browserName} has no text-box-trim`);
     return;
   }
   const step = fitted.families[0]!.steps[0]!;
+  const recipe: Recipe = { property: "margin", avoidSplit: true };
 
-  const one = await measure(browser, pageWith(step, "margin", 1));
-  const two = await measure(browser, pageWith(step, "margin", 2));
+  const one = await measure(browser, pageWith(step, recipe, 1));
+  const two = await measure(browser, pageWith(step, recipe, 2));
+
+  /* The condition the finding needs, asserted rather than assumed. Without
+     this the test passes whenever the browser happens to break mid-paragraph,
+     which is what made it disagree with itself across machines. */
+  expect(two.atColumnTop, "no paragraph started at the top of a later column").toBeGreaterThan(0);
+  expect(two.split, "break-inside: avoid should have stopped every split").toBe(0);
 
   expect(one.onGrid, "one column is on the grid").toBe(one.total);
   expect(
@@ -132,7 +177,56 @@ test("a margin at the top of a column fragment is truncated, and it costs half t
   ).toBeLessThan(two.total);
 });
 
-test("padding survives the break, and in Chromium that is the whole fix", async ({
+/* ------------------------------------------------------------------ *
+   Two: a split paragraph, which is the part padding cannot fix
+ * ------------------------------------------------------------------ */
+
+test("a paragraph split across the boundary is WebKit's remaining problem", async ({
+  browser,
+  browserName,
+}) => {
+  const fitted = await fit(browser, "padding");
+  if (fitted.unavailable) {
+    test.skip(true, `${browserName} has no text-box-trim`);
+    return;
+  }
+  const step = fitted.families[0]!.steps[0]!;
+
+  /* One paragraph long enough to be split, and one after it, so the only
+     fragmentation in the page is the split itself. */
+  const long =
+    `<p class="long">` +
+    Array.from({ length: 40 }, (_, i) => `Sentence ${i + 1} of a single long paragraph.`).join(" ") +
+    `</p><p>A short paragraph after it.</p>`;
+
+  const html = `<!doctype html><meta charset="utf-8"><style>
+    html { font-family: serif } body { margin: 0 }
+    main { width: 92%; max-width: 1000px; margin: 0 auto; column-count: 2; column-gap: 40px }
+    p { font-size: ${step.size}px; line-height: ${step.leading}px;
+        margin: 0; padding: ${step.space}px 0 0;
+        text-box-trim: trim-both; text-box-edge: cap alphabetic }
+  </style><main>${long}</main>`;
+
+  const report = await measure(browser, html);
+  expect(report.split, "the long paragraph should have been split").toBeGreaterThan(0);
+
+  if (browserName === "chromium") {
+    expect(report.onGrid, "Chromium keeps a split paragraph on the grid").toBe(report.total);
+  } else {
+    /* Asserted as the limitation it is, so that the day WebKit fixes it this
+       test says so rather than quietly continuing to pass. */
+    expect(
+      report.onGrid,
+      "WebKit now keeps a split paragraph on the grid; the recipe can drop break-inside"
+    ).toBeLessThan(report.total);
+  }
+});
+
+/* ------------------------------------------------------------------ *
+   Together: the recipe, swept
+ * ------------------------------------------------------------------ */
+
+test("padding and break-inside: avoid hold at every width and column count", async ({
   browser,
   browserName,
 }) => {
@@ -143,39 +237,52 @@ test("padding survives the break, and in Chromium that is the whole fix", async 
   }
   expect(fitted.spaceProperty).toBe("padding");
   const step = fitted.families[0]!.steps[0]!;
+  const recipe: Recipe = { property: "padding", avoidSplit: true };
 
   const readings: string[] = [];
-  const results = [];
-  for (const columns of [1, 2, 3]) {
-    const report = await measure(browser, pageWith(step, "padding", columns));
-    readings.push(`${columns} col ${report.onGrid}/${report.total}`);
-    results.push({ columns, ...report });
+  for (const width of [760, 900, 1100, 1400]) {
+    for (const columns of [2, 3, 4]) {
+      const report = await measure(browser, pageWith(step, recipe, columns), width);
+      readings.push(`${width}/${columns} ${report.onGrid}/${report.total}`);
+      expect(
+        report.onGrid,
+        `${width}px at ${columns} columns: ${report.onGrid}/${report.total}`
+      ).toBe(report.total);
+    }
   }
+  console.log(`\n  ${browserName}: ${readings.join("  ")}\n`);
+});
 
-  console.log(`\n  ${browserName}, padding: ${readings.join("  ")}\n`);
+test("padding alone is enough in Chromium, and is never worse than margin", async ({
+  browser,
+  browserName,
+}) => {
+  /* Recorded separately because it is the difference between the two engines,
+     and because a recipe that says "add break-inside: avoid" should be honest
+     about which half of it each engine needs. */
+  const fitted = await fit(browser, "padding");
+  if (fitted.unavailable) {
+    test.skip(true, `${browserName} has no text-box-trim`);
+    return;
+  }
+  const step = fitted.families[0]!.steps[0]!;
+
+  const padding = await measure(browser, pageWith(step, { property: "padding", avoidSplit: false }, 2));
+  const margin = await measure(browser, pageWith(step, { property: "margin", avoidSplit: false }, 2));
+
+  expect(
+    padding.onGrid,
+    `padding scored ${padding.onGrid} against ${margin.onGrid} for margin`
+  ).toBeGreaterThanOrEqual(margin.onGrid);
 
   if (browserName === "chromium") {
-    for (const result of results) {
-      expect(
-        result.onGrid,
-        `${result.columns} columns: ${result.onGrid}/${result.total}`
-      ).toBe(result.total);
-    }
-  } else {
-    /*
-       WebKit is not asserted to pass, because it does not, and pretending
-       otherwise would be a green test standing in front of a real limitation.
-       What is asserted is that it is no worse than the margin it replaces, so
-       recommending padding costs nothing anywhere.
-    */
-    const withMargin = await measure(browser, pageWith(step, "margin", 2));
-    expect(
-      results[1]!.onGrid,
-      `padding scored ${results[1]!.onGrid} against ${withMargin.onGrid} for margin, ` +
-        "so padding is worse here and should not be recommended"
-    ).toBeGreaterThanOrEqual(withMargin.onGrid);
+    expect(padding.onGrid, "padding alone is the whole fix in Chromium").toBe(padding.total);
   }
 });
+
+/* ------------------------------------------------------------------ *
+   The emitted stylesheet
+ * ------------------------------------------------------------------ */
 
 test("the emitted CSS uses whichever property was chosen", async ({ page, browserName }) => {
   await page.goto("/prose.html");
@@ -212,6 +319,10 @@ test("the emitted CSS uses whichever property was chosen", async ({ page, browse
   expect(emitted.padding, "the padding form does not tell you to switch").not.toMatch(
     /Use padding-top instead/
   );
+  expect(
+    emitted.padding,
+    "the padding form carries the other half of the recipe"
+  ).toMatch(/break-inside/);
 });
 
 /* ------------------------------------------------------------------ *
