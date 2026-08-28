@@ -493,8 +493,11 @@ test("an inline at a different size is named, because nothing about it looks wro
     return page.evaluate(() => {
       const report = window.quoin.verifyRhythm({ pitch: 8, limit: 10 });
       const p = document.querySelector("p")!;
+      const range = document.createRange();
+      range.selectNodeContents(p);
       return {
         height: Math.round(p.getBoundingClientRect().height * 100) / 100,
+        lines: [...range.getClientRects()].length,
         issue: report.issues.find((i) => i.path.endsWith("p")) ?? null,
       };
     });
@@ -504,7 +507,17 @@ test("an inline at a different size is named, because nothing about it looks wro
      engine, so the paragraph is a whole number of rows and nothing is reported.
      Without this a fix that named every inline would pass. */
   const same = await read("code { font-family: inherit; font-size: inherit }");
-  expect(same.height, "the control paragraph is not a whole number of rows").toBe(96);
+  /*
+     A whole number of rows, not 96. The first version asserted the figure, and
+     on Linux there is no Georgia, so the fallback wraps the same words to two
+     lines instead of three and the paragraph is 64px. Both are correct and only
+     one of them is 96. It is the remainder that carries the claim.
+  */
+  expect(
+    same.height % 8,
+    `the control paragraph is ${same.height}px, not a whole number of rows`
+  ).toBe(0);
+  expect(same.lines, "the control did not wrap, so the leading is doing nothing").toBeGreaterThan(1);
   expect(
     same.issue,
     `an inline differing in nothing was reported: ${same.issue?.fix ?? ""}`
@@ -529,7 +542,8 @@ test("an inline at a different size is named, because nothing about it looks wro
   );
   expect(
     fixed.height,
-    `following the advice left the paragraph at ${fixed.height}px`
-  ).toBe(96);
+    `following the advice left the paragraph at ${fixed.height}px against ` +
+      `${same.height}px for an inline that differs in nothing`
+  ).toBe(same.height);
   expect(fixed.issue, "still reported after taking its own advice").toBeNull();
 });
