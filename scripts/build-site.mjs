@@ -246,8 +246,12 @@ function report() {
 
 report();
 
+const RANGE_WIDTH =
+  Math.max(...results.map((r) => `${r.at}px  ${r.query}`.length), "range".length) + 2;
 console.log("");
-console.log("  range                                       before   stylesheet   sweeps");
+console.log(
+  "  " + "range".padEnd(RANGE_WIDTH) + "before   stylesheet   sweeps"
+);
 for (const r of results) {
   const before = ((r.before / r.total) * 100).toFixed(0) + "%";
   const withCss = ((r.withCss / r.withCssTotal) * 100).toFixed(0) + "%";
@@ -257,8 +261,11 @@ for (const r of results) {
     r.unexportable ? `${r.unexportable} unexportable` : null,
     r.stillLost ? `${r.stillLost} still lost` : null,
   ].filter(Boolean).join(", ");
+  /* Padded to the longest range actually printed, not to a number picked once
+     and left behind. Two of the six media queries are longer than 44, so the
+     percentage after them was printed with no gap: `(max-width: 599px)10%`. */
   console.log(
-    "  " + `${r.at}px  ${r.query}`.padEnd(44) +
+    "  " + `${r.at}px  ${r.query}`.padEnd(RANGE_WIDTH) +
     before.padEnd(9) + withCss.padEnd(13) + r.passes +
     (notes ? "   " + notes : "")
   );
