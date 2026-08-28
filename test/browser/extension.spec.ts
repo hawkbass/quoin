@@ -176,6 +176,16 @@ test("seating raises the score, and lifting puts it back", async () => {
 
   await popup.locator("#seat").click();
   await expect(popup.locator("#result")).toBeVisible({ timeout: 20_000 });
+
+  /*
+     Wait for the number to change, not for the panel to appear. The panel is
+     revealed as part of rendering, so visible and filled in are not the same
+     instant, which is the note four lines above this one and was still the bug
+     here: CI read the pre-seat figure twice and reported "11% then 11%".
+  */
+  await expect
+    .poll(() => popup.locator("#pct").textContent(), { timeout: 20_000 })
+    .not.toBe(before);
   const after = await popup.locator("#pct").textContent();
 
   expect(Number.parseInt(after ?? "0", 10), `${before} then ${after}`).toBeGreaterThan(

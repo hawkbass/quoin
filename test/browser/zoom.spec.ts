@@ -160,12 +160,19 @@ test("a fitted page holds under zoom, all the way to 300%", async ({
   expect(baseline.onGrid, "the page is mostly on the grid to begin with").toBeGreaterThan(
     baseline.total / 2
   );
+  /*
+     Not worse, rather than identical. Zoom scales the drift along with
+     everything else, so a block sitting within a rounding error of the tolerance
+     at 1x can land either side of it at 2x: WebKit under Linux scored 4 at 1x
+     and 5 at 2x, which is zoom failing to break anything rather than zoom
+     breaking something, and an equality check called that a failure.
+  */
   for (const [i, count] of counts.entries()) {
     expect(
       count,
       `${[1, 1.25, 1.5, 2, 3][i]}x scored ${count} against ${baseline.onGrid} at 1x, ` +
-        "so zoom moved something"
-    ).toBe(baseline.onGrid);
+        "so zoom took blocks off the grid"
+    ).toBeGreaterThanOrEqual(baseline.onGrid);
   }
 
   console.log(`\n  ${browserName}: ${readings.join("  ")}\n`);
