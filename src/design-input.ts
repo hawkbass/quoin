@@ -144,6 +144,36 @@ function toStep(raw: unknown, at: string, notes: string[]): DesignStep {
   const spaceKey = ["space", "spacing", "marginTop", "margin-top", "gap"].find((k) => k in it);
   if (spaceKey) step.space = toPx(it[spaceKey], `${at}.${spaceKey}`, notes);
 
+  /*
+     A fluid size, given as the arguments to `clamp()`. `size` stays the nominal
+     figure, because the leading is solved from it and a person reading the
+     report needs one number rather than a range.
+  */
+  const fluid = it.fluid;
+  if (fluid && typeof fluid === "object") {
+    const f = fluid as Record<string, unknown>;
+    const min = toPx(f.min, `${at}.fluid.min`, notes);
+    const max = toPx(f.max, `${at}.fluid.max`, notes);
+    if (min >= max) {
+      throw new DesignError(
+        `${at}.fluid`,
+        `min ${min} is not smaller than max ${max}, so nothing is fluid about it`
+      );
+    }
+    if (typeof f.preferred !== "string" || !f.preferred.trim()) {
+      throw new DesignError(
+        `${at}.fluid.preferred`,
+        'expected the middle term of a clamp, such as "5vw" or "calc(1rem + 2vw)"'
+      );
+    }
+    step.fluid = { min, max, preferred: f.preferred.trim() };
+    if (step.size < min || step.size > max) {
+      notes.push(
+        `${at}: the nominal size ${step.size} is outside the fluid range ${min} to ${max}`
+      );
+    }
+  }
+
   return step;
 }
 

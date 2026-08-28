@@ -1032,6 +1032,58 @@ the block it comes *before*. Add the trim the CSS carries. That is the whole
 integration, and it holds at every width without media queries, so there is
 nothing to regenerate when the copy changes.
 
+### Fluid type, which this said was impossible
+
+An earlier version of this file said `clamp()` could not be put on a grid. The
+reasoning went: a block's phase is `size x capRatio`, so a size that varies
+continuously has a phase that varies continuously, and lands on the grid only at
+whichever widths happen to work. That is all true.
+
+What it missed is that the space does not have to be a number. CSS Values 4 has
+`mod()`, so the arithmetic the fitter does at build time can be done by the
+browser at layout time instead:
+
+```css
+h1 {
+  --size: clamp(28px, 5vw, 56px);
+  --cap: calc(var(--size) * 0.6621);
+  font-size: var(--size);
+  line-height: 64px;
+  margin-top: calc(6 * var(--pitch) - mod(var(--cap), var(--pitch)));
+}
+```
+
+Measured at eleven widths from 320 to 1440, in Chromium and WebKit:
+
+```
+fixed spacing   320px 1/4  360px 1/4  400px 1/4  ...  1440px 1/4
+space follows   320px 4/4  360px 4/4  400px 4/4  ...  1440px 4/4
+```
+
+The control runs first and has to fail, because if the unfitted page were
+already on the grid the result below would be measuring nothing.
+
+`mod()` and `text-box-trim` are supported in the same engines, which is
+convenient and not a coincidence: both are recent additions to the same part of
+the platform. There is a test asserting they stay together, so if one ever ships
+without the other the fluid path grows a fallback rather than quietly breaking.
+
+Give the fitter a `fluid` range and it emits the rule rather than making you
+derive it:
+
+```json
+{ "name": "display", "size": 40, "leading": 64, "space": 48,
+  "fluid": { "min": 28, "max": 56, "preferred": "5vw" } }
+```
+
+The nominal `size` is still required, because the leading is solved from it and
+a report needs one number rather than a range. The leading cannot be fluid: it
+has to be a whole number of rows, and there is no continuum of whole numbers. So
+a fluid size takes a fixed leading across its range, which is what display type
+usually wants anyway.
+
+---
+
 ### Without a browser at all
 
 Fitting a design is a build-time question, and needing Playwright to answer it
@@ -1122,10 +1174,10 @@ answering from the line box, because the two give different numbers and a caller
 who asked for one and silently got the other has a stylesheet that does not do
 what they think.
 
-It does not make fluid type work. `clamp()` varies the size continuously, and
-only discrete sizes have a known cap height, so a fluid scale is off the grid
-between its endpoints by construction. Set the sizes at breakpoints instead;
-each one is fitted independently and they do not have to agree with each other.
+It does not fit a leading fluidly, and that one is not a limitation of the tool.
+A leading has to be a whole number of rows or the second line of every paragraph
+is off the grid, and there is no continuum of whole numbers. Fluid sizes take a
+fixed leading per range.
 
 It does not fix boxes that are not whole rows. Borders, padding and image heights
 still have to be multiples of the pitch, and `quoin rhythm` is what tells you

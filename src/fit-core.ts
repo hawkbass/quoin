@@ -26,6 +26,19 @@ export interface DesignStep {
   ratio?: number;
   /** The space the design wants before a block of this size, in px. */
   space?: number;
+  /**
+   * A size that varies with the viewport, as `clamp()` arguments.
+   *
+   * `size` stays the nominal figure, used for the leading and for reporting.
+   * When this is present the emitted CSS sets the size fluidly and makes the
+   * space follow it, so the block stays on the grid at every width rather than
+   * only at the two ends.
+   *
+   * The leading cannot be fluid, and that is not a limitation of this tool. A
+   * leading has to be a whole number of rows or the second line of every
+   * paragraph is off the grid, and there is no continuum of whole numbers.
+   */
+  fluid?: { min: number; max: number; preferred: string };
 }
 
 export interface FamilyRequest {
@@ -61,6 +74,15 @@ export interface FittedStep {
   /** This size's cap height, and how far past a row it falls. */
   cap: number;
   residue: number;
+  /**
+   * Cap height per em for this family, when the size is fluid.
+   *
+   * A fluid size has no single cap height, so the CSS carries the ratio and
+   * computes the space from it with `mod()`. Absent for a fixed size, where the
+   * space is a number and needs no arithmetic at runtime.
+   */
+  capRatio?: number;
+  fluid?: { min: number; max: number; preferred: string };
 }
 
 export interface FittedFamily {
@@ -184,6 +206,11 @@ export function fitWith(
         spaceMoved: Math.round((space - wantedSpace) * 1000) / 1000,
         cap: Math.round(cap * 1000) / 1000,
         residue: Math.round((((cap % pitch) + pitch) % pitch) * 1000) / 1000,
+        /* Cap height is linear in the size, so the ratio taken at the nominal
+           size holds across the whole fluid range. */
+        ...(step.fluid
+          ? { fluid: step.fluid, capRatio: Math.round((cap / step.size) * 100000) / 100000 }
+          : {}),
       });
     });
 
@@ -250,6 +277,18 @@ export function fittedScaleToCss(fitted: FittedScale): string {
     );
   }
 
+  const fluid = fitted.families.flatMap((f) => f.steps.filter((s) => s.fluid));
+  if (fluid.length) {
+    lines.push(
+      " *",
+      " * Some sizes are fluid. Their space is computed from the size with mod()",
+      " * rather than written down, so they stay on the grid across the whole",
+      " * range instead of only at its two ends. The leading cannot be fluid: it",
+      " * has to be a whole number of rows or the second line of every paragraph",
+      " * is off the grid, and there is no continuum of whole numbers."
+    );
+  }
+
   const unresolved = fitted.families.filter((f) => !f.resolved);
   if (unresolved.length) {
     lines.push(
@@ -265,12 +304,33 @@ export function fittedScaleToCss(fitted: FittedScale): string {
     if (!family.steps.length) continue;
     lines.push("", `  /* ${family.role}: ${family.font} */`);
     for (const step of family.steps) {
-      lines.push(
-        `  --size-${step.name}: ${step.size}px;`,
-        `  --leading-${step.name}: ${step.leading}px;` +
-          (step.leadingMoved === 0 ? "" : `  /* was ${step.leadingWas} */`),
-        `  --space-${step.name}: ${step.space}px;  /* closes a ${step.residue}px cap residue */`
-      );
+      if (step.fluid) {
+        /*
+           A fluid size has no single cap height, so the space cannot be a
+           number. It is computed from the size at runtime instead:
+
+               space = N x pitch - mod(size x capRatio, pitch)
+
+           which is the same arithmetic as the fixed case with the cap height
+           left as an expression. `mod()` is CSS Values 4 and is supported
+           wherever `text-box-trim` is, so a page that can use one can use both.
+        */
+        const rows = Math.max(1, Math.round(step.space / fitted.grid.pitch));
+        lines.push(
+          `  --size-${step.name}: clamp(${step.fluid.min}px, ${step.fluid.preferred}, ${step.fluid.max}px);`,
+          `  --leading-${step.name}: ${step.leading}px;` +
+            (step.leadingMoved === 0 ? "" : `  /* was ${step.leadingWas} */`),
+          `  --cap-${step.name}: calc(var(--size-${step.name}) * ${step.capRatio});`,
+          `  --space-${step.name}: calc(${rows} * var(--pitch) - mod(var(--cap-${step.name}), var(--pitch)));`
+        );
+      } else {
+        lines.push(
+          `  --size-${step.name}: ${step.size}px;`,
+          `  --leading-${step.name}: ${step.leading}px;` +
+            (step.leadingMoved === 0 ? "" : `  /* was ${step.leadingWas} */`),
+          `  --space-${step.name}: ${step.space}px;  /* closes a ${step.residue}px cap residue */`
+        );
+      }
     }
   }
 

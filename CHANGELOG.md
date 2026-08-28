@@ -1,5 +1,55 @@
 # Changelog
 
+## 1.8.0
+
+Fluid type on a baseline grid, which this README said was impossible.
+
+The reasoning it said it with was sound as far as it went. A block phase is
+size times cap ratio, so a size that varies continuously has a phase that varies
+continuously and lands on the grid only where it happens to. What it missed is
+that the space does not have to be a number.
+
+### Added
+
+**A `fluid` range on a design step, and the CSS to make it hold.** CSS Values 4
+has `mod()`, so the arithmetic the fitter does at build time can be done by the
+browser at layout time instead:
+
+```css
+--size: clamp(28px, 5vw, 56px);
+--cap: calc(var(--size) * 0.6621);
+margin-top: calc(6 * var(--pitch) - mod(var(--cap), var(--pitch)));
+```
+
+Measured at eleven widths from 320 to 1440 in Chromium and WebKit, a page with
+a clamped heading goes from on the grid at no width to on the grid at every one.
+The control runs first and has to fail, because if the unfitted page were already
+on the grid the result would be measuring nothing.
+
+The leading still cannot be fluid, and that is not a limitation of the tool: a
+leading has to be a whole number of rows or the second line of every paragraph is
+off the grid, and there is no continuum of whole numbers.
+
+### Fixed
+
+**Nine font-file tests failed in CI rather than skipping.** The guard checked
+that the fonts directory exists, and it does: a manifest is committed and the
+fonts are not, because they are thirty megabytes of somebody else work that
+`npm run fonts` downloads. Guarding on the directory is guarding on the wrong
+thing.
+
+That left the real problem, which is that the parser `fitFromFiles` depends on
+had no coverage in any CI run there has ever been. There are now fonts built byte
+by byte in the test file, so the parser is tested where the corpus is not: without
+it, fifteen pass and nine skip.
+
+### Findings
+
+**`mod()` and `text-box-trim` are supported in the same engines.** Not a
+coincidence, since both are recent additions to the same part of the platform,
+and there is a test asserting they stay together so that a future divergence
+grows a fallback rather than breaking quietly.
+
 ## 1.7.0
 
 Taking a design in the shape somebody actually has it.
