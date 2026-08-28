@@ -1084,6 +1084,34 @@ usually wants anyway.
 
 ---
 
+### Zoom, and what a reader can change
+
+A fit is arithmetic in pixels, which is a suspicious thing to build an
+accessibility story on, so both cases are measured rather than argued.
+
+**Zoom holds.** It multiplies every length on the page including the pitch, so
+the modular arithmetic is untouched: a space that closes a cap residue at 1x
+closes the same residue scaled at 3x. Measured in Chromium and WebKit:
+
+```
+1x 5/5   1.25x 5/5   1.5x 5/5   2x 5/5   3x 5/5
+```
+
+WCAG 1.4.4 asks for 200%. This goes to 300% because measuring it costs nothing
+and reasoning about it proves nothing.
+
+**A forced minimum font size degrades it.** That one raises the sizes below its
+threshold and leaves the rest, so those blocks' cap heights change while their
+spacing stays where the fit put it. Overriding one size in a five-block page
+took it from 5/5 to 3/5: the caption came off and so did the block below it,
+because its height changed, and the three above it did not move.
+
+Worth being plain about. It degrades rather than collapsing, and it breaks the
+vertical rhythm of every px-based design ever shipped in exactly the same way,
+which is an explanation and not a defence.
+
+---
+
 ### Without a browser at all
 
 Fitting a design is a build-time question, and needing Playwright to answer it
