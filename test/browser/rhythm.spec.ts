@@ -540,10 +540,17 @@ test("an inline at a different size is named, because nothing about it looks wro
   const fixed = await read(
     "code { font-family: monospace; font-size: 0.82em; line-height: 0 }"
   );
+  /*
+     A whole number of rows, and not the control's height. Monospace is wider
+     than the serif, so on a machine without Georgia the same words wrap to
+     three lines with the code in them and two without, and comparing the two
+     heights compares two different paragraphs. Whole rows is the claim; equal
+     heights was a second version of the same mistake as the first.
+  */
   expect(
-    fixed.height,
-    `following the advice left the paragraph at ${fixed.height}px against ` +
-      `${same.height}px for an inline that differs in nothing`
-  ).toBe(same.height);
+    fixed.height % 8,
+    `following the advice left the paragraph at ${fixed.height}px, ` +
+      `${Math.round((fixed.height % 8) * 100) / 100}px off a row`
+  ).toBe(0);
   expect(fixed.issue, "still reported after taking its own advice").toBeNull();
 });
