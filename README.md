@@ -1081,6 +1081,67 @@ phase, which is worse again, because each family has its own cap height per em
 and the compromises compound: an early version moved a 17px body to 20.5 and a
 15px mono to 10.5, which is not fitting a design to a grid, it is replacing it.
 
+### The box, which is the rest of that equation
+
+The formula above is right for a block with no border and no padding, and for a
+while it was the whole of what the fitter solved. It is not the whole equation.
+
+Under `text-box-trim` a box begins at its first baseline's cap and ends at its
+last baseline, so the full distance from one baseline to the next is
+
+```
+baseline(B) - baseline(A) =
+      (lines(A) - 1) x leading(A)
+    + paddingBottom(A) + borderBottom(A)
+    + space(B)
+    + borderTop(B) + paddingTop(B)
+    + cap(B)
+```
+
+Four terms the fitter used to assume were zero. A fitted paragraph with a 1px
+border-top read 2 of 3 on the grid; with 5px of padding-top, 1 of 3. Eight pixels
+of padding read 3 of 3, and that is the tell: eight is a whole row, so it moved
+everything by exactly one row, which is to say by nothing.
+
+**This was found by pointing the tool at quoin.dev.** Its table cells set
+`line-height: 31px` against a 1px border, deliberately, with a comment saying
+`31 + 1px border = 32`. The fitter read that page and told it to use 32, which
+would have made the box 33 and broken the rhythm the author had built by hand.
+The tool was wrong and the site was right, which is a bad way round for a tool
+whose entire argument is that measuring beats reading.
+
+The two halves are not symmetrical, and the difference matters:
+
+**The lead-in** is `borderTop + paddingTop`. It sits between the top of the box
+and the first line, it belongs to the block being fitted, and so that block's own
+space closes it along with its cap height:
+
+```
+space(B) + borderTop(B) + paddingTop(B) + cap(B) = 0   (mod pitch)
+```
+
+**The tail** is `borderBottom + paddingBottom`. It sits below the last baseline
+and pushes the *next* block down, which makes it the one term in the equation
+belonging to a block other than the one being fitted. A per-step design cannot
+know what follows a block, so the tail is not absorbed into somebody else's
+space. It is rounded up to a whole number of rows instead, by adding to the
+block's own `padding-bottom`, which makes it contribute nothing:
+
+```
+paddingBottom(A) + borderBottom(A) = 0   (mod pitch)
+```
+
+Both terms then belong to one block alone, and the property the whole method
+rests on survives: **no block has to agree with any other.**
+
+A 1px border-bottom asks for 7px of padding under it. A border and padding that
+already come to a whole row are left exactly as they are, and a design with
+neither fits precisely as it did before any of this existed.
+
+`inferDesign` reads all four off the page, and groups on them as well as on the
+type, because two blocks at the same size with different borders need different
+spaces.
+
 ### What it does instead
 
 ```bash

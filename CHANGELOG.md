@@ -1,5 +1,72 @@
 # Changelog
 
+## 1.14.0
+
+The fitter solved for a block with no border and no padding. Most blocks have
+one or the other.
+
+### Fixed
+
+**A border or a padding between the top of a box and its first line moved the
+baseline by an amount the fitter never accounted for.**
+
+The formula it solved was `space + cap = 0 (mod pitch)`, which is right for a
+block with nothing else above its first line. Under `text-box-trim` the full
+distance from one baseline to the next is
+
+```
+      (lines(A) - 1) x leading(A)
+    + paddingBottom(A) + borderBottom(A)
+    + space(B)
+    + borderTop(B) + paddingTop(B)
+    + cap(B)
+```
+
+Four terms that were assumed to be zero. A fitted paragraph with a 1px
+border-top read 2 of 3 on the grid; with 5px of padding-top, 1 of 3; with both
+borders, 1 of 3. Eight pixels of padding read 3 of 3, which is the tell: eight is
+a whole row, so it moved everything by exactly one and nothing came off.
+
+**Found by pointing the tool at quoin.dev.** Its table cells set `line-height:
+31px` against a 1px border, deliberately, with a comment saying `31 + 1px border
+= 32`. The fitter read that page and told it to use 32, which would have made the
+box 33 and broken the rhythm the author had built by hand. The tool was wrong and
+the site was right, which is a bad way round for a tool whose whole argument is
+that measuring beats reading.
+
+The two halves are not symmetrical, and keeping them apart is what preserves the
+property the method rests on.
+
+The **lead-in**, `borderTop + paddingTop`, belongs to the block being fitted, so
+that block's own space closes it along with the cap height.
+
+The **tail**, `borderBottom + paddingBottom`, sits below the last baseline and
+pushes the *next* block down, which makes it the one term belonging to a block
+other than the one being fitted. A per-step design cannot know what follows, so
+it is not absorbed into somebody else's space. It is rounded up to a whole number
+of rows with the block's own `padding-bottom`, which makes it contribute nothing.
+A 1px border-bottom asks for 7px of padding under it.
+
+Both terms then belong to one block alone, and no block has to agree with any
+other, which is the whole point.
+
+Every shape tested now reads 3 of 3 in both engines: border-top, border-bottom,
+both, padding-top, mixed border and padding, padding-bottom, and the table cell
+that started it.
+
+### Changed
+
+**`inferDesign` reads the box, and groups on it.** Two blocks at the same size
+with different borders need different spaces, so they are now different steps.
+A page with no borders or padding on its text groups exactly as it did and fits
+to the same figures as before.
+
+**`DesignStep` takes `borderTop`, `paddingTop`, `borderBottom` and
+`paddingBottom`**, all optional and all defaulting to zero. `FittedStep` reports
+`leadIn` and the `paddingBottom` to set, next to what it was.
+
+The emitted CSS carries a `padding-bottom` only when the tail had to move.
+
 ## 1.13.1
 
 Two defects in `rhythm`, both found by pointing the tool at quoin.dev.

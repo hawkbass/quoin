@@ -171,6 +171,14 @@ export function inferDesign(options: InferOptions = {}): InferredDesign {
     font: string;
     size: number;
     leading: number;
+    /* The block's own border-top and padding-top, which sit between the top of
+       the box and the first baseline, and its border-bottom and padding-bottom,
+       which sit below the last one under the trim. All four move text and none
+       of them used to be read. */
+    borderTop: number;
+    paddingTop: number;
+    borderBottom: number;
+    paddingBottom: number;
     blocks: number;
     tags: Map<string, number>;
     elements: Element[];
@@ -186,10 +194,32 @@ export function inferDesign(options: InferOptions = {}): InferredDesign {
     if (!Number.isFinite(size) || size <= 0) continue;
 
     const font = style.fontFamily;
-    const key = `${font}|${size}|${leading}`;
+    const box = (value: string) => {
+      const n = Number.parseFloat(value);
+      return Number.isFinite(n) ? Math.round(n * 100) / 100 : 0;
+    };
+    const borderTop = box(style.borderTopWidth);
+    const paddingTop = box(style.paddingTop);
+    const borderBottom = box(style.borderBottomWidth);
+    const paddingBottom = box(style.paddingBottom);
+
+    /*
+       Grouped on the box as well as the type, because the space that seats a
+       block has to close its border-top and padding-top too, and two blocks at
+       the same size with different borders need different spaces. On a page
+       with no borders on its text every one of these is zero and the grouping
+       is exactly what it was.
+    */
+    const key =
+      `${font}|${size}|${leading}|` +
+      `${borderTop}|${paddingTop}|${borderBottom}|${paddingBottom}`;
     let group = groups.get(key);
     if (!group) {
-      group = { font, size, leading, blocks: 0, tags: new Map(), elements: [] };
+      group = {
+        font, size, leading,
+        borderTop, paddingTop, borderBottom, paddingBottom,
+        blocks: 0, tags: new Map(), elements: [],
+      };
       groups.set(key, group);
     }
     group.blocks++;
@@ -231,6 +261,15 @@ export function inferDesign(options: InferOptions = {}): InferredDesign {
           const commonest = [...group.tags.entries()].sort((a, b) => b[1] - a[1])[0];
           let name = commonest ? commonest[0] : `s${group.size}`;
           if (used.has(name)) name = `${name}-${group.size}`;
+          /* Grouping on the box as well as the type means two steps can share a
+             tag and a size and differ only in their borders, which the size
+             suffix does not separate. A name that collides silently overwrites
+             a custom property and takes a block off the grid. */
+          if (used.has(name)) {
+            let n = 2;
+            while (used.has(`${name}-${n}`)) n++;
+            name = `${name}-${n}`;
+          }
           used.add(name);
 
           return {
@@ -238,6 +277,10 @@ export function inferDesign(options: InferOptions = {}): InferredDesign {
             size: group.size,
             leading: group.leading,
             space: group.leading,
+            borderTop: group.borderTop,
+            paddingTop: group.paddingTop,
+            borderBottom: group.borderBottom,
+            paddingBottom: group.paddingBottom,
             selector: selectorFor(group.elements, root),
           };
         }),

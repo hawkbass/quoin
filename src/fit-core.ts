@@ -27,6 +27,32 @@ export interface DesignStep {
   /** The space the design wants before a block of this size, in px. */
   space?: number;
   /**
+   * The block's own border-top and padding-top, in px.
+   *
+   * These sit between the top of the box and its first line, so they move the
+   * first baseline by exactly their sum. The fitter closes them along with the
+   * cap height, which it did not used to: a fitted paragraph with a 1px
+   * border-top read 2 of 3 on the grid, and one with 5px of padding-top read
+   * 1 of 3. Eight pixels of padding was harmless, and that is the tell. It is a
+   * whole row, so it moved everything by exactly one and nothing came off.
+   */
+  borderTop?: number;
+  paddingTop?: number;
+  /**
+   * The block's own border-bottom and padding-bottom, in px.
+   *
+   * Under `text-box-trim` a box ends at its last baseline, so these two sit
+   * below it and push the *next* block down. That makes them the one term in
+   * this arithmetic that belongs to a block other than the one being fitted,
+   * and a per-step design cannot know which block comes next.
+   *
+   * So they are not absorbed into somebody else's space. They are rounded up to
+   * a whole number of rows instead, which makes them contribute nothing, and
+   * keeps every term in the equation the property of one block alone.
+   */
+  borderBottom?: number;
+  paddingBottom?: number;
+  /**
    * A selector that matches exactly the blocks this step was read from.
    *
    * Set by `inferDesign` when it can find one and verify it, so the emitted CSS
@@ -80,6 +106,21 @@ export interface FittedStep {
   space: number;
   spaceWas: number;
   spaceMoved: number;
+  /**
+   * The block's own border-top plus padding-top, in px, which the space closes
+   * along with the cap height. Zero for a block with neither.
+   */
+  leadIn: number;
+  /**
+   * The padding-bottom to set, in px, so that it and the border-bottom together
+   * are a whole number of rows.
+   *
+   * Equal to the design's own padding-bottom when that already holds. A block
+   * ends at its last baseline under the trim, so anything below it moves the
+   * next block, and this is what stops it.
+   */
+  paddingBottom: number;
+  paddingBottomWas: number;
   /** This size's cap height, and how far past a row it falls. */
   cap: number;
   residue: number;
@@ -250,7 +291,34 @@ export function fitWith(
 
       const { leading, wanted } = leadingFor(step, pitch);
       const wantedSpace = step.space ?? leading;
-      const space = spaceFor(cap, wantedSpace, pitch);
+
+      /*
+         Everything between the top of the box and the first baseline, not just
+         the cap height. A border-top and a padding-top sit there too, and the
+         space has to close all three or the block starts off the grid by their
+         sum. This was the defect: quoin.dev's table cells set `line-height:
+         31px` against a 1px border deliberately, the fitter told them to use 32
+         because it could not see the border, and following that advice would
+         have broken the rhythm the author had built by hand.
+      */
+      const leadIn =
+        (step.borderTop ?? 0) + (step.paddingTop ?? 0);
+      const space = spaceFor(cap + leadIn, wantedSpace, pitch);
+
+      /*
+         And everything below the last baseline, rounded up to a whole row so it
+         moves the next block by a whole number of them, which is to say not at
+         all.
+      */
+      const borderBottom = step.borderBottom ?? 0;
+      const paddingBottomWas = step.paddingBottom ?? 0;
+      const tail = borderBottom + paddingBottomWas;
+      const tailResidue = ((tail % pitch) + pitch) % pitch;
+      const paddingBottom =
+        tailResidue < 1e-9
+          ? paddingBottomWas
+          : Math.round((paddingBottomWas + (pitch - tailResidue)) * 1000) / 1000;
+
       const leadingMoved = Math.round((leading - wanted) * 1000) / 1000;
       cost += Math.abs(leadingMoved);
 
@@ -264,6 +332,9 @@ export function fitWith(
         space,
         spaceWas: Math.round(wantedSpace * 1000) / 1000,
         spaceMoved: Math.round((space - wantedSpace) * 1000) / 1000,
+        leadIn: Math.round(leadIn * 1000) / 1000,
+        paddingBottom,
+        paddingBottomWas,
         cap: Math.round(cap * 1000) / 1000,
         residue: Math.round((((cap % pitch) + pitch) % pitch) * 1000) / 1000,
         /* Cap height is linear in the size, so the ratio taken at the nominal
@@ -401,7 +472,23 @@ export function fittedScaleToCss(fitted: FittedScale): string {
           `  --size-${step.name}: ${step.size}px;`,
           `  --leading-${step.name}: ${step.leading}px;` +
             (step.leadingMoved === 0 ? "" : `  /* was ${step.leadingWas} */`),
-          `  --space-${step.name}: ${step.space}px;  /* closes a ${step.residue}px cap residue */`
+          /* What it closes, which is the cap residue on its own only when the
+             block has nothing above its first line. Saying "cap residue" for a
+             block whose border is half the correction is a comment that sends
+             somebody looking in the wrong place. */
+          `  --space-${step.name}: ${step.space}px;` +
+            (step.leadIn > 0
+              ? `  /* closes a ${step.residue}px cap residue and ${step.leadIn}px above it */`
+              : `  /* closes a ${step.residue}px cap residue */`),
+          /* The tail, as a token, so a step with no selector of its own still
+             carries it. Only when it had to move. */
+          ...(step.paddingBottom !== step.paddingBottomWas
+            ? [
+                `  --pad-bottom-${step.name}: ${step.paddingBottom}px;` +
+                  `  /* was ${step.paddingBottomWas}, so the border below the last` +
+                  ` baseline is a whole row */`,
+              ]
+            : [])
         );
       }
     }
@@ -432,6 +519,16 @@ export function fittedScaleToCss(fitted: FittedScale): string {
         `  line-height: var(--leading-${step.name});`,
         `  ${fitted.spaceProperty}-top: var(--space-${step.name});`,
         ...(fitted.spaceProperty === "margin" ? ["  margin-bottom: 0;"] : []),
+        /* Only when the design's own padding-bottom did not already leave the
+           tail on a row. Writing it otherwise sets a property nobody asked
+           about to the value it already had. */
+        ...(step.paddingBottom !== step.paddingBottomWas
+          ? [
+              `  padding-bottom: ${step.paddingBottom}px;` +
+                `  /* was ${step.paddingBottomWas}, rounded up so the border below` +
+                ` the last baseline is a whole row */`,
+            ]
+          : []),
         ...(fitted.columns ? ["  break-inside: avoid;"] : []),
         "  text-box-trim: trim-both;",
         `  text-box-edge: ${fitted.edge};`,

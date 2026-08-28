@@ -373,3 +373,150 @@ test("every emitted stylesheet still parses with break-inside in it", () => {
     }
   }
 });
+
+/* ------------------------------------------------------------------ *
+   Borders and padding, which are between the box and the baseline
+ * ------------------------------------------------------------------ */
+
+test("the space closes the lead-in as well as the cap", () => {
+  /* A border-top and a padding-top sit between the top of the box and the first
+     line, so they move the first baseline by exactly their sum. The space has
+     to close all three or the block starts off the grid.
+
+     Cap 11.25 is 3.25 past a row, and with 1px of border above it the lead is
+     4.25 past. Asking for 24 then lands on 27.75 rather than the 20.75 it lands
+     on without the border, because the nearest multiple moved: 27.75 is 3.75
+     away from what was asked for and 19.75 is 4.25 away. */
+  const withBorder = fitWith(
+    [{ role: "body", font: "Test", steps: [{ name: "p", size: 17, ratio: 1.5, space: 24, borderTop: 1 }] }],
+    CAPS,
+    { pitch: 8 }
+  ).families[0]!.steps[0]!;
+
+  assert.equal(withBorder.leadIn, 1);
+  assert.equal((withBorder.space + withBorder.cap + withBorder.leadIn) % 8, 0);
+  assert.equal(withBorder.space, 27.75);
+});
+
+test("border-top and padding-top are the same term, because they are", () => {
+  const shapes = [
+    { borderTop: 5 },
+    { paddingTop: 5 },
+    { borderTop: 2, paddingTop: 3 },
+    { borderTop: 1, paddingTop: 4 },
+  ];
+  const spaces = shapes.map(
+    (shape) =>
+      fitWith(
+        [{ role: "body", font: "Test", steps: [{ name: "p", size: 17, ratio: 1.5, space: 24, ...shape }] }],
+        CAPS,
+        { pitch: 8 }
+      ).families[0]!.steps[0]!.space
+  );
+  assert.deepEqual(spaces, [spaces[0], spaces[0], spaces[0], spaces[0]]);
+});
+
+test("a lead-in that is a whole number of rows changes nothing", () => {
+  /* Which is why 8px of padding was harmless on a page where 5px was not: it
+     moves everything by exactly one row, and a row is nothing. */
+  const plain = fitWith(DESIGN, CAPS, { pitch: 8 }).families[0]!.steps[0]!;
+  const padded = fitWith(
+    [{ role: "body", font: "Test", steps: [{ name: "body", size: 17, ratio: 1.5, space: 24, paddingTop: 8 }] }],
+    CAPS,
+    { pitch: 8 }
+  ).families[0]!.steps[0]!;
+  assert.equal(padded.space, plain.space);
+});
+
+test("the tail is rounded up to a whole row rather than absorbed", () => {
+  /*
+     Under the trim a box ends at its last baseline, so a border-bottom and a
+     padding-bottom sit below it and push the next block down. That makes them
+     the only term here belonging to a block other than the one being fitted,
+     and a per-step design cannot know what comes next. So they are made to
+     contribute nothing instead of being absorbed into somebody else's space.
+  */
+  const step = fitWith(
+    [{ role: "body", font: "Test", steps: [{ name: "p", size: 17, ratio: 1.5, space: 24, borderBottom: 1 }] }],
+    CAPS,
+    { pitch: 8 }
+  ).families[0]!.steps[0]!;
+
+  assert.equal(step.paddingBottomWas, 0);
+  assert.equal(step.paddingBottom, 7, "1px of border wants 7px of padding under it");
+  assert.equal((step.paddingBottom + 1) % 8, 0);
+  assert.equal(step.space, 20.75, "and the space is untouched, because the tail is not its problem");
+});
+
+test("a tail already on a row is left exactly as it is", () => {
+  for (const shape of [{}, { paddingBottom: 8 }, { borderBottom: 2, paddingBottom: 6 }, { paddingBottom: 16 }]) {
+    const step = fitWith(
+      [{ role: "body", font: "Test", steps: [{ name: "p", size: 17, ratio: 1.5, space: 24, ...shape }] }],
+      CAPS,
+      { pitch: 8 }
+    ).families[0]!.steps[0]!;
+    assert.equal(
+      step.paddingBottom,
+      step.paddingBottomWas,
+      `${JSON.stringify(shape)} was moved when it did not need to be`
+    );
+  }
+});
+
+test("a design with no box at all is byte-for-byte what it was", () => {
+  /* The guard on the whole change: a page with no borders or padding on its
+     text must fit exactly as it did before any of this existed. */
+  const step = fitWith(DESIGN, CAPS, { pitch: 8 }).families[0]!.steps[0]!;
+  assert.equal(step.leadIn, 0);
+  assert.equal(step.paddingBottom, 0);
+  assert.equal(step.space, 20.75);
+});
+
+test("the CSS carries a padding-bottom only when the tail had to move", () => {
+  const withSelector = (extra: object) => [
+    {
+      role: "body",
+      font: "Test",
+      steps: [{ name: "p", size: 17, ratio: 1.5, space: 24, selector: "p", ...extra }],
+    },
+  ];
+
+  const moved = fittedScaleToCss(fitWith(withSelector({ borderBottom: 1 }), CAPS, { pitch: 8 }));
+  assert.match(moved, /padding-bottom: 7px/);
+  assert.match(moved, /whole row/);
+
+  const still = fittedScaleToCss(fitWith(withSelector({}), CAPS, { pitch: 8 }));
+  assert.doesNotMatch(still, /padding-bottom/);
+});
+
+test("a step with no selector still carries its tail, as a token", () => {
+  /* Rules are only emitted for steps with a verified selector, and most steps
+     read off a page do not get one. Putting the tail only in the rule meant the
+     correction existed for three steps out of seventeen and vanished for the
+     rest without saying so. */
+  const css = fittedScaleToCss(
+    fitWith(
+      [{ role: "body", font: "Test", steps: [{ name: "p", size: 17, ratio: 1.5, space: 24, borderBottom: 1 }] }],
+      CAPS,
+      { pitch: 8 }
+    )
+  );
+  assert.match(css, /--pad-bottom-p: 7px/);
+  assert.match(css, /whole row/);
+});
+
+test("the space says what it closes, not just that it closes a cap", () => {
+  /* A block whose border is most of the correction with a comment blaming the
+     cap height sends somebody looking in the wrong place. */
+  const withBox = fittedScaleToCss(
+    fitWith(
+      [{ role: "body", font: "Test", steps: [{ name: "p", size: 17, ratio: 1.5, space: 24, borderTop: 1, paddingTop: 4 }] }],
+      CAPS,
+      { pitch: 8 }
+    )
+  );
+  assert.match(withBox, /cap residue and 5px above it/);
+
+  const plain = fittedScaleToCss(fitWith(DESIGN, CAPS, { pitch: 8 }));
+  assert.match(plain, /closes a [\d.]+px cap residue \*\//);
+});
