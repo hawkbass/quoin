@@ -97,6 +97,35 @@ const global = await build({
 
 /* The CLI runs in Node and drives a browser, so it is not bundled with the
    library and it does not bundle its own driver. */
+/* The build-tool plugins.
+
+   Node-side, so no bundling of the browser surface: a PostCSS plugin that
+   dragged `verifyGrid` and a canvas probe into a build would be carrying a page
+   it is never going to be on. They reach `font-file.ts` and the fitting
+   arithmetic and nothing else.
+
+   `postcss` and `vite` are peer dependencies and neither is imported: the
+   plugins describe the shapes they need structurally, because a package whose
+   argument is that it has no dependencies should not acquire one to read two
+   properties off a node. */
+for (const [entry, name] of [
+  ["src/postcss.ts", "postcss"],
+  ["src/vite.ts", "vite"],
+]) {
+  for (const [format, extension] of [["esm", "js"], ["cjs", "cjs"]]) {
+    await build({
+      entryPoints: [entry],
+      format,
+      platform: "node",
+      target: "node20",
+      outfile: `dist/${name}.${extension}`,
+      bundle: true,
+      packages: "external",
+      logLevel: "warning",
+    });
+  }
+}
+
 /* The fitter, as its own single file.
 
    Not folded into the console bundle: that one has a size budget because it is

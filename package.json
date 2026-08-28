@@ -1,6 +1,6 @@
 {
   "name": "quoin",
-  "version": "1.9.0",
+  "version": "1.10.0",
   "description": "It puts a web page on a baseline grid. Seats every line of text on a rendered page, re-measures each correction, and exports CSS you can ship without the JavaScript.",
   "keywords": [
     "baseline-grid",
@@ -48,7 +48,19 @@
       "default": "./dist/quoin.js"
     },
     "./global": "./dist/quoin.global.js",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./postcss": {
+      "types": "./dist/postcss.d.ts",
+      "import": "./dist/postcss.js",
+      "require": "./dist/postcss.cjs",
+      "default": "./dist/postcss.js"
+    },
+    "./vite": {
+      "types": "./dist/vite.d.ts",
+      "import": "./dist/vite.js",
+      "require": "./dist/vite.cjs",
+      "default": "./dist/vite.js"
+    }
   },
   "scripts": {
     "build": "node scripts/build.mjs",
@@ -68,13 +80,28 @@
     "wild": "node scripts/run-wild.mjs",
     "prepublishOnly": "npm run build",
     "workflows:check": "node scripts/check-workflows.mjs",
-    "fittable": "node scripts/run-fittable.mjs"
+    "fittable": "node scripts/run-fittable.mjs",
+    "test:linux": "node scripts/test-linux.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.60.0",
     "@types/node": "^24.13.3",
     "esbuild": "^0.28.2",
     "playwright": "^1.60.0",
-    "typescript": "^5.9.0"
+    "postcss": "^8.5.26",
+    "typescript": "^5.9.0",
+    "vite": "^8.2.2"
+  },
+  "peerDependencies": {
+    "postcss": ">=8",
+    "vite": ">=5"
+  },
+  "peerDependenciesMeta": {
+    "postcss": {
+      "optional": true
+    },
+    "vite": {
+      "optional": true
+    }
   }
 }

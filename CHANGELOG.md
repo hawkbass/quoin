@@ -1,5 +1,53 @@
 # Changelog
 
+## 1.10.0
+
+A PostCSS plugin and a Vite plugin, so a build can do this without being asked
+twice.
+
+### Added
+
+**`quoin/postcss`.** Every rule declaring a pixel font-size and a line-height is
+fitted. The size is never touched, the leading is snapped to whole rows, and the
+trim is added.
+
+It stops short of margins on purpose. A rule that already declares margin-top
+gets it rewritten, because the author has decided that is where the spacing
+lives; every other rule gets --quoin-space and keeps its layout. Rewriting every
+rule margin is exactly how the corpus study produced numbers that were nonsense
+in both directions.
+
+**`quoin/vite`.** Runs the PostCSS plugin over the project CSS, and serves the
+fitted tokens as an importable module for designs that live in a token file
+rather than in a stylesheet. Both halves are independent, and a test asserts they
+produce the same numbers when both run, because a page built from a mixture of
+two disagreeing grids is on neither.
+
+postcss and vite are optional peer dependencies. The package still has no
+dependencies of its own, and neither plugin imports the tool it plugs into: they
+describe the shapes they need structurally.
+
+**`npm run test:linux`.** Runs the browser suite in the same image CI uses.
+
+### Fixed
+
+**Eight of the last twelve CI runs were red, and every one was a difference
+between this machine and the runner.** The generic serif is a different typeface
+on Linux, so any threshold tuned locally fails there, and a test that waits on a
+panel rather than on a number is slower there and reads the previous value.
+
+Three tests asserted absolute numbers when their claims were comparative. The
+fluid control now asserts that the fitted page beats the unfitted one rather than
+naming a percentage. The zoom test asserts that zoom does not take blocks off the
+grid rather than that the page is perfect, which was a second claim belonging to
+another file. The layout-change test measures the same page without its media
+query in the same run and compares the two: 0/4 against 4/4, which is the same
+finding without a number that travels badly.
+
+**The Vite plugin resolved a relative design path against the process working
+directory** rather than the project root, so it looked for the file wherever the
+build happened to be launched from.
+
 ## 1.9.0
 
 What a baseline grid would actually cost the web.

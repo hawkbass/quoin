@@ -1196,6 +1196,84 @@ which is an explanation and not a defence.
 
 ---
 
+### In a build, with PostCSS or Vite
+
+```js
+// postcss.config.js
+import quoin from "quoin/postcss";
+export default {
+  plugins: [quoin({ fonts: { Lato: "./fonts/Lato.ttf" }, defaultFont: "Lato" })],
+};
+```
+
+Every rule declaring a pixel `font-size` and a `line-height` gets fitted. The
+size is never touched. The leading is snapped to a whole number of rows and the
+trim is added, because those are the two things that cannot be wrong afterwards:
+a leading off the grid puts every line after the first off it too, and every
+figure here assumes the box is trimmed.
+
+**It stops short of your margins, on purpose.** The space before a block is what
+closes that block's cap height, and without it the page is not on a grid. It is
+also the most destructive thing to write into somebody's stylesheet, because a
+real site's vertical spacing lives on its containers rather than on its
+paragraphs. Rewriting every rule's `margin-top` is exactly how the study further
+up produced numbers that were nonsense in both directions.
+
+So a rule that already declares `margin-top` gets it rewritten, because the
+author has decided that is where the spacing lives. Every other rule gets
+`--quoin-space` and leaves the decision alone. `rewriteSpace: false` turns even
+that off.
+
+```css
+/* in */                          /* out */
+p {                               p {
+  font-size: 17px;                  font-size: 17px;
+  line-height: 1.5;                 line-height: 24px;
+  margin-top: 24px;                 margin-top: 27.828px;
+}                                   text-box-trim: trim-both;
+                                    text-box-edge: cap alphabetic;
+                                  }
+```
+
+`--quoin: skip` on a rule leaves it alone. Anything it cannot fit is reported
+through `onSkip` with the reason: a `line-height: normal` resolves per font and
+per engine, which is the one number a build cannot know, and a `rem` size depends
+on a root it cannot see.
+
+```js
+// vite.config.js
+import quoin from "quoin/vite";
+
+export default {
+  plugins: [
+    quoin({
+      design: "./design.json",
+      css: { fonts: { Lato: "./fonts/Lato.ttf" }, defaultFont: "Lato" },
+    }),
+  ],
+};
+```
+
+The Vite plugin does that, and one more thing: it serves the fitted tokens as a
+module.
+
+```js
+import "quoin/tokens.css"
+```
+
+That half exists because most design systems keep their scale in tokens and
+generate the CSS from them, so a plugin that could only read stylesheets would be
+useless to exactly those projects. Both halves are independent, and when both run
+there is a test asserting they produce the same numbers, because a page built
+from a mixture of two disagreeing grids is on neither.
+
+**No browser at any point.** Cap heights come from the OS/2 table, which is the
+same number the engines use and agrees with them to eight thousandths of a pixel.
+`postcss` and `vite` are optional peer dependencies; the package itself still has
+none.
+
+---
+
 ### Without a browser at all
 
 Fitting a design is a build-time question, and needing Playwright to answer it
@@ -1556,8 +1634,9 @@ Then `quoin.check()` in the console.
 ## Tests
 
 ```bash
-npm test              # 83 unit tests: the arithmetic, in Node, no browser
-npm run test:browser  # 303 browser tests across Chromium, Firefox and WebKit
+npm test              # 180 unit tests: the arithmetic and the plugins, in Node
+npm run test:browser  # 330 browser tests across Chromium, Firefox and WebKit
+npm run test:linux    # the browser suite in the image CI uses, needs Docker
 npm run fonts         # download the 24-font corpus
 npm run corpus        # measure 212 live sites and write findings/corpus.md
 npm run fittable      # what a grid would cost each of them, in leading

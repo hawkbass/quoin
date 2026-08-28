@@ -183,13 +183,23 @@ function absolute(url) {
    Measure
  * ------------------------------------------------------------------ */
 
+/*
+   Every URL resolved before anything is launched.
+
+   `absolute()` refuses a relative path when there is no directory to serve it
+   from, which is a pure input check, and it used to happen inside the measuring
+   loop: the run started Chromium, loaded it, and only then discovered the
+   workflow was misconfigured. Two seconds to reject a string, and a browser in
+   the failure path of a test that has nothing to do with browsers.
+*/
+const targets = URLS.map((raw) => ({ raw, url: absolute(raw) }));
+
 const browser = await playwright.chromium.launch();
 const readings = [];
 const failures = [];
 
 try {
-  for (const raw of URLS) {
-    const url = absolute(raw);
+  for (const { raw, url } of targets) {
 
     for (const width of WIDTHS) {
       const page = await browser.newPage({ viewport: { width, height: 900 } });
