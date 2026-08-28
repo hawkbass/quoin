@@ -1,5 +1,40 @@
 # Changelog
 
+## 1.18.2
+
+quoin.dev rebuilt on its own advice.
+
+### The site
+
+It was **57.8% in rhythm** and introducing **272px of drift across 80 boxes**,
+which is a poor showing for a page whose argument is that the web can hold a
+baseline grid. It is **77%** now, and the drift it introduces is **one pixel**.
+
+Two things did it, and both are worth writing down because neither was what the
+page looked like it needed.
+
+**Every part of the table rows was off the grid, and the rows were right.** They
+set a 31px leading against a 1px rule, which comes to 32, and the stylesheet said
+so in a comment. Neither term is a whole number of rows, so the box was correct
+by an arithmetic no tool could confirm and no edit could safely touch. Moving
+seven pixels out of the leading and into symmetric padding leaves the text in
+exactly the same place, to the pixel, and puts every part on the grid rather than
+only their total.
+
+**`border-collapse: collapse` breaks the arithmetic entirely.** A collapsed
+border is centred on the edge between two cells, half inside each, so a cell with
+24px of line, 7px of padding and a 1px rule renders 32.5px rather than 32. The
+box height stops being the sum of its parts. Separate borders with no spacing
+look identical here, because only `border-bottom` is set, and they add up. That
+one change was most of the 19 points.
+
+What is left is a long tail of one and two pixel fractions in definition lists,
+and one replaced element. Nothing on the page introduces drift any more except a
+single pixel.
+
+Phase is unaffected: the build still seats to 100% at every breakpoint, which it
+checks on every run and fails on.
+
 ## 1.18.1
 
 The tool told quoin.dev to change a border that was fine.

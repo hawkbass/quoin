@@ -9,6 +9,20 @@
    it by the remainder. That is why one un-quantised box near the top of a page
    costs the whole page: on quoin.dev, six section borders and seventeen table
    rows at 32 plus 1 put twenty-three pixels of drift into everything below them.
+
+   That page has since been rebuilt on its own advice, and the interesting part
+   is what it took. The rows really were 32px and every part of them was off:
+   a 31px leading with a 1px rule comes to 32 and neither term is a whole row,
+   so the box was right by arithmetic no tool could confirm. Moving seven pixels
+   out of the leading and into symmetric padding left the text in exactly the
+   same place and put every part on the grid.
+
+   The rest was `border-collapse: collapse`, which centres a border on the edge
+   between two cells, half inside each, so a cell with 24px of line, 7px of
+   padding and a 1px rule renders 32.5px rather than 32. Under a collapsed
+   border a box height is not the sum of its parts, and no arithmetic about it
+   is safe. Separate borders took the page from 57.8% to 77% and the drift it
+   introduces from 272px to one.
    It is also why static corrections stop holding when the viewport moves, since
    a block that reflows to a different number of lines changes height by a
    multiple of its leading, which is only harmless if the leading is a whole

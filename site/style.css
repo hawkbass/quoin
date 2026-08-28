@@ -192,7 +192,14 @@ a:hover { color: var(--ink); }
 
 /* ---------- the specimen demo ---------- */
 
-.demo { border: 1px solid var(--rule-hard); background: var(--paper-lift); }
+/* A 1px rule on all four sides is 2px of height, so the box needs 6px of its
+   own to reach the next row. Split evenly, because the panel is a frame around
+   something rather than a block of text, and it should stay centred in it. */
+.demo {
+  border: 1px solid var(--rule-hard);
+  padding: 3px 0;
+  background: var(--paper-lift);
+}
 
 .demo-bar {
   display: flex;
@@ -293,7 +300,18 @@ section { padding: 56px 0 55px; border-bottom: 1px solid var(--rule); }
 
 table {
   width: 100%;
-  border-collapse: collapse;
+  /*
+     Separate, not collapse, and it is the grid that decides it.
+
+     Under `border-collapse: collapse` a border is centred on the edge between
+     two cells, half inside each, so a cell with 24px of line, 7px of padding and
+     a 1px rule renders 32.5px rather than 32. The box height stops being the sum
+     of its parts, which means no arithmetic about it is safe and no tool can
+     check it. Separate borders with no spacing look the same here, because only
+     border-bottom is set, and they add up.
+  */
+  border-collapse: separate;
+  border-spacing: 0;
   font-family: var(--mono);
   font-size: 13px;
   line-height: 32px;
@@ -316,25 +334,37 @@ thead th {
   text-transform: uppercase;
   color: var(--ink-faint);
   border-bottom: 2px solid var(--rule-hard);
-  padding: 0 16px 0 0;
-  /* 22 + 2px border = 24 */
-  line-height: 22px;
+  /* 16 + 3 + 3 + 2px border = 24.
+
+     It was 22 + 2, which is also 24, and the row was right while none of its
+     parts were: a 22px leading is not a whole number of rows and neither is a
+     2px border, so the tool could only say the box was correct by accident.
+     Moving six pixels out of the leading and into symmetric padding leaves the
+     text in exactly the same place, to the pixel, and puts every part of the
+     box on the grid rather than only their total. */
+  padding: 3px 16px 3px 0;
+  line-height: 16px;
 }
 thead th:first-child { text-align: left; }
-/* 31 + 1px border = 32, so seventeen rows are 544 rather than 561 */
+/* 24 + 3.5 + 3.5 + 1px border = 32, so seventeen rows are 544 rather than 561.
+
+   It was 31 + 1, which is also 32. The row was a whole number of rows and not
+   one part of it was, so it held by arithmetic that no tool could confirm and
+   no edit could safely touch. The seven pixels are in the padding now, split
+   evenly, which leaves the text where it was: centred 15.5px down either way. */
 tbody th {
   text-align: left;
   font-family: var(--serif);
   font-size: 17px;
   font-weight: 400;
-  line-height: 31px;
-  padding: 0 16px 0 0;
+  line-height: 24px;
+  padding: 3.5px 16px 3.5px 0;
   border-bottom: 1px solid var(--rule);
 }
 td {
   text-align: right;
-  line-height: 31px;
-  padding: 0 16px 0 0;
+  line-height: 24px;
+  padding: 3.5px 16px 3.5px 0;
   border-bottom: 1px solid var(--rule);
   white-space: nowrap;
 }
@@ -360,8 +390,12 @@ td i {
 }
 .ok { color: var(--good); font-weight: 700; }
 .bad { color: var(--bad); font-weight: 700; }
-/* 23 + 1px border = 24 */
-table.compact tbody th, table.compact td { line-height: 23px; }
+/* 16 + 3.5 + 3.5 + 1px border = 24, the same total the 23 + 1 came to and the
+   same centre, with every part of it on the grid instead of only the sum. */
+table.compact tbody th, table.compact td {
+  line-height: 16px;
+  padding: 3.5px 16px 3.5px 0;
+}
 table.compact tbody th { font-size: 15px; }
 
 /* ---------- findings, on ink ---------- */
