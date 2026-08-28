@@ -116,6 +116,23 @@ export interface FittedScale {
    */
   edge: string;
   /**
+   * Which property carries the space: `margin` or `padding`.
+   *
+   * `margin` by default, because it is what a stylesheet usually already uses
+   * and changing it alters nothing about the box.
+   *
+   * `padding` is what survives a column break. A margin at the top of a column
+   * fragment is truncated, so a fitted page that reads 12 of 12 in one column
+   * reads 6 of 12 in two; with padding it reads 12 of 12 in one, two and three.
+   * That holds in Chromium. WebKit fragments differently and no lever tested
+   * survives it, so multi-column is an engine limitation there rather than a
+   * choice this makes.
+   *
+   * On a block with a background or a border the two are not interchangeable,
+   * which is why this is a decision rather than a default.
+   */
+  spaceProperty: "margin" | "padding";
+  /**
    * Where the grid starts, in px.
    *
    * Zero, and that is a result rather than a default. Every block carries a
@@ -192,11 +209,15 @@ export function leadingFor(step: DesignStep, pitch: number): { leading: number; 
 export function fitWith(
   families: readonly FamilyRequest[],
   source: CapSource,
-  options: Partial<GridConfig> & { edge?: string } = {}
+  options: Partial<GridConfig> & {
+    edge?: string;
+    spaceProperty?: "margin" | "padding";
+  } = {}
 ): FittedScale {
   const grid = gridConfig(options);
   const pitch = grid.pitch;
   const edge = options.edge ?? "cap alphabetic";
+  const spaceProperty = options.spaceProperty ?? "margin";
 
   let cost = 0;
   let anyCap = false;
@@ -247,6 +268,7 @@ export function fitWith(
   return {
     grid,
     edge,
+    spaceProperty,
     origin: 0,
     families: fitted,
     cost: Math.round(cost * 1000) / 1000,
@@ -381,16 +403,16 @@ export function fittedScaleToCss(fitted: FittedScale): string {
     lines.push(
       "",
       "/* Read off the page, so these are the blocks the figures came from.",
-      " * Space is margin-top, never margin-bottom: it closes the cap height of",
-      " * the block it comes before, not the one it follows. */"
+      ` * Space is ${fitted.spaceProperty}-top, and before rather than after: it`,
+      " * closes the cap height of the block it comes before. */"
     );
     for (const step of addressable) {
       lines.push(
         `${step.selector} {`,
         `  font-size: var(--size-${step.name});`,
         `  line-height: var(--leading-${step.name});`,
-        `  margin-top: var(--space-${step.name});`,
-        "  margin-bottom: 0;",
+        `  ${fitted.spaceProperty}-top: var(--space-${step.name});`,
+        ...(fitted.spaceProperty === "margin" ? ["  margin-bottom: 0;"] : []),
         "  text-box-trim: trim-both;",
         `  text-box-edge: ${fitted.edge};`,
         "}"
@@ -417,8 +439,18 @@ export function fittedScaleToCss(fitted: FittedScale): string {
       `  text-box-edge: ${fitted.edge};`,
       "}",
       "",
-      "/* Set --space-* as margin-top, never margin-bottom: the space closes the",
-      " * cap height of the block it comes before, not the one it follows. */"
+      `/* Set --space-* as ${fitted.spaceProperty}-top, and before rather than after:`,
+      " * the space closes the cap height of the block it comes before, not the one",
+      " * it follows.",
+      ...(fitted.spaceProperty === "margin"
+        ? [
+            " *",
+            " * Use padding-top instead if the page has columns. A margin at the top of",
+            " * a column fragment is truncated, which takes a fitted page from 12 of 12",
+            " * to 6 of 12 across two columns; padding survives it.",
+          ]
+        : []),
+      " */"
     );
   }
 

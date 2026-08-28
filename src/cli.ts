@@ -40,7 +40,8 @@ Options
   --sizes <a,b,c>            the sizes you want              (scale only)
   --basis <line-box|cap>     phase from the line box, or from a trimmed cap
   --design <file|->          a design as JSON, for fit. Use - for stdin
-  --edge <text-box-edge>     default "cap alphabetic"; try ideographic for CJK
+  --edge <text-box-edge>     default "cap alphabetic"; ex and text also work
+  --space <margin|padding>   which property carries the space (default margin)
   --from <url>               read the design off a page instead, for fit
   --near <px>                how far from those is acceptable (default 3)
   --json                     machine-readable output
@@ -81,9 +82,12 @@ interface Options {
   design: string | null;
   /** A URL to read the design off, instead of a file. */
   from: string | null;
-  /* The `text-box-edge` to fit against. Cap height is a Latin idea, and a
-     Japanese page grids to the ideographic em instead. */
+  /* The `text-box-edge` to fit against. Cap height is a Latin idea, though it
+     turns out to grid every script correctly because a trimmed box comes from
+     the font rather than from the glyphs. */
   edge: string | null;
+  /* Which property carries the space. Padding is what survives a column break. */
+  space: "margin" | "padding" | null;
 }
 
 function fail(message: string): never {
@@ -111,6 +115,7 @@ function parseArgs(argv: string[]): { command: string; url: string | null; optio
     design: null,
     from: null,
     edge: null,
+    space: null,
   };
 
   const positional: string[] = [];
@@ -181,6 +186,14 @@ function parseArgs(argv: string[]): { command: string; url: string | null; optio
       case "--design": options.design = next(); break;
       case "--from": options.from = next(); break;
       case "--edge": options.edge = next(); break;
+      case "--space": {
+        const value = next();
+        if (value !== "margin" && value !== "padding") {
+          fail(`--space wants margin or padding, got ${value}`);
+        }
+        options.space = value;
+        break;
+      }
       case "--sizes": {
         const raw = next();
         const parsed = raw.split(",").map((v) => Number.parseFloat(v.trim()));
@@ -616,9 +629,11 @@ switch (command) {
       await page.addScriptTag({ content: bundle("quoin.fit.js") });
 
       const read = await page.evaluate(
-        ({ ignore, pitch, tolerance, edge }) => {
+        ({ ignore, pitch, tolerance, edge, spaceProperty }) => {
           const design = window.quoinFit.inferDesign({ ignore, minimumBlocks: 2 });
-          const result = window.quoinFit.fitScale(design.families, { pitch, tolerance, edge });
+          const result = window.quoinFit.fitScale(design.families, {
+            pitch, tolerance, edge, spaceProperty,
+          });
           return {
             design,
             result,
@@ -630,6 +645,7 @@ switch (command) {
           pitch: options.pitch,
           tolerance: options.tolerance,
           edge: options.edge ?? "cap alphabetic",
+          spaceProperty: options.space ?? "margin",
         }
       );
 
@@ -864,6 +880,7 @@ switch (command) {
           pitch: design.pitch ?? options.pitch,
           tolerance: design.tolerance ?? options.tolerance,
           edge: options.edge ?? (design as { edge?: string }).edge ?? "cap alphabetic",
+          spaceProperty: options.space ?? "margin",
         },
       }
     );

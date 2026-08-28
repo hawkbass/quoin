@@ -1,5 +1,53 @@
 # Changelog
 
+## 1.12.0
+
+Columns, which is the case a baseline grid is famous for and which this had never
+looked at.
+
+### Findings
+
+**A fitted page does not hold across columns, and the reason is specific.** The
+space that closes a block's cap residue is a `margin-top`, and a margin at the top
+of a column fragment is truncated, so the second column starts its first paragraph
+without the space that was doing the work. A page reading 12 of 12 in one column
+reads 6 of 12 in two.
+
+```
+                       1 column   2 columns   3 columns
+margin-top              12/12       6/12        8/12
+padding-top             12/12      12/12       12/12
+```
+
+**Padding is not truncated, and in Chromium that is the whole fix.** In WebKit
+nothing tested fixes it: margin, padding, `break-inside: avoid` and
+`box-decoration-break: slice` all leave it at 7 of 12, because it fragments
+differently. That is an engine limitation rather than a choice this library is
+making, and the test asserts it rather than claiming a pass it does not get.
+
+### Added
+
+**`spaceProperty` on the fitter and `--space margin|padding` on the CLI.** Margin
+stays the default, because on a block with a background or a border the two are
+not interchangeable and changing somebody's box model quietly is not a thing to
+do. The emitted CSS points at the column case when it writes a margin.
+
+### Fixed
+
+**The emitted stylesheet could be unparseable.** Adding the column note to the
+margin form left the comment terminator before it rather than after, so every
+rule below became comment text and a Vite build failed on it. A string assertion
+does not see that, so there is now a test that parses every stylesheet the fitter
+can emit, across both space properties and two edges.
+
+It was found because the Vite tests compile the output for real rather than
+matching strings in it, which is the entire argument for testing a plugin through
+the tool it plugs into.
+
+And writing the test reproduced the bug: the comment explaining it quoted the
+terminator as an example and ended four lines early.
+
+
 ## 1.11.0
 
 Text that is not Latin.

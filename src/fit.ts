@@ -88,12 +88,16 @@ export function pageCapSource(edge = "cap alphabetic"): CapSource {
  */
 export function fitScale(
   families: readonly FamilyRequest[],
-  options: Partial<GridConfig> & { edge?: string } = {}
+  options: Partial<GridConfig> & {
+    edge?: string;
+    spaceProperty?: "margin" | "padding";
+  } = {}
 ): FittedScale {
   if (!canReadFontTableCapHeight()) {
     return {
       grid: { pitch: options.pitch ?? 8, tolerance: options.tolerance ?? 0.5, origin: 0 },
       edge: options.edge ?? "cap alphabetic",
+      spaceProperty: options.spaceProperty ?? "margin",
       origin: 0,
       families: families.map((f) => ({
         role: f.role,

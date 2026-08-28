@@ -271,8 +271,23 @@ test("the custom properties carry every step", () => {
 });
 
 test("space is documented as going before the block, because that is load-bearing", () => {
-  /* Set as margin-bottom it corrects against the wrong font size, and the page
-     is off the grid in a way that looks like the tool failed. */
+  /* Set after the block it corrects against the wrong font size, and the page is
+     off the grid in a way that looks like the tool failed. */
   const css = fittedScaleToCss(fitWith(DESIGN, CAPS, { pitch: 8 }));
-  assert.match(css, /margin-top, never margin-bottom/);
+  assert.match(css, /margin-top/);
+  assert.match(css, /before rather than after/);
+});
+
+test("the margin form points at columns and the padding form does not", () => {
+  /* A margin at the top of a column fragment is truncated, which takes a fitted
+     page from 12 of 12 to 6 of 12 across two columns. Somebody reading the
+     stylesheet should find that out there rather than from their own page. */
+  const margin = fittedScaleToCss(fitWith(DESIGN, CAPS, { pitch: 8 }));
+  assert.match(margin, /column/);
+
+  const padding = fittedScaleToCss(
+    fitWith(DESIGN, CAPS, { pitch: 8, spaceProperty: "padding" })
+  );
+  assert.match(padding, /padding-top/);
+  assert.doesNotMatch(padding, /Use padding-top instead/);
 });

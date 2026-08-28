@@ -718,6 +718,43 @@ others.
 
 ---
 
+## Finding: columns, which is what a baseline grid is famous for
+
+Everything above this line is one column deep. A print baseline grid sits inside
+a column grid, and the thing it is celebrated for is that a line in the left
+column and a line in the right column sit on the same rule. This had never looked
+at it.
+
+**It does not hold by default, and the reason is specific.** The space that
+closes a block's cap residue is a `margin-top`, and a margin at the top of a
+column fragment is truncated: the second column starts its first paragraph
+without the space that was doing the work.
+
+```
+                       1 column   2 columns   3 columns
+margin-top              12/12       6/12        8/12
+padding-top             12/12      12/12       12/12
+```
+
+Padding is not truncated, and in Chromium that is the whole fix. So the space can
+be carried by either property:
+
+```bash
+npx quoin fit --design design.json --space padding
+```
+
+**In WebKit nothing tested fixes it.** It fragments differently, and margin,
+padding, `break-inside: avoid` and `box-decoration-break: slice` all leave it at
+7 of 12. Multi-column is an engine limitation there rather than a choice this
+library is making, and the test says so rather than asserting a pass it does not
+get.
+
+`margin` stays the default, because on a block with a background or a border the
+two are not interchangeable and changing somebody's box model is not a thing to
+do quietly. The emitted CSS points at this when it writes a margin.
+
+---
+
 ## Finding: a grid costs two pixels a size
 
 The corpus says the median site is at 28% on an 8px grid. That describes the

@@ -262,3 +262,103 @@ test("a whole stylesheet keeps its shape", { skip: !have }, async () => {
   assert.match(css, /\.untouched\s*\{\s*color:\s*blue\s*\}/);
   assert.equal((css.match(/text-box-trim/g) ?? []).length, 2, "both fitted rules got it");
 });
+
+/* ------------------------------------------------------------------ *
+   Everything the fitter emits has to be CSS
+ * ------------------------------------------------------------------ */
+
+test("every stylesheet the fitter can emit parses", { skip: !have }, async () => {
+  /*
+     A malformed comment in emitted CSS is a build-breaking bug, and a string
+     assertion will not see it: `toContain("margin-top")` passes happily on a
+     stylesheet whose comment never closes.
+
+     One did. Adding the note about columns to the margin form left the comment
+     terminator before it rather than after, so every rule below became comment
+     text and Vite failed with "Unknown word". Parsing the output is the only
+     assertion that catches that shape of mistake, so it is made over every
+     combination of the options that change what comes out.
+
+     Writing this comment reproduced the bug, incidentally: the terminator was
+     quoted in it as an example and ended the comment four lines early.
+  */
+  const { fitWith, fittedScaleToCss } = await import("../../src/fit-core.ts");
+
+  const source = {
+    capHeight: (_font: string, size: number) => size * RATIO,
+    resolved: () => true,
+  };
+
+  const designs = [
+    [{ role: "body", font: "serif", steps: [{ name: "p", size: 17, ratio: 1.5 }] }],
+    /* A leading that has to move, so the "leadings that moved" block is in it. */
+    [{ role: "body", font: "serif", steps: [{ name: "p", size: 17, leading: 25.5 }] }],
+    /* A fluid step, which emits calc() and mod(). */
+    [
+      {
+        role: "d",
+        font: "serif",
+        steps: [
+          {
+            name: "display",
+            size: 40,
+            leading: 64,
+            space: 48,
+            fluid: { min: 28, max: 56, preferred: "5vw" },
+          },
+        ],
+      },
+    ],
+    /* A step carrying a selector, which emits rules rather than tokens. */
+    [
+      {
+        role: "body",
+        font: "serif",
+        steps: [{ name: "p", size: 17, ratio: 1.5, selector: "p.body" }],
+      },
+    ],
+  ];
+
+  for (const design of designs) {
+    for (const spaceProperty of ["margin", "padding"] as const) {
+      for (const edge of ["cap alphabetic", "ex alphabetic"]) {
+        const css = fittedScaleToCss(
+          fitWith(design as never, source, { pitch: 8, spaceProperty, edge })
+        );
+
+        /* Balanced comments, checked separately because PostCSS is forgiving
+           about some things and an unterminated comment swallows the rest of the
+           file rather than throwing. */
+        const opens = css.split("/" + "*").length - 1;
+        const closes = css.split("*" + "/").length - 1;
+        assert.equal(
+          opens,
+          closes,
+          `unbalanced comments with ${spaceProperty} and ${edge}:\n${css}`
+        );
+
+        await assert.doesNotReject(
+          () => postcss([]).process(css, { from: undefined }),
+          `did not parse with ${spaceProperty} and ${edge}:\n${css}`
+        );
+      }
+    }
+  }
+});
+
+test("what the fitter emits survives the plugin that fits it", { skip: !have }, async () => {
+  /* A project can reasonably do both, and the emitted tokens going through the
+     plugin must not produce something neither of them meant. */
+  const { fitWith, fittedScaleToCss } = await import("../../src/fit-core.ts");
+  const css = fittedScaleToCss(
+    fitWith(
+      [{ role: "body", font: "serif", steps: [{ name: "p", size: 17, ratio: 1.5 }] }] as never,
+      { capHeight: (_f: string, s: number) => s * RATIO, resolved: () => true },
+      { pitch: 8 }
+    )
+  );
+
+  const out = await run(css);
+  assert.match(out, /--size-p:\s*17px/, "the tokens survived");
+  assert.doesNotMatch(out, /--quoin-space:\s*NaN/);
+});
