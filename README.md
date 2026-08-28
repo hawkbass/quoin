@@ -1002,6 +1002,12 @@ build:
   nothing had to move
 ```
 
+It gives you rules rather than tokens where it can. A step whose blocks are
+matched exactly by one selector gets that selector, checked against the document
+before it is written out; a step whose tag is shared with another size gets
+nothing, because a selector that is nearly right styles the wrong blocks and
+looks finished doing it. Pointed at quoin.dev it found two and refused eleven.
+
 It reads what the browser resolved rather than what the stylesheet asked for, for
 the same reason everything else here does. A page also has a long tail of sizes
 used once, usually a widget or a third party, so anything appearing fewer than

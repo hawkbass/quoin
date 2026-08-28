@@ -166,6 +166,7 @@ export function inferDesign(options: InferOptions = {}): InferredDesign {
     leading: number;
     blocks: number;
     tags: Map<string, number>;
+    elements: Element[];
   }
 
   const groups = new Map<string, Group>();
@@ -181,10 +182,11 @@ export function inferDesign(options: InferOptions = {}): InferredDesign {
     const key = `${font}|${size}|${leading}`;
     let group = groups.get(key);
     if (!group) {
-      group = { font, size, leading, blocks: 0, tags: new Map() };
+      group = { font, size, leading, blocks: 0, tags: new Map(), elements: [] };
       groups.set(key, group);
     }
     group.blocks++;
+    group.elements.push(element);
     const tag = element.tagName.toLowerCase();
     group.tags.set(tag, (group.tags.get(tag) ?? 0) + 1);
   }
@@ -229,6 +231,7 @@ export function inferDesign(options: InferOptions = {}): InferredDesign {
             size: group.size,
             leading: group.leading,
             space: group.leading,
+            selector: selectorFor(group.elements, root),
           };
         }),
     }));
@@ -243,4 +246,64 @@ export function inferDesign(options: InferOptions = {}): InferredDesign {
 
 function sumBlocks(groups: { blocks: number }[]): number {
   return groups.reduce((sum, g) => sum + g.blocks, 0);
+}
+
+/**
+ * A selector that matches this group and nothing outside it, or null.
+ *
+ * `--from` reads a design off a page and then hands back custom properties that
+ * somebody has to wire up by hand, which is a strange thing to do when the tool
+ * is holding the very elements it read them from. This tries to close that.
+ *
+ * Only two shapes are attempted and both are verified against the document
+ * before being returned: a bare tag, and a tag with one class. Anything more
+ * elaborate would be guessing at somebody's naming, and a selector that is
+ * nearly right is worse than none at all, because it silently styles the wrong
+ * blocks.
+ */
+function selectorFor(elements: readonly Element[], root: Element): string | null {
+  if (elements.length === 0) return null;
+
+  const exactly = (selector: string): boolean => {
+    let found: NodeListOf<Element>;
+    try {
+      found = root.querySelectorAll(selector);
+    } catch {
+      return false;
+    }
+    if (found.length !== elements.length) return false;
+    const inGroup = new Set<Element>(elements);
+    for (const element of found) if (!inGroup.has(element)) return false;
+    return true;
+  };
+
+  const tags = new Set(elements.map((e) => e.tagName.toLowerCase()));
+  if (tags.size === 1) {
+    const tag = [...tags][0]!;
+    if (exactly(tag)) return tag;
+
+    /* Classes every element in the group carries, tried commonest first so the
+       answer is the one somebody would have written. */
+    const counts = new Map<string, number>();
+    for (const element of elements) {
+      for (const name of element.classList) {
+        counts.set(name, (counts.get(name) ?? 0) + 1);
+      }
+    }
+    const shared = [...counts.entries()]
+      .filter(([, count]) => count === elements.length)
+      .sort((a, b) => b[1] - a[1])
+      .map(([name]) => name);
+
+    for (const name of shared) {
+      /* Escaped, because a class can contain characters a selector cannot carry
+         raw, and Tailwind-shaped names are full of them. */
+      const escaped =
+        typeof CSS !== "undefined" && CSS.escape ? CSS.escape(name) : name;
+      if (exactly(`${tag}.${escaped}`)) return `${tag}.${escaped}`;
+      if (exactly(`.${escaped}`)) return `.${escaped}`;
+    }
+  }
+
+  return null;
 }

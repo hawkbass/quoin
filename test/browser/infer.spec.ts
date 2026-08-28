@@ -267,3 +267,166 @@ test("a page with no text infers nothing rather than throwing", async ({ browser
   expect(design.blocks).toBe(0);
   expect(design.covered).toBe(0);
 });
+
+/* ------------------------------------------------------------------ *
+   Selectors, which turn tokens into rules
+ * ------------------------------------------------------------------ */
+
+test("a step gets a selector when one matches it exactly", async ({ browser }) => {
+  /*
+     Reading a design off a page and then handing back custom properties for
+     somebody to wire up is a strange thing to do when the tool is holding the
+     very elements it read them from. So it returns a selector when it can find
+     one and check it.
+  */
+  const design = await infer(
+    browser,
+    `<!doctype html><meta charset="utf-8"><style>
+      body { margin: 0; font-family: serif }
+      h2 { font-size: 26px; line-height: 32px }
+      .note { font-size: 13px; line-height: 16px }
+      p { font-size: 17px; line-height: 24px }
+    </style>
+    <main>
+      <h2>A heading</h2>
+      <h2>Another heading</h2>
+      <p>A paragraph.</p>
+      <p>Another paragraph.</p>
+      <p class="note">A note.</p>
+      <p class="note">Another note.</p>
+    </main>`
+  );
+
+  const steps = design.families.flatMap((f) => f.steps) as unknown as {
+    name: string;
+    size: number;
+    selector: string | null;
+  }[];
+
+  const h2 = steps.find((s) => s.size === 26)!;
+  const note = steps.find((s) => s.size === 13)!;
+
+  expect(h2.selector, "a tag that is used at only one size is enough").toBe("h2");
+  expect(
+    note.selector,
+    "a tag shared with another size needs the class as well"
+  ).toMatch(/\.note$/);
+});
+
+test("no selector is offered when none matches exactly", async ({ browser }) => {
+  /*
+     The important half. A selector that is nearly right silently styles the
+     wrong blocks, which is worse than no selector at all because the stylesheet
+     looks finished. Two groups of plain paragraphs with nothing to tell them
+     apart: `p` matches both, so neither gets it.
+  */
+  const design = await infer(
+    browser,
+    `<!doctype html><meta charset="utf-8"><style>
+      body { margin: 0; font-family: serif }
+      p { font-size: 17px; line-height: 24px }
+      main > p:nth-child(n+3) { font-size: 21px; line-height: 32px }
+    </style>
+    <main>
+      <p>One.</p><p>Two.</p><p>Three.</p><p>Four.</p>
+    </main>`
+  );
+
+  const steps = design.families.flatMap((f) => f.steps) as unknown as {
+    size: number;
+    selector: string | null;
+  }[];
+
+  expect(steps.length, "both sizes were found").toBe(2);
+  for (const step of steps) {
+    expect(
+      step.selector,
+      `${step.size}px was given the selector ${step.selector}, which also matches the other size`
+    ).toBeNull();
+  }
+});
+
+test("a selector with characters CSS cannot carry raw is escaped", async ({ browser }) => {
+  /* Utility-first class names are full of them, and an unescaped one is not a
+     selector that fails, it is a selector that throws. The sizes are set inline
+     here so the test is about the selector rather than about escaping a rule. */
+  const design = await infer(
+    browser,
+    '<!doctype html><meta charset="utf-8"><style>body { margin: 0; font-family: serif }</style>' +
+      '<main>' +
+      '<p style="font-size:17px;line-height:24px">One.</p>' +
+      '<p style="font-size:17px;line-height:24px">Two.</p>' +
+      '<p class="text-[13px]" style="font-size:13px;line-height:16px">Small.</p>' +
+      '<p class="text-[13px]" style="font-size:13px;line-height:16px">Also small.</p>' +
+      '</main>'
+  );
+
+  const steps = design.families.flatMap((f) => f.steps) as unknown as {
+    size: number;
+    selector: string | null;
+  }[];
+  const small = steps.find((s) => s.size === 13)!;
+
+  expect(small.selector, "a class needing an escape still produces one").not.toBeNull();
+  expect(small.selector!, "and the bracket is escaped").toContain("13px");
+
+  /* And the escaped form is a selector a document accepts rather than throws
+     on, which is the whole reason to escape it. */
+  const page = await browser.newPage();
+  await page.setContent(
+    '<p class="text-[13px]">x</p><p class="text-[13px]">y</p><p>z</p>'
+  );
+  const matches = await page.evaluate(
+    (selector) => document.querySelectorAll(selector).length,
+    small.selector!
+  );
+  await page.close();
+
+  expect(matches, "it matches exactly the two it was built from").toBe(2);
+});
+
+test("the emitted CSS is rules when there are selectors, and tokens when not", async ({
+  browser,
+  browserName,
+}) => {
+  const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  await page.setContent(
+    `<!doctype html><meta charset="utf-8"><style>
+      body { margin: 0; font-family: serif }
+      h2 { font-size: 26px; line-height: 32px }
+      p { font-size: 17px; line-height: 24px }
+    </style>
+    <main><h2>A</h2><h2>B</h2><p>C</p><p>D</p></main>`
+  );
+  await page.evaluate(() => document.fonts?.ready);
+  await page.addScriptTag({ content: FIT_BUNDLE });
+
+  const emitted = await page.evaluate(() => {
+    const api = (window as unknown as {
+      quoinFit: {
+        inferDesign: (o: unknown) => Inferred;
+        fitScale: (f: unknown, o: unknown) => { unavailable: boolean };
+        fittedScaleToCss: (f: unknown) => string;
+      };
+    }).quoinFit;
+    const design = api.inferDesign({ minimumBlocks: 2 });
+    const fitted = api.fitScale(design.families, { pitch: 8 });
+    return { css: api.fittedScaleToCss(fitted), unavailable: fitted.unavailable };
+  });
+  await page.close();
+
+  if (emitted.unavailable) {
+    test.skip(true, `${browserName} has no text-box-trim`);
+    return;
+  }
+
+  /* Both tags are unambiguous here, so both become rules that use their own
+     tokens rather than a blanket `:is(...)` and a wiring exercise. */
+  expect(emitted.css).toMatch(/^h2 \{$/m);
+  expect(emitted.css).toMatch(/^p \{$/m);
+  expect(emitted.css).toContain("font-size: var(--size-h2);");
+  expect(emitted.css).toContain("margin-top: var(--space-p);");
+  expect(emitted.css, "and the blanket rule is not also emitted").not.toContain(
+    ":is(p, h1, h2"
+  );
+});

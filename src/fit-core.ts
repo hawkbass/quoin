@@ -27,6 +27,15 @@ export interface DesignStep {
   /** The space the design wants before a block of this size, in px. */
   space?: number;
   /**
+   * A selector that matches exactly the blocks this step was read from.
+   *
+   * Set by `inferDesign` when it can find one and verify it, so the emitted CSS
+   * can be rules somebody applies rather than tokens somebody wires up. Null
+   * when no simple selector matches the group exactly, because a selector that
+   * is nearly right silently styles the wrong blocks.
+   */
+  selector?: string | null;
+  /**
    * A size that varies with the viewport, as `clamp()` arguments.
    *
    * `size` stays the nominal figure, used for the leading and for reporting.
@@ -74,6 +83,8 @@ export interface FittedStep {
   /** This size's cap height, and how far past a row it falls. */
   cap: number;
   residue: number;
+  /** The selector this step was read from, when there was one. */
+  selector?: string | null;
   /**
    * Cap height per em for this family, when the size is fluid.
    *
@@ -211,6 +222,7 @@ export function fitWith(
         ...(step.fluid
           ? { fluid: step.fluid, capRatio: Math.round((cap / step.size) * 100000) / 100000 }
           : {}),
+        ...(step.selector ? { selector: step.selector } : {}),
       });
     });
 
@@ -334,19 +346,61 @@ export function fittedScaleToCss(fitted: FittedScale): string {
     }
   }
 
-  lines.push(
-    "}",
-    "",
-    "/* Required. Every figure above assumes the box is trimmed to its cap",
-    " * height at the top and its baseline at the bottom. */",
-    ":is(p, h1, h2, h3, h4, h5, h6, li, dt, dd, blockquote, figcaption, td, th) {",
-    "  text-box-trim: trim-both;",
-    "  text-box-edge: cap alphabetic;",
-    "}",
-    "",
-    "/* Set --space-* as margin-top, never margin-bottom: the space closes the",
-    " * cap height of the block it comes before, not the one it follows. */"
-  );
+  lines.push("}");
+
+  /*
+     Rules, when the design came off a real page and a selector could be checked
+     against it. Handing back custom properties and leaving somebody to wire
+     them up is a strange thing to do when the tool is holding the very elements
+     it read them from.
+  */
+  const steps = fitted.families.flatMap((f) => f.steps);
+  const addressable = steps.filter((s) => s.selector);
+
+  if (addressable.length) {
+    lines.push(
+      "",
+      "/* Read off the page, so these are the blocks the figures came from.",
+      " * Space is margin-top, never margin-bottom: it closes the cap height of",
+      " * the block it comes before, not the one it follows. */"
+    );
+    for (const step of addressable) {
+      lines.push(
+        `${step.selector} {`,
+        `  font-size: var(--size-${step.name});`,
+        `  line-height: var(--leading-${step.name});`,
+        `  margin-top: var(--space-${step.name});`,
+        "  margin-bottom: 0;",
+        "  text-box-trim: trim-both;",
+        "  text-box-edge: cap alphabetic;",
+        "}"
+      );
+    }
+
+    const unaddressed = steps.filter((s) => !s.selector);
+    if (unaddressed.length) {
+      lines.push(
+        "",
+        "/* No single selector matched these exactly, so they are tokens only:",
+        ` * ${unaddressed.map((s) => s.name).join(", ")}.`,
+        " * A selector that is nearly right styles the wrong blocks, so none is",
+        " * guessed at. */"
+      );
+    }
+  } else {
+    lines.push(
+      "",
+      "/* Required. Every figure above assumes the box is trimmed to its cap",
+      " * height at the top and its baseline at the bottom. */",
+      ":is(p, h1, h2, h3, h4, h5, h6, li, dt, dd, blockquote, figcaption, td, th) {",
+      "  text-box-trim: trim-both;",
+      "  text-box-edge: cap alphabetic;",
+      "}",
+      "",
+      "/* Set --space-* as margin-top, never margin-bottom: the space closes the",
+      " * cap height of the block it comes before, not the one it follows. */"
+    );
+  }
 
   return lines.join("\n");
 }
