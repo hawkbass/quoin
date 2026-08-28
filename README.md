@@ -660,6 +660,84 @@ spoiled it, so the dialogs stand and the count is reported instead.
 
 ---
 
+## Finding: a grid costs two pixels a size
+
+The corpus says the median site is at 28% on an 8px grid. That describes the
+medium and it does not answer the question this library is now about, which is
+what those sites would have to give up to be on one.
+
+So each site's design was read off its own rendered page and fitted. No size ever
+changes, so the entire cost is leading. 175 of the 212 rendered enough to read.
+
+```
+Category         Sites   leading to move   sizes   in rhythm
+studio           13      11px              5       12.8%
+academic         11      11.3px            7       9.7%
+institution      14      11.61px           6       5.4%
+design-system    29      12.56px           7       27.8%
+type-foundry     17      13.2px            6       6.1%
+documentation    40      17.26px           9       21.3%
+editorial        24      20.75px           10.5    19.3%
+product          26      21.38px           12.5    25.3%
+```
+
+**The median site would move 15.6px of leading across 8 sizes**, which is
+1.95px per size. **The largest single change is 4px**, and that figure is the
+median of the worst change on each site rather than the best case: no site in
+175 would have to move any one leading by more than about four pixels.
+
+### The cost is the number of sizes, not the size of the change
+
+Look at the two ends of it.
+
+```
+Rollup                    0px across 5 sizes,  worst 0
+Sagmeister & Walsh     0.77px across 1 size,   worst 0.77
+Bureau Borsche          0.8px across 1 size,   worst 0.8
+
+Deno                  67.31px across 29 sizes, worst 4
+Bun                   59.52px across 31 sizes, worst 3.84
+Raycast               52.06px across 29 sizes, worst 4
+```
+
+Deno costs sixty-seven pixels and Rollup costs nothing, and the difference is not
+that Deno's typography is worse. Deno has twenty-nine distinct size-and-leading
+combinations on one page and Rollup has five. Every one of Deno's changes is
+under four pixels, the same as everybody else's; there are simply twenty-nine of
+them.
+
+Which reframes what the grid is asking for. It is not asking you to accept type
+that looks different. It is asking how many sizes you actually needed.
+
+Rollup is the one site in the corpus that could be fitted for nothing at all. Its
+leadings are already whole numbers of rows, which means somebody chose them.
+
+### The other obstacle, which this does not remove
+
+The median site is 28.6% on the grid and **18.9% in rhythm**, and the second
+number is the one a type fit does not touch. Fitting sets sizes, leadings and the
+space between blocks. It cannot make a container with thirteen pixels of padding,
+or an image a hundred and thirty-seven pixels tall, into a whole number of rows,
+and everything below one of those is pushed off whatever the type is doing.
+
+**This study does not retrofit anybody's site**, and an earlier version of it
+claimed to. That version walked each page setting `margin-top` on every text
+block, and the numbers it produced were nonsense in both directions: the site
+with the best rhythm in the sample got worse and the one with the worst improved
+by fifty points. A real site's vertical spacing lives on its containers rather
+than on its paragraphs, so overwriting every block's margins measures the
+demolition and not the fit.
+
+Fitting a page is something you do when you build it. That claim is tested
+against pages built from a fit, at nine widths, in `fit.spec.ts` and
+`every-width.spec.ts`. What is measured here is the price of the ticket.
+
+`npm run fittable` reproduces it. 37 sites dropped: 14 render too little text to
+read a design from, 10 refuse injected scripts, 5 did not load, 8 for other
+reasons.
+
+---
+
 ## Finding what to correct
 
 The seater has to know which lines missed, so the same walk is available on its
@@ -1476,6 +1554,7 @@ npm test              # 83 unit tests: the arithmetic, in Node, no browser
 npm run test:browser  # 303 browser tests across Chromium, Firefox and WebKit
 npm run fonts         # download the 24-font corpus
 npm run corpus        # measure 212 live sites and write findings/corpus.md
+npm run fittable      # what a grid would cost each of them, in leading
 npm run wild          # seat five of them and check the exported CSS holds
 npm run build:extension:test && npx playwright test test/browser/extension.spec.ts
 ```

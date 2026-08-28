@@ -1,5 +1,59 @@
 # Changelog
 
+## 1.9.0
+
+What a baseline grid would actually cost the web.
+
+The corpus said the median site is at 28% on an 8px grid. That describes the
+medium and does not answer what those sites would have to give up to be on one.
+This release measures the price.
+
+### Added
+
+**`npm run fittable`.** Reads each corpus site design off its own rendered page,
+fits it, and reports what the type would cost. 175 of 212 rendered enough to
+read.
+
+### Findings
+
+**The median site would move 15.6px of leading across 8 sizes**, which is 1.95px
+per size. No size ever changes, so that is the entire cost. The largest single
+change is 4px, and that is the median of the worst change on each site rather
+than the best case: no site in 175 would have to move any one leading by more
+than about four pixels.
+
+**The cost is the number of sizes, not the size of the change.** Rollup could be
+fitted for nothing at all; Deno would cost 67px. The difference is not that Deno
+typography is worse. Deno has twenty-nine distinct size-and-leading combinations
+on one page and Rollup has five, and every one of Deno changes is under four
+pixels, the same as everybody else. There are simply twenty-nine of them.
+
+Which reframes what the grid asks for. Not that you accept type that looks
+different, but how many sizes you actually needed.
+
+**Studios are cheapest at 11px and products dearest at 21.38px**, and the
+ordering is by how many sizes each carries: 5 against 12.5.
+
+**The median site is 18.9% in rhythm**, and that is the obstacle a type fit does
+not remove. Fitting sets sizes, leadings and spacing. It cannot make a container
+with thirteen pixels of padding into a whole number of rows.
+
+### Changed
+
+**The study stopped claiming to retrofit live sites.** A first version walked
+each page setting margin-top on every text block, and produced nonsense in both
+directions: the site with the best rhythm in the sample got worse and the one
+with the worst improved by fifty points. A real site vertical spacing lives on
+its containers rather than its paragraphs, so overwriting every block margins
+measures the demolition and not the fit. What it reports now is the cost, which
+is a real number.
+
+**Zoom and forced size changes are measured.** A fitted page holds 5/5 at 1x,
+1.25x, 1.5x, 2x and 3x in both engines, because zoom scales the pitch along with
+everything else. A forced minimum font size degrades it: overriding one size in a
+five-block page took it from 5/5 to 3/5, the caption and the block below it, with
+the three above unmoved.
+
 ## 1.8.0
 
 Fluid type on a baseline grid, which this README said was impossible.
