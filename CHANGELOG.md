@@ -1,5 +1,48 @@
 # Changelog
 
+## 1.6.0
+
+Fitting without a browser, which is what makes it usable in a build.
+
+1.5.0 fits a design to a grid and keeps every size the design asked for. It also
+needed Playwright to do it, which rules the tool out of every pipeline that does
+not already have one: a PostCSS step, a Vite plugin, a token build, an agent with
+no display.
+
+### Added
+
+**`fitFromFiles(families, files, options)`, and `quoin fit` uses it whenever the
+design names its font files.** Cap heights come out of the OS/2 table instead of
+a browser. Three families and five sizes in 76ms, against roughly two seconds and
+a browser install for the other route. Measured against real engines across nine
+fonts at five sizes, the two disagreed by at most 0.008px.
+
+**`readFontMetrics(bytes)`.** Units per em, cap height, x height and the
+ascenders, from a TTF, OTF or WOFF. Deliberately small: it reads the table
+directory and three tables, because those are the ones the arithmetic needs, and
+a font parser that grows to handle glyphs is a dependency wearing a hat. WOFF2 is
+refused rather than half-parsed, because it transforms glyf and loca rather than
+merely compressing them.
+
+**`fit-core.ts`**, the arithmetic with nothing in it that needs a browser, so the
+modular equation the whole library now rests on is checked against hand-computed
+cases rather than only through nine viewport widths.
+
+### Findings
+
+**The engines check a declared cap height, and only sometimes.** Three fonts
+manufactured for the earlier metrics study, measured through a trim probe in both
+Chromium and WebKit: a font declaring 0.60 em whose capitals are really 0.70 was
+drawn at 0.60, and a font declaring 1.40 em was drawn at 0.70. The table is the
+authority whenever the table is credible, and an impossible declaration is
+ignored in favour of measuring the glyphs. Both engines behave identically.
+
+That is the whole reason reading a file works, and the whole reason it needs a
+guard. `readFontMetrics` refuses a cap height taller than the em, so
+`fitFromFiles` declines rather than producing a stylesheet wrong by thirty pixels
+at a display size. It cannot catch the credible lie, and should not: the engine
+believes that one too, so a fit built on it is right about the page.
+
 ## 1.5.0
 
 Fitting a design to a grid without changing the design.

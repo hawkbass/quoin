@@ -23,6 +23,23 @@ export {
 } from "./fit.ts";
 
 export {
+  fitFromFiles,
+  readFontMetrics,
+  capHeightAt,
+  FontFileError,
+  type FamilyFile,
+  type FitFromFilesResult,
+  type FontFileMetrics,
+} from "./fit-file.ts";
+
+export {
+  fitWith,
+  spaceFor,
+  leadingFor,
+  type CapSource,
+} from "./fit-core.ts";
+
+export {
   makeBaseline,
   compareToBaseline,
   comparisonToMarkdown,

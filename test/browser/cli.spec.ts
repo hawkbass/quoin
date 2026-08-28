@@ -6,8 +6,8 @@
 import { test, expect } from "@playwright/test";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
-import { readFileSync, rmSync, mkdtempSync } from "node:fs";
-import { join } from "node:path";
+import { readFileSync, rmSync, mkdtempSync, writeFileSync, existsSync } from "node:fs";
+import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 
 const run = promisify(execFile);
@@ -183,4 +183,171 @@ test("a URL that does not resolve fails with a message rather than a stack", asy
   expect(result.code).toBe(2);
   expect(result.stderr).toContain("could not load");
   expect(result.stderr, "no raw stack trace").not.toContain("at async");
+});
+
+/* ------------------------------------------------------------------ *
+   Fitting, which is the only command that need not open a browser
+ * ------------------------------------------------------------------ */
+
+test("@fit a design naming its font files is fitted without a browser", async () => {
+  /*
+     The adoption question. A PostCSS step, a Vite plugin, a token pipeline or an
+     agent with no display can all read an OS/2 table; none of them can be asked
+     to install Playwright first. When every family names a file, nothing here
+     launches anything.
+
+     Run as a Playwright test only because it needs `dist/` to exist, which the
+     unit suite runs before. Nothing in it touches a browser.
+  */
+  const dir = mkdtempSync(join(tmpdir(), "quoin-fit-"));
+  try {
+    const fonts = resolve("test/browser/fixtures/fonts");
+    if (!existsSync(join(fonts, "Lato.ttf"))) {
+      test.skip(true, "no font corpus: run `npm run fonts`");
+      return;
+    }
+
+    const design = {
+      pitch: 8,
+      families: [
+        {
+          role: "body",
+          font: "Lato",
+          file: join(fonts, "Lato.ttf"),
+          steps: [
+            { name: "body", size: 17, ratio: 1.5, space: 24 },
+            { name: "h1", size: 44, leading: 48, space: 56 },
+          ],
+        },
+      ],
+    };
+
+    const path = join(dir, "design.json");
+    writeFileSync(path, JSON.stringify(design));
+
+    const started = Date.now();
+    const result = await quoin(["fit", "--design", path, "--json"]);
+    const took = Date.now() - started;
+
+    expect(result.code, result.stderr).toBe(0);
+
+    const parsed = JSON.parse(result.stdout) as {
+      cost: number;
+      origin: number;
+      families: {
+        steps: { name: string; size: number; leading: number; space: number; cap: number }[];
+      }[];
+      fonts: { font: string; problem: string | null }[];
+      css: string;
+    };
+
+    /* Lato declares 1433 on a 2000 em, so 17px has a cap of 12.1805 and 44px
+       has 31.526. Both engines drew exactly those. */
+    const [body, h1] = parsed.families[0]!.steps;
+    expect(body!.size, "the size is untouched").toBe(17);
+    expect(h1!.size).toBe(44);
+    expect(Math.abs(body!.cap - 12.181)).toBeLessThan(0.01);
+
+    /* The property the whole method rests on. */
+    for (const step of parsed.families[0]!.steps) {
+      const closes = (step.space + step.cap) % 8;
+      expect(
+        Math.min(closes, 8 - closes),
+        `${step.name}: space ${step.space} plus cap ${step.cap} is not a whole row`
+      ).toBeLessThan(0.01);
+    }
+
+    expect(parsed.fonts[0]!.problem, "the file was readable").toBeNull();
+    expect(parsed.css).toContain("text-box-trim: trim-both");
+
+    /* Not a benchmark, a proof that no browser started. Launching Chromium and
+       loading a page has never taken under a second on any machine this has run
+       on; reading two tables out of a file takes a hundredth of that. */
+    expect(took, `took ${took}ms, which is long enough to have started a browser`).toBeLessThan(
+      1500
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("@fit a font with no declared cap height is named, not silently dropped", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "quoin-fit-"));
+  try {
+    const fonts = resolve("test/browser/fixtures/fonts");
+    if (!existsSync(join(fonts, "AwkwardAbsent.ttf"))) {
+      test.skip(true, "no font corpus: run `npm run fonts`");
+      return;
+    }
+
+    const path = join(dir, "design.json");
+    writeFileSync(
+      path,
+      JSON.stringify({
+        pitch: 8,
+        families: [
+          {
+            role: "body",
+            font: "Absent",
+            file: join(fonts, "AwkwardAbsent.ttf"),
+            steps: [{ name: "body", size: 17, ratio: 1.5 }],
+          },
+        ],
+      })
+    );
+
+    const result = await quoin(["fit", "--design", path, "--json"]);
+    const parsed = JSON.parse(result.stdout) as {
+      unavailable: boolean;
+      fonts: { problem: string | null }[];
+    };
+
+    expect(parsed.unavailable, "nothing could be fitted").toBe(true);
+    expect(parsed.fonts[0]!.problem, "and it says why").toMatch(/OS\/2|cap height/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("@fit a font declaring an impossible cap height is refused", async () => {
+  /*
+     AwkwardHuge declares 1.4 em, which cannot be a cap height. Both Chromium and
+     WebKit ignore it and measure the glyphs instead, drawing 0.7, so trusting
+     the file would have produced a fit wrong by thirty pixels at a display size.
+  */
+  const dir = mkdtempSync(join(tmpdir(), "quoin-fit-"));
+  try {
+    const fonts = resolve("test/browser/fixtures/fonts");
+    if (!existsSync(join(fonts, "AwkwardHuge.ttf"))) {
+      test.skip(true, "no font corpus: run `npm run fonts`");
+      return;
+    }
+
+    const path = join(dir, "design.json");
+    writeFileSync(
+      path,
+      JSON.stringify({
+        pitch: 8,
+        families: [
+          {
+            role: "body",
+            font: "Huge",
+            file: join(fonts, "AwkwardHuge.ttf"),
+            steps: [{ name: "body", size: 44, ratio: 1.1 }],
+          },
+        ],
+      })
+    );
+
+    const result = await quoin(["fit", "--design", path, "--json"]);
+    const parsed = JSON.parse(result.stdout) as {
+      unavailable: boolean;
+      fonts: { problem: string | null }[];
+    };
+
+    expect(parsed.unavailable).toBe(true);
+    expect(parsed.fonts[0]!.problem).toMatch(/taller than the em/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });

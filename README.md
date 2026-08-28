@@ -952,6 +952,88 @@ becomes arithmetic, and this is the arithmetic.
 cat design.json | npx quoin fit --design - --json
 ```
 
+### Without a browser at all
+
+Fitting a design is a build-time question, and needing Playwright to answer it
+rules the tool out of every pipeline that does not already have one: a PostCSS
+step, a Vite plugin, a token build, an agent with no display.
+
+Give each family the font file it is set in and nothing launches:
+
+```json
+{
+  "pitch": 8,
+  "families": [
+    { "role": "body", "font": "Lato", "file": "./fonts/Lato.ttf", "steps": [
+      { "name": "body", "size": 17, "ratio": 1.5, "space": 24 }
+    ]}
+  ]
+}
+```
+
+```
+  8px grid, origin 0px, read from font files
+  1 family, 1.5px of leading moved, no size touched
+
+  No browser was used. Cap heights came from each font's OS/2 table,
+  which is the same number the engines use for text-box-edge: cap.
+```
+
+Three families and five sizes in **76ms**, against roughly two seconds and a
+browser install for the other route.
+
+**Why this is allowed.** `text-box-edge: cap` is defined against the OS/2 table's
+`sCapHeight`, so the number in the file is the number the engine will use. Across
+nine fonts at five sizes, the file and the engine disagreed by at most **0.008px**.
+It is the same reasoning that made the cap basis worth having, applied one step
+further back.
+
+**Why it is not always the better answer.** A browser tells you which font
+actually rendered; a file tells you about the file. If the page ends up setting
+something else, because a webfont failed or the stack fell through, a fit from
+the file describes a typeface nobody saw. `fitScale` in a page is still the
+better answer when there is a page. This is the answer when there is not one yet.
+
+**WOFF2 is refused**, rather than half-parsed. It transforms the glyf and loca
+tables rather than merely compressing them, so a partial parser would be wrong
+quietly. TTF, OTF and WOFF are read directly. Point it at the file the WOFF2 was
+built from.
+
+---
+
+## Finding: the engines check the cap height, and only sometimes
+
+Building the file reader turned up a limit on trusting it, and the limit is a
+narrow one worth stating precisely.
+
+Three fonts were manufactured for the earlier metrics study, each lying about
+itself in a different way. Loaded into Chromium and WebKit and measured through a
+trim probe:
+
+| font | declares | engine draws | |
+|---|---|---|---|
+| AwkwardLies | 0.60 em, real capitals 0.70 | **0.60 em** | trusted, though it is false |
+| AwkwardLiesLato | 0.60 em | **0.60 em** | trusted |
+| AwkwardHuge | 1.40 em | **0.70 em** | rejected, glyphs measured instead |
+| Lato | 0.7165 em | 0.7165 em | |
+| EB Garamond | 0.65 em | 0.65 em | |
+
+Both engines behave identically. **The table is the authority whenever the table
+is credible.** A font claiming its capitals are shorter than they are gets
+believed, and `text-box-edge: cap` trims to the claim. A font claiming a cap
+height taller than the em does not, and the engine falls back to measuring.
+
+That is the whole reason reading a file works, and the whole reason it needs a
+guard. `readFontMetrics` refuses a declaration taller than the em and says so, so
+`fitFromFiles` declines rather than producing a stylesheet wrong by thirty pixels
+at a display size. Declining to fit is recoverable; fitting wrongly is not.
+
+It does not, and cannot, catch the credible lie. Nothing can, and nothing should:
+the engine believes it too, so a fit built on it is correct about the page even
+though the font is wrong about itself.
+
+---
+
 ### What it needs, and what it does not do
 
 It needs `text-box-trim`, which is Baseline as of Firefox 154 in August 2026. On
@@ -1161,6 +1243,8 @@ release.
 | `gridNativeScale(font, options)` | solve a type scale that needs no correction |
 | `fitScale(families, options)` | fit a design to the grid, keeping every size it asked for |
 | `inferDesign(options)` | read a design off a rendered page, in the shape `fitScale` takes |
+| `fitFromFiles(families, files, options)` | the same fit from font files, with no browser |
+| `readFontMetrics(bytes)` | units per em and cap height from a TTF, OTF or WOFF |
 | `fittedScaleToCss(fitted)` | that fit as CSS, with the trim it depends on |
 | `scaleToCss(scale)` | that scale as custom properties, with its origin |
 | `uniqueSelector(el)` | a selector verified to match exactly that element, or null |
