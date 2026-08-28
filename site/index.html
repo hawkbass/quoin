@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <title>Quoin: a baseline grid for the web</title>
-<meta name="description" content="It puts a web page on a baseline grid. Seats every line on a rendered page, re-measures each correction, and exports CSS you can ship without the JavaScript. MIT, no dependencies, 24 kB.">
+<meta name="description" content="It puts a web page on a baseline grid. Seats every line on a rendered page, re-measures each correction, and exports CSS you can ship without the JavaScript. MIT, no dependencies, 26 kB.">
 <link rel="canonical" href="https://quoin.dev/">
 
 <meta property="og:type" content="website">
@@ -44,7 +44,7 @@
      ============================================================ -->
 <header class="hero">
   <div class="shell">
-    <p class="kicker">Quoin <span class="ver" data-version>1.1</span> &middot; MIT &middot; no dependencies &middot; 24 kB</p>
+    <p class="kicker">Quoin <span class="ver" data-version>1.1</span> &middot; MIT &middot; no dependencies &middot; 26 kB</p>
 
     <h1>It puts a web page on a <em>baseline grid</em>.</h1>
 
@@ -282,87 +282,115 @@
 <section class="solve">
   <div class="shell">
     <div class="column">
-      <h2>Or don't correct it at all</h2>
+      <h2>Or keep your design and move the grid to it</h2>
       <p class="lede">
-        Everything above is remedial. It measures a page that is off the grid
-        and pushes each block into place. There is a constructive answer, and
-        for new work it makes the corrector unnecessary.
+        Everything above is remedial. It measures a page that is off the grid and
+        pushes each block into place, and what you get back is a list of pixel
+        corrections that describe one arrangement of line breaks. There is a
+        better answer, and it does not ask you to change a single size.
       </p>
       <p>
-        A block's phase, meaning where its first baseline sits inside its own
-        line box, is half the leading plus the ascent. Written out, with
-        <code>A</code> and <code>D</code> as the font's per-em ascent and
-        descent, that is
+        Trim the boxes. Under <code>text-box-trim: trim-both</code> with
+        <code>text-box-edge: cap alphabetic</code>, a block starts at its cap
+        height and ends at its baseline, so the distance from one baseline to the
+        next across a block boundary is
       </p>
-      <p class="formula"><code>phase(S, L) = L/2 + S(A &minus; D)/2</code></p>
+      <p class="formula"><code>(lines &minus; 1) &times; leading + space + cap</code></p>
       <p>
-        <strong>If every size and leading on a page produces the same phase,
-        one grid origin seats the whole page.</strong> The phase is identical,
-        so the correction would be identical, so it folds into where the grid
-        starts. There is nothing left to correct.
+        <code>lines</code> is the only term that changes with the viewport, and
+        it is multiplied by a leading that is already a whole number of rows. So
+        modulo the pitch what is left is <code>space + cap</code>, and
+        <strong>every term in that belongs to one block by itself.</strong>
+        Nothing relates one size to another. The sizes are free.
+      </p>
+      <p>
+        So a design keeps every size it asked for. The leading is snapped to the
+        nearest whole number of rows, which is the one thing that moves and is
+        the same thing InDesign moves when you tick the box. The space before
+        each block is then solved to close that block's own cap height.
       </p>
     </div>
 
     <div class="tablewrap tight">
       <table class="compact">
-        <caption><code>npx quoin scale --font "EB Garamond" --sizes 16,28,44</code></caption>
-        <thead><tr><th scope="col">Wanted</th><th scope="col">Size</th><th scope="col">Leading</th><th scope="col">Ratio</th><th scope="col">Rows</th><th scope="col">Off by</th></tr></thead>
+        <caption><code>npx quoin fit --design design.json</code> &middot; three families, five sizes, nothing moved but the leading</caption>
+        <thead><tr><th scope="col">Name</th><th scope="col">Size</th><th scope="col">Leading</th><th scope="col">Space</th><th scope="col">Cap</th><th scope="col">Moved</th></tr></thead>
         <tbody>
-          <tr><th scope="row">16px</th><td>17.5px</td><td>24px</td><td>1.37</td><td>3</td><td>+1.5</td></tr>
-          <tr><th scope="row">28px</th><td>28.5px</td><td>48px</td><td>1.68</td><td>6</td><td>+0.5</td></tr>
-          <tr><th scope="row">44px</th><td>42px</td><td>56px</td><td>1.33</td><td>7</td><td>&minus;2</td></tr>
+          <tr><th scope="row">h1</th><td>44px</td><td>48px</td><td>57.516px</td><td>30.484</td><td class="ok">exact</td></tr>
+          <tr><th scope="row">h2</th><td>27px</td><td>32px</td><td>29.297px</td><td>18.703</td><td>leading &minus;0.4</td></tr>
+          <tr><th scope="row">body</th><td>17px</td><td>24px</td><td>27.828px</td><td>12.172</td><td>leading &minus;1.5</td></tr>
+          <tr><th scope="row">lead</th><td>21px</td><td>32px</td><td>24.953px</td><td>15.047</td><td>leading +1.55</td></tr>
+          <tr><th scope="row">code</th><td>15px</td><td>24px</td><td>22.422px</td><td>9.578</td><td class="ok">exact</td></tr>
         </tbody>
       </table>
     </div>
 
     <div class="column">
-      <h3>What it costs, and it is a real cost</h3>
+      <h3>It holds at every width, with no media queries</h3>
       <p>
-        Solved sizes sit <code>pitch / (A &minus; D)</code> apart, which is 11
-        to 12 pixels for a text face on an 8px grid. You take the nearest solved
-        size rather than the round number you had in mind, and
-        <strong>two targets closer together than that spacing cannot both be
-        met.</strong> Ask for 16 and 20 and it gives you one and says why.
-      </p>
-      <p>
-        Refusing is the point. The first version of the solver answered 17px and
-        17.5px, which satisfies both requests and is one step and a rounding
-        error.
+        A page built from a fit, with headings that wrap at some widths and not
+        others, a list, a blockquote and paragraphs reflowing from two lines to
+        nine. One stylesheet, nothing to regenerate when the copy changes.
       </p>
     </div>
 
     <div class="tablewrap tight">
       <table class="compact">
-        <caption>The spacing belongs to the typeface, so it differs. Measured at 400px, where the rounding in ascent and descent is under a tenth of a percent.</caption>
-        <thead><tr><th scope="col">Typeface</th><th scope="col">Spacing</th><th scope="col">Phase</th><th scope="col">A solved scale</th></tr></thead>
+        <caption>Measured in Chromium and WebKit. Two controls run beside it, the same page with the design's own spacing and the same page without the trim, and both have to fall below 75%. Both do.</caption>
+        <thead><tr><th scope="col">Width</th><th scope="col">320</th><th scope="col">414</th><th scope="col">600</th><th scope="col">768</th><th scope="col">1024</th><th scope="col">1280</th><th scope="col">1440</th></tr></thead>
         <tbody>
-          <tr><th scope="row">Georgia</th><td>11.47px</td><td>2.0px</td><td>17 / 28 / 40.5</td></tr>
-          <tr><th scope="row">Arial</th><td>11.55px</td><td>2.0px</td><td>16.5 / 28.5 / 41</td></tr>
-          <tr><th scope="row">Times New Roman</th><td>11.90px</td><td>1.5px</td><td>16 / 28 / 40.5</td></tr>
-          <tr><th scope="row">EB Garamond</th><td>11.27px</td><td>2.5px</td><td>17.5 / 28.5 / 42</td></tr>
-          <tr><th scope="row">JetBrains Mono</th><td>11.11px</td><td>2.5px</td><td>17.5 / 28 / 40.5</td></tr>
+          <tr><th scope="row">On the grid</th><td class="ok">9/9</td><td class="ok">9/9</td><td class="ok">9/9</td><td class="ok">9/9</td><td class="ok">9/9</td><td class="ok">9/9</td><td class="ok">9/9</td></tr>
         </tbody>
       </table>
     </div>
 
     <div class="column">
+      <h3>Fluid type as well, which this site used to say was impossible</h3>
+      <p>
+        A <code>clamp()</code> size varies continuously, so its phase does too,
+        and it lands on the grid only where it happens to. That was the argument
+        and it was right as far as it went. What it missed is that the space does
+        not have to be a number: CSS has <code>mod()</code>, so the browser can
+        do at layout time what the fitter does at build time.
+      </p>
+      <p class="formula"><code>margin-top: calc(6 &times; var(--pitch) &minus; mod(var(--cap), var(--pitch)))</code></p>
+      <p>
+        Eleven widths from 320 to 1440: a clamped heading goes from on the grid
+        at <strong>no width</strong> to on the grid at <strong>every one</strong>.
+        The only thing that cannot be fluid is the leading, because it has to be
+        a whole number of rows and there is no continuum of whole numbers.
+      </p>
+    </div>
+
+    <div class="column">
+      <h3>What it costs the rest of the web</h3>
+      <p>
+        Every site in the survey had its design read off its own page and fitted.
+        <strong>The median would move 15.6px of leading across 8 sizes</strong>,
+        which is under two pixels a size, and no size ever changes. The largest
+        single change anywhere in 175 sites is about four pixels.
+      </p>
+      <p>
+        The interesting half is what makes a site expensive. Rollup could be
+        fitted for nothing at all and Deno would cost sixty-seven pixels, and
+        that is not because Deno's typography is worse. Deno sets twenty-nine
+        distinct size-and-leading combinations on one page and Rollup sets five.
+        Every one of Deno's changes is under four pixels, like everybody else's.
+        There are simply twenty-nine of them.
+      </p>
       <p class="pull">
-        This is the trade print has always made. It is why the checkbox in
-        InDesign changes your leading when you tick it.
+        The grid is not asking you to accept type that looks different. It is
+        asking how many sizes you actually needed.
       </p>
       <h3>And it checks the font actually loaded</h3>
       <p>
-        A scale solved against a font that did not render describes a typeface
+        A fit solved against a font that did not render describes a typeface
         nobody is going to set in, and the obvious check does not work:
         <code>ctx.font</code> reads back the family you <em>asked for</em>, so a
         font nobody has installed hands its own name straight back while the
-        measurement comes off the fallback.
-      </p>
-      <p>
-        Solving for Inter on a page that never loaded it produced numbers
-        identical to Times New Roman, down to the last step, with the shorthand
-        saying Inter throughout. It now probes widths against two different
-        fallbacks and warns in the stylesheet rather than quietly lying.
+        measurement comes off the fallback. It probes widths against two
+        different fallbacks and warns in the stylesheet rather than quietly
+        lying.
       </p>
     </div>
   </div>
@@ -453,30 +481,43 @@
 <section class="get">
   <div class="shell">
     <div class="column">
-      <h2>Three ways in</h2>
+      <h2>Six ways in</h2>
       <p>
-        The library has no dependencies. The command line drives a real browser,
-        so it needs Playwright and says so plainly if you have not got it.
+        The library has no dependencies. Fitting from font files needs nothing at
+        all; everything that measures a rendered page drives a real browser, so it
+        needs Playwright and says so plainly if you have not got it.
       </p>
     </div>
 
     <div class="ways">
       <article>
-        <h3>In your build</h3>
-        <pre><code>npm install quoin</code></pre>
+        <h3>Fit a design</h3>
+        <pre><code>npx quoin fit --design design.json</code></pre>
         <p>
-          Import <code>verifyGrid</code>, <code>seatPage</code> and
-          <code>exportCssVerified</code>. ESM, CJS and types.
+          Keeps every size, snaps the leading, solves the spacing. Name each
+          family's font file and it never opens a browser: three families in
+          <strong>76ms</strong>, which is what makes it usable in a build.
         </p>
       </article>
 
       <article>
-        <h3>On any URL</h3>
+        <h3>Fit a site you already have</h3>
+        <pre><code>npx quoin fit --from https://example.com</code></pre>
+        <p>
+          Reads the design off the rendered page, groups every block by what it
+          actually resolved to, and fits that. Most people have a site rather
+          than a design file.
+        </p>
+      </article>
+
+      <article>
+        <h3>Measure and correct</h3>
         <pre><code>npx quoin check https://example.com
+npx quoin rhythm https://example.com
 npx quoin seat https://example.com -o baseline.css</code></pre>
         <p>
-          Runs on your machine, so there is no proxy and no rate limit.
-          <code>--min 90</code> exits non-zero, which makes it a CI gate.
+          For a page that cannot be rebuilt. <code>--min 90</code> exits
+          non-zero, and the GitHub Action gates on a committed baseline.
         </p>
       </article>
 
@@ -490,27 +531,56 @@ quoin.css()</code></pre>
           a button. Both reach pages a hosted service cannot.
         </p>
       </article>
+
+      <article>
+        <h3>In your build</h3>
+        <pre><code>npm install quoin</code></pre>
+        <p>
+          <code>fitScale</code>, <code>inferDesign</code>,
+          <code>verifyGrid</code>, <code>verifyRhythm</code>,
+          <code>seatPage</code>. ESM, CJS and types, no dependencies.
+        </p>
+      </article>
+
+      <article>
+        <h3>For an agent</h3>
+        <pre><code>cat design.json | npx quoin fit --design - --json</code></pre>
+        <p>
+          Takes the shape you already have, whether that is a Figma export or a
+          flat token file. Every error names the entry it is about, because an
+          agent cannot ask a follow-up question.
+        </p>
+      </article>
     </div>
 
+
     <div class="column">
-      <h3>Where a static correction holds, and where it does not</h3>
+      <h3>Where a correction holds, and where a fit is the answer instead</h3>
       <p>
-        This page is seated at build time, once per breakpoint, and the
-        stylesheet is 5&nbsp;kB. Above 1040px it measures 100% at every width,
-        because above 1040px the layout has stopped reflowing: the column is
-        capped and nothing rewraps.
+        This page is corrected at build time, once per breakpoint, and the
+        stylesheet is 5&nbsp;kB. That arrangement predates the fitter and it is
+        the clearest demonstration of why the fitter exists.
       </p>
       <p>
-        Below that it degrades between breakpoints, and no amount of care fixes
-        it. A correction is an absolute number of pixels computed for one
-        layout, and narrow layouts reflow continuously as the viewport moves.
-        More breakpoints narrow the gaps and never close them.
+        Measured properly, a correction survives more than it was given credit
+        for. A stylesheet seated at 1280 and carried to 375 held at
+        <strong>100%</strong> when only the line breaks had moved, because
+        snapping every leading to whole rows means an extra line adds a whole
+        number of rows and nothing shifts. It fell to <strong>0%</strong> when a
+        media query changed a container's padding by thirteen pixels.
       </p>
       <p>
-        So: <strong>static corrections for a layout that has settled, the
-        script for one that has not.</strong> The score in the footer is
-        measured live, which means it tells you which of those you are looking
-        at rather than which one the author hoped for.
+        <strong>Corrections survive reflow and do not survive a layout change</strong>,
+        and every real site has one. This page changes its layout at six ranges
+        rather than merely its line breaks, so a correction taken in one range is
+        describing a different page in the next.
+      </p>
+      <p>
+        A fitted design needs none of it, because there is nothing to carry.
+        Rebuilding this page on a fit is the obvious next thing and is not done
+        yet, so that is a description of this site rather than a recommendation.
+        The score in the footer is measured live, which means it tells you what
+        you are actually looking at rather than what the author hoped for.
       </p>
 
       <h3>Why an extension and not a paste-your-URL box</h3>
