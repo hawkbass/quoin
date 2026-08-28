@@ -904,6 +904,37 @@ fitter's own numbers proves the arithmetic is self-consistent and nothing else.
 The identical page with the spacing left as the design wrote it, and the identical
 page without the trim, both have to fall below 75%. Both do.
 
+### Point it at a site you already have
+
+Most people have a site rather than a design file, and the question they want
+answered is what to change about the site they have.
+
+```bash
+npx quoin fit --from https://example.com
+```
+
+It walks the rendered page, groups every block of text by the family, size and
+leading it actually resolved to, and fits that. Run against quoin.dev's own
+build:
+
+```
+  236 text blocks, 233 covered by 2 families
+  3 one-off combinations left out, which is usually
+  a widget or a third party rather than the design
+  nothing had to move
+```
+
+It reads what the browser resolved rather than what the stylesheet asked for, for
+the same reason everything else here does. A page also has a long tail of sizes
+used once, usually a widget or a third party, so anything appearing fewer than
+twice is left out of the design and listed in `rare` instead, which makes it a
+decision rather than a silent omission.
+
+Code is not in it. `pre` and `code` are excluded from the walk, because
+preformatted text is not prose and measuring it as though it were fills a report
+with things nobody was ever going to seat. A design that needs its monospace
+fitted should pass it explicitly with `--design`.
+
 ### For agents
 
 `quoin fit --design - --json` reads a design on stdin and writes the whole result
@@ -1129,6 +1160,7 @@ release.
 | `seatingPadding(within, blockTop, grid)` | top and bottom padding that sum to one grid row |
 | `gridNativeScale(font, options)` | solve a type scale that needs no correction |
 | `fitScale(families, options)` | fit a design to the grid, keeping every size it asked for |
+| `inferDesign(options)` | read a design off a rendered page, in the shape `fitScale` takes |
 | `fittedScaleToCss(fitted)` | that fit as CSS, with the trim it depends on |
 | `scaleToCss(scale)` | that scale as custom properties, with its origin |
 | `uniqueSelector(el)` | a selector verified to match exactly that element, or null |

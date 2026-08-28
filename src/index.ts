@@ -11,6 +11,9 @@ export * from "./page.ts";
 
 export {
   fitScale,
+  inferDesign,
+  type InferOptions,
+  type InferredDesign,
   fittedScaleToCss,
   type FamilyRequest,
   type FittedFamily,

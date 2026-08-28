@@ -14,7 +14,7 @@
    than a Node module, and the CLI injects it for `quoin fit`. */
 
 import * as library from "./page.ts";
-import { fitScale, fittedScaleToCss } from "./fit.ts";
+import { fitScale, fittedScaleToCss, inferDesign } from "./fit.ts";
 
 const global = globalThis as unknown as Record<string, unknown>;
-global.quoinFit = { ...library, fitScale, fittedScaleToCss };
+global.quoinFit = { ...library, fitScale, fittedScaleToCss, inferDesign };

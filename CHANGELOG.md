@@ -47,6 +47,15 @@ and it is a build-time question that happens to need a browser for its metrics,
 so it does not belong in the bundle whose whole constraint is being small enough
 to paste into a console.
 
+**`inferDesign(options)` and `quoin fit --from <url>`.** Most people have a site
+rather than a design file, and the question they want answered is what to change
+about the site they have. It walks a rendered page, groups every block of text by
+the family, size and leading it actually resolved to, and fits that. Run against
+quoin.dev, it read 233 of 236 text blocks into two families and thirteen sizes,
+with nothing needing to move. Combinations used fewer than twice are left out and
+listed in `rare`, so the long tail of one-off widget sizes is a decision rather
+than a silent omission.
+
 ### Fixed
 
 **Quoin measured trimmed pages wrongly, in two places.** `text-box-trim` reached

@@ -40,6 +40,7 @@ Options
   --sizes <a,b,c>            the sizes you want              (scale only)
   --basis <line-box|cap>     phase from the line box, or from a trimmed cap
   --design <file|->          a design as JSON, for fit. Use - for stdin
+  --from <url>               read the design off a page instead, for fit
   --near <px>                how far from those is acceptable (default 3)
   --json                     machine-readable output
   -h, --help                 this
@@ -77,6 +78,8 @@ interface Options {
   json: boolean;
   /** Path to a design description for `fit`, or "-" for stdin. */
   design: string | null;
+  /** A URL to read the design off, instead of a file. */
+  from: string | null;
 }
 
 function fail(message: string): never {
@@ -102,6 +105,7 @@ function parseArgs(argv: string[]): { command: string; url: string | null; optio
     important: false,
     json: false,
     design: null,
+    from: null,
   };
 
   const positional: string[] = [];
@@ -170,6 +174,7 @@ function parseArgs(argv: string[]): { command: string; url: string | null; optio
       case "--font": options.font = next(); break;
       case "--near": options.near = number(); break;
       case "--design": options.design = next(); break;
+      case "--from": options.from = next(); break;
       case "--sizes": {
         const raw = next();
         const parsed = raw.split(",").map((v) => Number.parseFloat(v.trim()));
@@ -293,6 +298,12 @@ interface InPage {
 }
 
 interface InPageFit {
+  inferDesign: (options: unknown) => {
+    families: { role: string; font: string; steps: { name?: string; size: number; leading?: number; space?: number }[] }[];
+    rare: { font: string; size: number; leading: number; blocks: number }[];
+    blocks: number;
+    covered: number;
+  };
   fitScale: (families: unknown, options: unknown) => {
     grid: { pitch: number; tolerance: number; origin: number };
     origin: number;
@@ -578,7 +589,102 @@ switch (command) {
        spacing, the shared phase, and a per-size record of the deviation, so the
        decision to accept a 0.4px shift is made by whoever has to live with it.
     */
-    const source = options.design ?? fail("fit needs --design <file|->");
+    if (!options.design && !options.from) {
+      fail("fit needs --design <file|-> or --from <url>");
+    }
+    if (options.design && options.from) {
+      fail("fit takes --design or --from, not both");
+    }
+
+    /*
+       `--from` reads the design off a page that already exists, which is the
+       case most people are in: they have a site rather than a design file, and
+       the question they want answered is what to change about the site they
+       have. It reads what the browser resolved rather than what the stylesheet
+       asked for, because between those two sit an inherited line-height, a
+       reset, a webfont that failed, and a heading with a clamp() that resolved
+       to something nobody intended.
+    */
+    if (options.from) {
+      const { browser, page } = await open(options.from, options);
+      await page.addScriptTag({ content: bundle("quoin.fit.js") });
+
+      const read = await page.evaluate(
+        ({ ignore, pitch, tolerance }) => {
+          const design = window.quoinFit.inferDesign({ ignore, minimumBlocks: 2 });
+          const result = window.quoinFit.fitScale(design.families, { pitch, tolerance });
+          return {
+            design,
+            result,
+            css: window.quoinFit.fittedScaleToCss(result),
+          };
+        },
+        {
+          ignore: options.ignore,
+          pitch: options.pitch,
+          tolerance: options.tolerance,
+        }
+      );
+
+      await browser.close();
+
+      if (options.out) writeFileSync(options.out, read.css, "utf8");
+
+      if (options.json) {
+        console.log(
+          JSON.stringify({ read: read.design, ...read.result, css: read.css }, null, 2)
+        );
+        break;
+      }
+
+      if (read.result.unavailable) {
+        fail(
+          "fitting reads each size's cap height through a text-box-trim probe,\n" +
+            "  and this browser does not support it. Chrome 133, Safari 18.2\n" +
+            "  or Firefox 154."
+        );
+      }
+
+      console.log(`\n  ${options.from}`);
+      console.log(
+        `  ${read.design.blocks} text blocks, ${read.design.covered} covered by ` +
+          `${read.design.families.length} ` +
+          `${read.design.families.length === 1 ? "family" : "families"}`
+      );
+      if (read.design.rare.length) {
+        console.log(
+          `  ${read.design.rare.length} one-off combinations left out, which is usually` +
+            "\n  a widget or a third party rather than the design"
+        );
+      }
+      console.log(
+        `  ${read.result.cost === 0 ? "nothing" : read.result.cost + "px of leading"} had to move`
+      );
+
+      for (const family of read.result.families) {
+        console.log(`\n  ${family.role}  ${family.font}`);
+        console.log("    name          size      leading   space     was");
+        for (const step of family.steps) {
+          console.log(
+            "    " + step.name.padEnd(14) +
+              String(step.size + "px").padEnd(10) +
+              String(step.leading + "px").padEnd(10) +
+              String(step.space + "px").padEnd(10) +
+              (step.leadingMoved === 0 ? "exact" : `leading ${step.leadingWas}px`)
+          );
+        }
+      }
+
+      console.log(
+        "\n  Every size is the size the page already sets. Apply the spaces as" +
+          "\n  margin-top, add the trim, and it is on the grid at every width."
+      );
+      if (options.out) console.log(`\n  CSS written to ${options.out}\n`);
+      else console.log("\n" + read.css + "\n");
+      break;
+    }
+
+    const source = options.design as string;
     let design: {
       pitch?: number;
       tolerance?: number;

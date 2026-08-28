@@ -64,6 +64,7 @@
    to 24 is acceptable and say so rather than guess. */
 
 import { gridConfig, type GridConfig } from "./grid.ts";
+import { textBlocks } from "./verify.ts";
 import {
   capHeightFromFontTable,
   canReadFontTableCapHeight,
@@ -335,4 +336,142 @@ export function fittedScaleToCss(fitted: FittedScale): string {
   );
 
   return lines.join("\n");
+}
+
+/* ------------------------------------------------------------------ *
+   Reading a design off a page that already exists
+ * ------------------------------------------------------------------ */
+
+export interface InferOptions {
+  root?: Element;
+  ignore?: string[];
+  crossShadow?: boolean;
+  /**
+   * Ignore any combination used by fewer than this many blocks.
+   *
+   * A page has a long tail of one-off sizes, usually a widget or a third party,
+   * and fitting them produces a stylesheet with forty entries nobody asked for.
+   * The tail is still reported, in `rare`, so it is a decision rather than a
+   * silent omission.
+   */
+  minimumBlocks?: number;
+}
+
+export interface InferredDesign {
+  families: FamilyRequest[];
+  /**
+   * Combinations that appeared too few times to be part of the design, with the
+   * count that disqualified each one.
+   */
+  rare: { font: string; size: number; leading: number; blocks: number }[];
+  /** Text blocks the walk found, and how many are covered by `families`. */
+  blocks: number;
+  covered: number;
+}
+
+/**
+ * Read a design off a rendered page.
+ *
+ * Most people have a site rather than a design file, and the question they want
+ * answered is what to change about the site they have. This walks the page,
+ * groups every block of text by the family, size and leading it actually
+ * resolved to, and hands back the result in the shape `fitScale` takes.
+ *
+ * It reads what the browser resolved rather than what the stylesheet asked for,
+ * which is the same reason everything else here runs in the page: between the
+ * two sit an inherited line-height, a component library's reset, a webfont that
+ * failed, and a heading with a `clamp()` that resolved to something the type
+ * scale never anticipated.
+ */
+export function inferDesign(options: InferOptions = {}): InferredDesign {
+  const root = options.root ?? document.body;
+  const minimum = options.minimumBlocks ?? 2;
+
+  const blocks = textBlocks(root, options.ignore ?? [], {
+    crossShadow: options.crossShadow,
+  });
+
+  interface Group {
+    font: string;
+    size: number;
+    leading: number;
+    blocks: number;
+    tags: Map<string, number>;
+  }
+
+  const groups = new Map<string, Group>();
+
+  for (const element of blocks) {
+    const style = getComputedStyle(element);
+    const size = Math.round(Number.parseFloat(style.fontSize) * 100) / 100;
+    const leading =
+      Math.round((Number.parseFloat(style.lineHeight) || size * 1.2) * 100) / 100;
+    if (!Number.isFinite(size) || size <= 0) continue;
+
+    const font = style.fontFamily;
+    const key = `${font}|${size}|${leading}`;
+    let group = groups.get(key);
+    if (!group) {
+      group = { font, size, leading, blocks: 0, tags: new Map() };
+      groups.set(key, group);
+    }
+    group.blocks++;
+    const tag = element.tagName.toLowerCase();
+    group.tags.set(tag, (group.tags.get(tag) ?? 0) + 1);
+  }
+
+  const kept = [...groups.values()].filter((g) => g.blocks >= minimum);
+  const rare = [...groups.values()]
+    .filter((g) => g.blocks < minimum)
+    .map((g) => ({ font: g.font, size: g.size, leading: g.leading, blocks: g.blocks }))
+    .sort((a, b) => b.blocks - a.blocks);
+
+  /* One family per resolved stack, its steps ordered by size. A page setting
+     three sizes in one family is one family with three steps, which is what a
+     design system would call it. */
+  const byFont = new Map<string, Group[]>();
+  for (const group of kept) {
+    const existing = byFont.get(group.font);
+    if (existing) existing.push(group);
+    else byFont.set(group.font, [group]);
+  }
+
+  const used = new Set<string>();
+  const families: FamilyRequest[] = [...byFont.entries()]
+    /* Commonest family first, so the one carrying the page's reading is the one
+       a person looks at first. */
+    .sort((a, b) => sumBlocks(b[1]) - sumBlocks(a[1]))
+    .map(([font, members], index) => ({
+      role: index === 0 ? "body" : `family-${index + 1}`,
+      font,
+      steps: members
+        .sort((a, b) => a.size - b.size)
+        .map((group) => {
+          /* Named for whatever tag uses it most, which is how somebody reading
+             the output will recognise it. Deduped, because two sizes can both
+             be mostly paragraphs. */
+          const commonest = [...group.tags.entries()].sort((a, b) => b[1] - a[1])[0];
+          let name = commonest ? commonest[0] : `s${group.size}`;
+          if (used.has(name)) name = `${name}-${group.size}`;
+          used.add(name);
+
+          return {
+            name,
+            size: group.size,
+            leading: group.leading,
+            space: group.leading,
+          };
+        }),
+    }));
+
+  return {
+    families,
+    rare,
+    blocks: blocks.length,
+    covered: kept.reduce((sum, g) => sum + g.blocks, 0),
+  };
+}
+
+function sumBlocks(groups: { blocks: number }[]): number {
+  return groups.reduce((sum, g) => sum + g.blocks, 0);
 }
