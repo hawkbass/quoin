@@ -200,6 +200,44 @@ function probe(): HTMLElement {
  * takes only a font. It sets a generous leading of its own so there is
  * something to trim.
  */
+/**
+ * The height of a trimmed box, for any `text-box-edge`.
+ *
+ * `capHeightFromFontTable` is this with the edge fixed at `cap alphabetic`,
+ * which is the right default and is a Latin assumption. Cap height is a Latin
+ * concept: a Japanese typesetter grids to the ideographic em, and Devanagari
+ * hangs from a headline rather than sitting on a baseline.
+ *
+ * The measurement itself does not care. A trimmed box's height comes from the
+ * font's declared metrics rather than from the glyphs in it, so Japanese text in
+ * a font trims to exactly the same height as Latin text in the same font,
+ * measured at 0.7330 em for both. What changes with the edge is which metric is
+ * used, and that is a typographic decision rather than a technical one.
+ *
+ * Null where `text-box-trim` is unsupported, or where the engine does not accept
+ * this edge.
+ */
+export function boxHeightForEdge(font: string, edge: string): number | null {
+  if (!canReadFontTableCapHeight()) return null;
+
+  const el = probe();
+  el.style.font = font;
+  el.style.lineHeight = "3";
+
+  el.style.textBoxTrim = "trim-both";
+  el.style.textBoxEdge = edge;
+  /* An edge the engine will not parse leaves the property at its previous value,
+     which would silently measure the wrong box. */
+  const took = el.style.textBoxEdge !== "";
+  const height = took ? el.getBoundingClientRect().height : 0;
+
+  el.style.textBoxTrim = "none";
+  el.style.textBoxEdge = "";
+  el.style.lineHeight = "";
+
+  return Number.isFinite(height) && height > 0 ? height : null;
+}
+
 export function capHeightFromFontTable(font: string): number | null {
   if (!canReadFontTableCapHeight()) return null;
 

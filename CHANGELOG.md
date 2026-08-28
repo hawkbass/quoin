@@ -1,5 +1,55 @@
 # Changelog
 
+## 1.11.0
+
+Text that is not Latin.
+
+Cap height is a Latin idea and everything here defaulted to it without saying
+so, which is the kind of assumption worth going and checking rather than
+defending.
+
+### Added
+
+**`boxHeightForEdge(font, edge)`, and an `edge` option on the fitter and the
+CLI.** Any `text-box-edge`, measured rather than assumed. An edge the engine
+refuses comes back as null and nothing is fitted.
+
+`fitFromFiles` supports only `cap alphabetic` and refuses the rest with a
+message, because the OS/2 table declares a cap height and does not declare the
+others.
+
+### Findings
+
+**Fitting works for every script, and the reason is not the obvious one.** A
+trimmed box is a property of the font declared metrics rather than of the glyphs
+inside it, so Japanese text in Noto Sans JP trims to exactly the same height as
+Latin text in the same face, and so does a line mixing the two. Measured across
+Japanese, Arabic, Devanagari, Thai and Latin, each in the face it is for: 15/15
+at five widths, on two different edges, in both engines.
+
+**There is no working ideographic edge on the web today.** Chromium refuses every
+ideographic form of text-box-edge outright. WebKit accepts them and returns the
+same box as text, which is to say it has not implemented the metric either. The
+engines also disagree about the single-keyword forms: cap on its own is a parse
+error in one and 0.8781 em in the other.
+
+So a Japanese page can be gridded, and not to the ideographic em a Japanese
+typesetter would use. That is the platform rather than this library, and it is
+worth writing down.
+
+### Fixed
+
+**An earlier note in this repository reported 1.448 em for the ideographic edge
+as a real measurement.** It was the untrimmed box: the property had been
+rejected, the element kept its previous value, and the probe measured that and
+reported it confidently. `boxHeightForEdge` now checks the declaration took
+before trusting the number, which is why the mistake is in this changelog rather
+than still in the README.
+
+**The action validated its URLs after launching Chromium**, so a misconfigured
+workflow cost a browser start to reject a string, and put a browser in the
+failure path of a check about a string.
+
 ## 1.10.0
 
 A PostCSS plugin and a Vite plugin, so a build can do this without being asked

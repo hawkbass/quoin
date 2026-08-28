@@ -73,8 +73,24 @@ export interface FitFromFilesResult extends FittedScale {
 export function fitFromFiles(
   families: readonly FamilyRequest[],
   files: readonly FamilyFile[],
-  options: Partial<GridConfig> & { inflate?: Inflate } = {}
+  options: Partial<GridConfig> & { inflate?: Inflate; edge?: string } = {}
 ): FitFromFilesResult {
+  /*
+     Only `cap alphabetic` here, and refused rather than approximated otherwise.
+
+     The file gives `sCapHeight`, which is exactly the box `cap alphabetic`
+     produces. Any other edge is a different metric: the ideographic em is not in
+     OS/2 in a form this reads, and guessing one from the ascender would produce a
+     stylesheet that is confidently wrong for a whole script.
+  */
+  if (options.edge && options.edge !== "cap alphabetic") {
+    throw new Error(
+      `quoin: fitting from font files only supports text-box-edge "cap alphabetic", ` +
+        `not "${options.edge}". The file declares a cap height and nothing else this ` +
+        "can use, so a different edge has to be measured in a browser."
+    );
+  }
+
   const parsed = new Map<string, FontFileMetrics>();
   const problems = new Map<string, string>();
 

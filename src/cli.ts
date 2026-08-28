@@ -40,6 +40,7 @@ Options
   --sizes <a,b,c>            the sizes you want              (scale only)
   --basis <line-box|cap>     phase from the line box, or from a trimmed cap
   --design <file|->          a design as JSON, for fit. Use - for stdin
+  --edge <text-box-edge>     default "cap alphabetic"; try ideographic for CJK
   --from <url>               read the design off a page instead, for fit
   --near <px>                how far from those is acceptable (default 3)
   --json                     machine-readable output
@@ -80,6 +81,9 @@ interface Options {
   design: string | null;
   /** A URL to read the design off, instead of a file. */
   from: string | null;
+  /* The `text-box-edge` to fit against. Cap height is a Latin idea, and a
+     Japanese page grids to the ideographic em instead. */
+  edge: string | null;
 }
 
 function fail(message: string): never {
@@ -106,6 +110,7 @@ function parseArgs(argv: string[]): { command: string; url: string | null; optio
     json: false,
     design: null,
     from: null,
+    edge: null,
   };
 
   const positional: string[] = [];
@@ -175,6 +180,7 @@ function parseArgs(argv: string[]): { command: string; url: string | null; optio
       case "--near": options.near = number(); break;
       case "--design": options.design = next(); break;
       case "--from": options.from = next(); break;
+      case "--edge": options.edge = next(); break;
       case "--sizes": {
         const raw = next();
         const parsed = raw.split(",").map((v) => Number.parseFloat(v.trim()));
@@ -610,9 +616,9 @@ switch (command) {
       await page.addScriptTag({ content: bundle("quoin.fit.js") });
 
       const read = await page.evaluate(
-        ({ ignore, pitch, tolerance }) => {
+        ({ ignore, pitch, tolerance, edge }) => {
           const design = window.quoinFit.inferDesign({ ignore, minimumBlocks: 2 });
-          const result = window.quoinFit.fitScale(design.families, { pitch, tolerance });
+          const result = window.quoinFit.fitScale(design.families, { pitch, tolerance, edge });
           return {
             design,
             result,
@@ -623,6 +629,7 @@ switch (command) {
           ignore: options.ignore,
           pitch: options.pitch,
           tolerance: options.tolerance,
+          edge: options.edge ?? "cap alphabetic",
         }
       );
 
@@ -856,6 +863,7 @@ switch (command) {
         grid: {
           pitch: design.pitch ?? options.pitch,
           tolerance: design.tolerance ?? options.tolerance,
+          edge: options.edge ?? (design as { edge?: string }).edge ?? "cap alphabetic",
         },
       }
     );

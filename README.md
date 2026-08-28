@@ -660,6 +660,64 @@ spoiled it, so the dialogs stand and the count is reported instead.
 
 ---
 
+## Finding: this works outside Latin, and the reason is not the obvious one
+
+Cap height is a Latin idea. Everything here defaults to
+`text-box-edge: cap alphabetic`, which was an assumption the tool made without
+ever saying so, and the obvious worry is that a Japanese or Devanagari page is
+being gridded to a metric that means nothing in it.
+
+**It works, and it works because a trimmed box is a property of the font rather
+than of the glyphs in it.** Japanese text in Noto Sans JP trims to exactly the
+same height as Latin text in the same face, 0.7330 em for both, and so does a
+line mixing the two. The engines lay all of them out against the alphabetic
+baseline in horizontal writing, so a grid built on it is a real grid whatever the
+script.
+
+Measured across five scripts, each set in the face it is for, at two sizes:
+
+```
+Japanese, Arabic, Devanagari, Thai and Latin
+cap alphabetic:  360px 15/15  480px 15/15  640px 15/15  900px 15/15  1280px 15/15
+ex alphabetic:   360px 15/15  480px 15/15  640px 15/15  900px 15/15  1280px 15/15
+```
+
+### The edge is an option now, and a smaller one than it should be
+
+A Japanese typesetter grids to the ideographic em rather than to a cap height, so
+`text-box-edge` ought to be the answer. It is not, yet:
+
+| edge | Chromium | WebKit |
+|---|---|---|
+| `cap alphabetic` | 0.6621 | 0.6621 |
+| `ex alphabetic` | 0.4473 | 0.4473 |
+| `text alphabetic` | 0.8910 | 0.8910 |
+| `cap` | refused | 0.8781 |
+| `ideographic ideographic` | **refused** | 1.1070, the same as `text` |
+
+**There is no working ideographic edge on the web today.** Chromium refuses every
+ideographic form outright; WebKit accepts them and hands back the plain text box,
+which is to say it has not implemented the metric either. The engines also
+disagree about the single-keyword forms: `cap` on its own is a parse error in one
+and 0.8781 em in the other.
+
+So `--edge` takes any of them and the measurement is checked rather than assumed.
+An edge an engine refuses comes back as `null`, and nothing is fitted, rather
+than a number being produced from the wrong box.
+
+That last part is not defensive programming for its own sake. An earlier draft of
+this section reported 1.448 em for the ideographic edge as though it were a real
+measurement. It was the untrimmed box: the property had been rejected, the
+element kept its previous value, and the probe measured that instead and reported
+it confidently. The check is there because the mistake had already been made
+once.
+
+`fitFromFiles` only does `cap alphabetic` and refuses anything else with a
+message, because the OS/2 table declares a cap height and does not declare the
+others.
+
+---
+
 ## Finding: a grid costs two pixels a size
 
 The corpus says the median site is at 28% on an 8px grid. That describes the
@@ -1567,6 +1625,7 @@ release.
 | `inferDesign(options)` | read a design off a rendered page, in the shape `fitScale` takes |
 | `fitFromFiles(families, files, options)` | the same fit from font files, with no browser |
 | `readFontMetrics(bytes)` | units per em and cap height from a TTF, OTF or WOFF |
+| `boxHeightForEdge(font, edge)` | the height of a trimmed box for any `text-box-edge`, or null |
 | `normaliseDesign(input)` | a design in whatever shape you have it, in the shape `fitScale` wants |
 | `fittedScaleToCss(fitted)` | that fit as CSS, with the trim it depends on |
 | `scaleToCss(scale)` | that scale as custom properties, with its origin |
@@ -1635,7 +1694,7 @@ Then `quoin.check()` in the console.
 
 ```bash
 npm test              # 180 unit tests: the arithmetic and the plugins, in Node
-npm run test:browser  # 330 browser tests across Chromium, Firefox and WebKit
+npm run test:browser  # 340 browser tests across Chromium, Firefox and WebKit
 npm run test:linux    # the browser suite in the image CI uses, needs Docker
 npm run fonts         # download the 24-font corpus
 npm run corpus        # measure 212 live sites and write findings/corpus.md

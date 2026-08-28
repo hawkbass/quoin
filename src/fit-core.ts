@@ -107,6 +107,15 @@ export interface FittedFamily {
 export interface FittedScale {
   grid: GridConfig;
   /**
+   * The `text-box-edge` every figure was measured against.
+   *
+   * `cap alphabetic` by default, which is a Latin assumption and the right
+   * default for Latin text. A Japanese page grids to the ideographic em instead,
+   * and the emitted CSS has to carry whichever was used or the boxes are not the
+   * boxes the spacing was solved for.
+   */
+  edge: string;
+  /**
    * Where the grid starts, in px.
    *
    * Zero, and that is a result rather than a default. Every block carries a
@@ -183,10 +192,11 @@ export function leadingFor(step: DesignStep, pitch: number): { leading: number; 
 export function fitWith(
   families: readonly FamilyRequest[],
   source: CapSource,
-  options: Partial<GridConfig> = {}
+  options: Partial<GridConfig> & { edge?: string } = {}
 ): FittedScale {
   const grid = gridConfig(options);
   const pitch = grid.pitch;
+  const edge = options.edge ?? "cap alphabetic";
 
   let cost = 0;
   let anyCap = false;
@@ -236,6 +246,7 @@ export function fitWith(
 
   return {
     grid,
+    edge,
     origin: 0,
     families: fitted,
     cost: Math.round(cost * 1000) / 1000,
@@ -275,6 +286,15 @@ export function fittedScaleToCss(fitted: FittedScale): string {
     " * lines a block wraps to, and that is multiplied by a leading which is",
     " * already a whole number of rows, so it contributes nothing to the grid.",
   ];
+
+  if (fitted.edge !== "cap alphabetic") {
+    lines.push(
+      " *",
+      ` * Measured against text-box-edge: ${fitted.edge}, not the default cap`,
+      " * alphabetic. Cap height is a Latin idea and this design is not being set",
+      " * in Latin, so the boxes below are the ones that edge produces."
+    );
+  }
 
   const moved = fitted.families.flatMap((f) =>
     f.steps
@@ -372,7 +392,7 @@ export function fittedScaleToCss(fitted: FittedScale): string {
         `  margin-top: var(--space-${step.name});`,
         "  margin-bottom: 0;",
         "  text-box-trim: trim-both;",
-        "  text-box-edge: cap alphabetic;",
+        `  text-box-edge: ${fitted.edge};`,
         "}"
       );
     }
@@ -394,7 +414,7 @@ export function fittedScaleToCss(fitted: FittedScale): string {
       " * height at the top and its baseline at the bottom. */",
       ":is(p, h1, h2, h3, h4, h5, h6, li, dt, dd, blockquote, figcaption, td, th) {",
       "  text-box-trim: trim-both;",
-      "  text-box-edge: cap alphabetic;",
+      `  text-box-edge: ${fitted.edge};`,
       "}",
       "",
       "/* Set --space-* as margin-top, never margin-bottom: the space closes the",

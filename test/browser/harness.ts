@@ -77,6 +77,7 @@ export interface InPage {
   measureFontWithCap: (font: string, size?: number) => Record<string, number | string>;
   capOvershootFromFontTable: (font: string, lh: number) => number | null;
   capHeightFromFontTable: (font: string) => number | null;
+  boxHeightForEdge: (font: string, edge: string) => number | null;
   canReadFontTableCapHeight: () => boolean;
   resetMeasurementCache: () => void;
   capHeightIsRasterised: (family?: string) => boolean;

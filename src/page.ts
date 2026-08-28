@@ -17,6 +17,7 @@ export {
   capOvershoot,
   capOvershootFromFontTable,
   capHeightFromFontTable,
+  boxHeightForEdge,
   canReadFontTableCapHeight,
   capHeightIsRasterised,
   fontIsAvailable,

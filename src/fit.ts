@@ -18,7 +18,7 @@
 import type { GridConfig } from "./grid.ts";
 import { textBlocks } from "./verify.ts";
 import {
-  capHeightFromFontTable,
+  boxHeightForEdge,
   canReadFontTableCapHeight,
   fontIsAvailable,
 } from "./metrics.ts";
@@ -51,14 +51,14 @@ const GENERIC =
  * to anything scaled from a measurement taken elsewhere, which would be a
  * prediction of it rather than the thing itself.
  */
-export function pageCapSource(): CapSource {
+export function pageCapSource(edge = "cap alphabetic"): CapSource {
   const cache = new Map<string, number | null>();
   const available = new Map<string, boolean>();
 
   return {
     capHeight(font, size) {
       const key = `${size}|${font}`;
-      if (!cache.has(key)) cache.set(key, capHeightFromFontTable(`${size}px ${font}`));
+      if (!cache.has(key)) cache.set(key, boxHeightForEdge(`${size}px ${font}`, edge));
       return cache.get(key) ?? null;
     },
     resolved(font) {
@@ -88,11 +88,12 @@ export function pageCapSource(): CapSource {
  */
 export function fitScale(
   families: readonly FamilyRequest[],
-  options: Partial<GridConfig> = {}
+  options: Partial<GridConfig> & { edge?: string } = {}
 ): FittedScale {
   if (!canReadFontTableCapHeight()) {
     return {
       grid: { pitch: options.pitch ?? 8, tolerance: options.tolerance ?? 0.5, origin: 0 },
+      edge: options.edge ?? "cap alphabetic",
       origin: 0,
       families: families.map((f) => ({
         role: f.role,
@@ -105,7 +106,7 @@ export function fitScale(
     };
   }
 
-  return fitWith(families, pageCapSource(), options);
+  return fitWith(families, pageCapSource(options.edge), options);
 }
 /* ------------------------------------------------------------------ *
    Reading a design off a page that already exists
