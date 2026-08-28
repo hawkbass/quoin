@@ -43,6 +43,15 @@ export type RhythmCause =
   | "leading"
   | "contents"
   | "replaced"
+  /**
+   * A cell in a table whose borders are collapsed.
+   *
+   * Not a cause so much as an admission. Under `border-collapse: collapse` a
+   * border sits on the edge between two cells, half inside each, so a box height
+   * stops being border plus padding plus contents and no attribution below is
+   * reliable. Saying so is the only honest answer.
+   */
+  | "collapsed-border"
   | "unknown";
 
 export interface RhythmIssue {
@@ -146,6 +155,36 @@ function diagnose(
      ordinary box; the cap height's residue for a trimmed one. */
   trimResidue = 0
 ): { cause: RhythmCause; detail: string; fix: string } {
+  /*
+     A collapsed border first, because it invalidates everything after it.
+
+     Under `border-collapse: collapse` the border between two cells is drawn on
+     the edge and counted half to each, so a cell declaring 24px of line, 7px of
+     padding and a 1px rule renders 31.5px rather than 32. Every figure this
+     function works from is a declared one, and under collapse they do not sum
+     to the box.
+
+     Asked about such a cell before this existed, the tool answered "contents,
+     7.5px over" and "fix the child", on a cell whose only child is a text node.
+     Advice that cannot be followed is worse than none, and a diagnosis that
+     names the wrong part is worse still, because somebody will act on it.
+  */
+  const table = el.closest?.("table");
+  if (table && getComputedStyle(table).borderCollapse === "collapse") {
+    return {
+      cause: "collapsed-border",
+      detail:
+        `this cell is in a table with collapsed borders, so its height is not ` +
+        `its border plus its padding plus its contents`,
+      fix:
+        `Set border-collapse: separate and border-spacing: 0 on the table. A ` +
+        `collapsed border is drawn on the edge between two cells and counted ` +
+        `half to each, so the parts stop adding up and nothing here can tell ` +
+        `you which one to change. Separate borders look the same where only ` +
+        `one side is set, and they add up.`,
+    };
+  }
+
   if (REPLACED.has(el.tagName.toUpperCase())) {
     return {
       cause: "replaced",
@@ -353,7 +392,8 @@ export function verifyRhythm(options: RhythmOptions = {}): RhythmReport {
 
   const issues: RhythmIssue[] = [];
   const byCause: Record<RhythmCause, number> = {
-    border: 0, padding: 0, leading: 0, contents: 0, replaced: 0, unknown: 0,
+    border: 0, padding: 0, leading: 0, contents: 0, replaced: 0,
+    "collapsed-border": 0, unknown: 0,
   };
   let accumulated = 0;
   let inherited = 0;

@@ -406,6 +406,7 @@ interface InPageFit {
   inferDesign: (options: unknown) => {
     families: { role: string; font: string; steps: { name?: string; size: number; leading?: number; space?: number }[] }[];
     rare: { font: string; size: number; leading: number; blocks: number }[];
+    warnings: string[];
     blocks: number;
     covered: number;
   };
@@ -1095,6 +1096,10 @@ switch (command) {
           `  ${read.design.rare.length} one-off combinations left out, which is usually` +
             "\n  a widget or a third party rather than the design"
         );
+      }
+      /* On stderr, so a pipeline taking the CSS on stdout still gets only CSS. */
+      for (const warning of read.design.warnings ?? []) {
+        console.error(`quoin: ${warning}`);
       }
       console.log(
         `  ${read.result.cost === 0 ? "nothing" : read.result.cost + "px of leading"} had to move`

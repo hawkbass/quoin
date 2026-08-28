@@ -190,3 +190,60 @@ test("the fitter reads the box off the page rather than assuming it away", async
   expect(borderBottom.space, "a border-bottom is not the space's problem").toBe(plain.space);
   expect(borderBottom.paddingBottom, "1px of border wants 7px of padding under it").toBe(7);
 });
+
+test("reading a design off a collapsed table says the box figures cannot be trusted", async ({
+  browser,
+  browserName,
+}) => {
+  /*
+     The same defect as the rhythm one, in the other half of the tool.
+
+     `inferDesign` reads a block's border and padding off the page so the fitter
+     can close them. Under a collapsed border those declared figures do not add
+     up to the box, so the space solved from them is out by whatever the engine
+     kept for the neighbouring cell. The sizes and leadings are unaffected, so
+     the step is still worth having; the box terms are not, and it now says so.
+  */
+  const context = await browser.newPage({ viewport: { width: 900, height: 800 } });
+
+  const table = (collapse: string) => `<!doctype html><meta charset="utf-8"><style>
+    body { margin: 0; font-family: serif }
+    table { width: 100%; border-collapse: ${collapse};
+            ${collapse === "separate" ? "border-spacing: 0;" : ""} }
+    th, td { font-size: 17px; line-height: 24px; padding: 3.5px 8px 3.5px 0;
+             border-bottom: 1px solid #999 }
+  </style><table><tbody>
+    ${Array.from({ length: 6 }, (_, i) => `<tr><th>Row ${i + 1}</th><td>${i + 1}</td></tr>`).join("")}
+  </tbody></table>`;
+
+  const warningsFor = async (collapse: string) => {
+    await context.setContent(table(collapse));
+    await context.evaluate(() => document.fonts?.ready);
+    await context.addScriptTag({ content: FIT_BUNDLE });
+    return context.evaluate(
+      (pitch) =>
+        (globalThis as unknown as {
+          quoinFit: { inferDesign: (o: unknown) => { warnings: string[]; blocks: number } };
+        }).quoinFit.inferDesign({ pitch, minimum: 2 }),
+      PITCH
+    );
+  };
+
+  const separate = await warningsFor("separate");
+  const collapsed = await warningsFor("collapse");
+  await context.close();
+
+  /* The control: the same table with borders that add up says nothing, so this
+     is not a warning that fires on every table. */
+  expect(separate.blocks, "nothing was read off the control page").toBeGreaterThan(4);
+  expect(
+    separate.warnings,
+    `a table with separate borders warned: ${separate.warnings.join(" ")}`
+  ).toEqual([]);
+
+  expect(collapsed.warnings.length, `${browserName} produced no warning`).toBe(1);
+  expect(collapsed.warnings[0], collapsed.warnings[0]).toMatch(/collapsed borders/);
+  expect(collapsed.warnings[0], "it does not say what to do").toMatch(
+    /border-collapse: separate/
+  );
+});

@@ -1,5 +1,46 @@
 # Changelog
 
+## 1.19.0
+
+The collapsed border, in both halves of the tool.
+
+Fixing quoin.dev turned up a thing about `border-collapse: collapse` and I fixed
+the site rather than the tool, which left the defect where everybody else would
+find it. Anyone with a table would get the same wrong answer.
+
+### Fixed
+
+**Rhythm told a table cell to fix a child it does not have.**
+
+Under `border-collapse: collapse` the border between two cells is drawn on the
+edge and counted half to each, so a cell declaring 24px of line, 7px of padding
+and a 1px rule renders 31.5px rather than 32. Every figure the diagnosis works
+from is a declared one, and under collapse they do not sum to the box.
+
+Asked about such a cell it answered `contents, 7.5px over`, `23.5px of content
+is 0.98 lines of 24px`, and **"Fix the child"**, on a cell whose only child is a
+text node. There was nothing to fix inside it, the arithmetic behind the number
+was wrong, and somebody following that advice would have gone looking for a
+problem that was not there.
+
+There is a `collapsed-border` cause now, reported before anything else because it
+invalidates everything after it, and its advice is the one thing that works:
+`border-collapse: separate` with `border-spacing: 0`. Which is an admission
+rather than a diagnosis, and the honest answer available: with the parts not
+adding up, nothing in that function can say which part to change.
+
+**`inferDesign` read the same untrustworthy figures into a design.** It takes a
+block's border and padding off the page so the fitter can close them, and under
+a collapsed border the space solved from those is out by whatever the engine kept
+for the neighbouring cell. Sizes and leadings are unaffected, so the steps are
+still worth having; the box terms are not, and `inferDesign` now returns a
+warning saying so. The CLI prints it on stderr, so a pipeline taking the CSS on
+stdout still gets only CSS.
+
+Both are gated with a control: the same table with separate borders must report
+nothing and warn about nothing, or a fix that flagged every table cell would pass
+on its own.
+
 ## 1.18.2
 
 quoin.dev rebuilt on its own advice.

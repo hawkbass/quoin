@@ -365,3 +365,88 @@ test("a border the padding already accounts for is not the cause", async ({ page
     `${found.ragged!.detail}, and this one is 3px past a row`
   ).toBe("border");
 });
+
+test("a collapsed border is named, not blamed on the contents", async ({ page }) => {
+  /*
+     Under `border-collapse: collapse` a border sits on the edge between two
+     cells, half inside each, so a cell declaring 24px of line, 7px of padding
+     and a 1px rule renders 31.5px rather than 32. Every figure this tool works
+     from is a declared one, and under collapse they do not sum to the box.
+
+     Asked about such a cell, it used to answer "contents, 7.5px over" and "fix
+     the child", on a cell whose only child is a text node. There is nothing to
+     fix inside it. The table's border model is the answer, and saying so is the
+     only honest one available: with the parts not adding up, nothing here can
+     tell you which part to change.
+
+     Both spellings are checked. A fix that reported every table cell as a
+     collapsed border would pass the first assertion on its own.
+  */
+  const table = (collapse: string) => `<!doctype html><meta charset="utf-8"><style>
+    body { margin: 0; font: 16px/24px serif }
+    table { width: 100%; border-collapse: ${collapse};
+            ${collapse === "separate" ? "border-spacing: 0;" : ""} }
+    th, td { line-height: 24px; padding: 3.5px 8px 3.5px 0;
+             border-bottom: 1px solid #999 }
+  </style>
+  <table><tbody>
+    <tr><th>One</th><td>1</td></tr>
+    <tr><th>Two</th><td>2</td></tr>
+    <tr><th>Three</th><td>3</td></tr>
+    <tr><th>Four</th><td>4</td></tr>
+  </tbody></table>`;
+
+  const read = async (collapse: string) => {
+    await page.setContent(table(collapse));
+    await page.evaluate(() => document.fonts?.ready);
+    await page.addScriptTag({ content: readFileSync(resolve("dist/quoin.global.js"), "utf8") });
+    return page.evaluate(() => {
+      const report = window.quoin.verifyRhythm({ pitch: 8, limit: 30 });
+      const cell = document.querySelector("tbody th")!;
+      const style = getComputedStyle(cell);
+      const num = (value: string) => Number.parseFloat(value) || 0;
+      return {
+        onRhythm: report.onRhythm,
+        total: report.total,
+        causes: report.byCause,
+        issue: report.issues.find((i) => /th|td/.test(i.path)) ?? null,
+        parts:
+          num(style.borderTopWidth) +
+          num(style.borderBottomWidth) +
+          num(style.paddingTop) +
+          num(style.paddingBottom) +
+          num(style.lineHeight),
+        height: Math.round(cell.getBoundingClientRect().height * 100) / 100,
+      };
+    });
+  };
+
+  /* The control, and the reason the fixture is built this way: with separate
+     borders the same numbers add up and the cells are on the grid, so nothing
+     should be reported at all. */
+  const separate = await read("separate");
+  expect(separate.parts, "the fixture does not come to a whole number of rows").toBe(32);
+  expect(separate.height, "separate borders should add up").toBe(separate.parts);
+  expect(separate.onRhythm, "the control page is not clean").toBe(separate.total);
+  expect(
+    separate.causes["collapsed-border"],
+    "a table with separate borders was reported as collapsed"
+  ).toBe(0);
+
+  /* The case. The declared parts still come to 32 and the box does not. */
+  const collapsed = await read("collapse");
+  expect(collapsed.parts).toBe(32);
+  expect(
+    collapsed.height,
+    "this engine did not halve the collapsed border, so there is nothing to report"
+  ).toBeLessThan(collapsed.parts);
+
+  expect(collapsed.issue, "the cell was not reported at all").toBeTruthy();
+  expect(
+    collapsed.issue!.cause,
+    `said "${collapsed.issue!.cause}": ${collapsed.issue!.fix}`
+  ).toBe("collapsed-border");
+  expect(collapsed.issue!.fix, "the advice does not name the property to change").toMatch(
+    /border-collapse: separate/
+  );
+});

@@ -143,6 +143,13 @@ export interface InferredDesign {
   /** Text blocks the walk found, and how many are covered by `families`. */
   blocks: number;
   covered: number;
+  /**
+   * Things read off the page that the fit cannot be trusted about.
+   *
+   * A design half-read in silence is worse than one that refuses, because the
+   * spacing that comes out of it looks like an answer.
+   */
+  warnings: string[];
 }
 
 /**
@@ -185,6 +192,7 @@ export function inferDesign(options: InferOptions = {}): InferredDesign {
   }
 
   const groups = new Map<string, Group>();
+  let collapsedCells = 0;
 
   for (const element of blocks) {
     const style = getComputedStyle(element);
@@ -202,6 +210,24 @@ export function inferDesign(options: InferOptions = {}): InferredDesign {
     const paddingTop = box(style.paddingTop);
     const borderBottom = box(style.borderBottomWidth);
     const paddingBottom = box(style.paddingBottom);
+
+    /*
+       A cell in a collapsed table reports a border it does not wholly own.
+
+       Under `border-collapse: collapse` the border between two cells is drawn on
+       the edge and counted half to each, so a cell declaring 24px of line, 7px
+       of padding and a 1px rule renders 31.5px rather than 32. Every figure
+       above is the declared one, and the space solved from it will be out by
+       whatever the engine kept for the neighbour.
+
+       The size and the leading are unaffected, so the step is still worth
+       having. The box terms are not, and saying so is better than a spacing
+       that is half a pixel wrong for a reason nobody can see.
+    */
+    const table = element.closest?.("table");
+    if (table && getComputedStyle(table).borderCollapse === "collapse") {
+      collapsedCells++;
+    }
 
     /*
        Grouped on the box as well as the type, because the space that seats a
@@ -286,9 +312,22 @@ export function inferDesign(options: InferOptions = {}): InferredDesign {
         }),
     }));
 
+  const warnings: string[] = [];
+  if (collapsedCells > 0) {
+    warnings.push(
+      `${collapsedCells} ${collapsedCells === 1 ? "block sits" : "blocks sit"} in a ` +
+        "table with collapsed borders, where a border is drawn on the edge between " +
+        "two cells and counted half to each. Their sizes and leadings are right and " +
+        "their border and padding figures do not add up to the box, so the space " +
+        "solved for them will be out by up to half a pixel. Set border-collapse: " +
+        "separate and border-spacing: 0 on the table."
+    );
+  }
+
   return {
     families,
     rare,
+    warnings,
     blocks: blocks.length,
     covered: kept.reduce((sum, g) => sum + g.blocks, 0),
   };
