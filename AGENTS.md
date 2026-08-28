@@ -141,6 +141,33 @@ Three cases where that is not enough, all of them measured:
 - **A block with a background or a border.** Margin and padding are not
   interchangeable on one, so decide rather than swap.
 
+
+## The one thing that will catch you out
+
+**An inline element in a different size or family takes its line off the grid.**
+`<code>` in prose, a `<small>`, a badge, a superscript. Half-leading is
+(line-height minus content height) over two, content height comes from the font
+at its rendered size, so an inline at a different size sits its baseline
+elsewhere inside its own leading box. Align the two baselines and the line comes
+out taller than its line-height. Nothing about the CSS looks wrong.
+
+```css
+code, small, sub, sup { line-height: 0 }
+```
+
+An inline with no leading contributes no box of its own, the parent's strut
+governs the line, and the glyphs draw exactly where they did. Verify it rather
+than trust it: `quoin rhythm` names the element, its size and what to set.
+
+Two things worth knowing about how far it reaches. It **does not propagate**:
+`text-box-trim` ends a box at its last baseline, so a line that grew inside a
+block is cut away at the edges and every block below it is unaffected. And the
+engines disagree about what triggers it, so test in both if you can: Chromium
+needs a different size, WebKit needs only a different family.
+
+On quoin.dev this was eighteen of the nineteen paragraphs off the rhythm against
+two of the forty-six on it, and one line of CSS moved the page from 77% to 93.6%.
+
 ## Checking your work
 
 ```bash

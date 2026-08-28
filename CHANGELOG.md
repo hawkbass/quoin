@@ -1,5 +1,36 @@
 # Changelog
 
+## 1.20.1
+
+How far the inline problem reaches, measured rather than assumed.
+
+### Finding
+
+1.20.0 named the inline that takes a line off the rhythm. The question it left
+open is the one that matters: does it take the **fit** off the grid, and does it
+propagate? Inline `code` in prose is most prose on the web, so if a fitted page
+comes apart around it the method is not much use.
+
+**It does not propagate.** `text-box-trim` ends a box at its last baseline, so a
+line box that grew inside a block is cut away at both edges and every block below
+it starts where the arithmetic said it would. The trim was doing this the whole
+time and nothing had asked it to.
+
+**What it cannot protect is the block's own first baseline**, when the inline
+lands on the first line. That one moves, by 1.5px in the case measured, and it
+stops there.
+
+So the method has a limit and the limit is one block deep. Stated plainly here
+rather than left to be discovered, and pinned by a test, because a defect
+contained to one block is a blemish and one that moved everything below it would
+be the thing this library exists to stop.
+
+The recipe is in `AGENTS.md` and the README:
+
+```css
+code, small, sub, sup { line-height: 0 }
+```
+
 ## 1.20.0
 
 An inline element in a different size or family takes its block off the rhythm,

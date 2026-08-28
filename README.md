@@ -1888,6 +1888,56 @@ For 6px of leading, the coarsest grid you can have is 6px,
 and it costs 4px across 6 sizes.
 ```
 
+---
+
+## Finding: an inline element takes its line off the grid
+
+`<code>` in a paragraph. A `<small>`, a badge, a superscript. Half-leading is
+(line-height minus content height) over two, and content height comes from the
+font at its rendered size, so an inline at a different size sits its baseline
+elsewhere inside its own leading box. Align the two baselines and the line comes
+out taller than its line-height, and every declaration involved is defensible.
+
+**The engines disagree about what triggers it**, which is the part worth
+knowing:
+
+```
+                                    Chromium   WebKit
+inline, same family and size            -          -
+inline, other family                    -       +1.5
+other family, smaller size            +1        +2.5
+other family, inline-block              -       +1.5
+other family, line-height 0             -          -
+```
+
+Chromium needs a different size and a different family alone is harmless. WebKit
+needs only the family, a size makes it worse, and `inline-block` does not help.
+
+```css
+code, small, sub, sup { line-height: 0 }
+```
+
+That fixes every case in both, because an inline with no leading contributes no
+box, the parent's strut governs the line, and the glyphs draw where they did.
+`quoin rhythm` names the element, its size, and what to set.
+
+### How far it reaches
+
+**It does not propagate.** `text-box-trim` ends a box at its last baseline, so a
+line that grew inside a block is cut away at both edges and the next block starts
+where the arithmetic said it would. What the trim cannot protect is the block's
+own first baseline when the inline lands on the first line: that one moves, by
+1.5px in the case measured, and it stops there.
+
+Which is worth stating plainly as a limit of the method rather than leaving to be
+discovered. A defect contained to one block is a blemish. One that moves
+everything below it would be the thing this library exists to stop, and it is
+not that.
+
+**On quoin.dev it was eighteen of the nineteen paragraphs off the rhythm, against
+two of the forty-six on it**, and all of it was `code` set at 0.82em. One line of
+CSS took the page from 77% to 93.6%.
+
 ## The command line
 
 ```bash
