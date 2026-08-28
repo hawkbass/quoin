@@ -71,10 +71,31 @@ test("it never touches the size", { skip: !have }, async () => {
   assert.doesNotMatch(css, /font-size:\s*1[68]px/);
 });
 
-test("it adds the trim, because every figure assumes it", { skip: !have }, async () => {
-  const css = await run("p { font-size: 17px; line-height: 1.5 }");
-  assert.match(css, /text-box-trim:\s*trim-both/);
-  assert.match(css, /text-box-edge:\s*cap alphabetic/);
+test("the trim goes on with the space and never without it", { skip: !have }, async () => {
+  /*
+     This asserted that the trim was added, full stop, and it was, and that was
+     the defect. The trim is not a neutral addition: an untrimmed box begins half
+     a leading above its first ascent and a trimmed one begins at the cap, so
+     adding it moves the block's first baseline. The space is what puts it back
+     on a row, and written apart the first of them is a page whose blocks have
+     moved and whose spacing has not.
+
+     Run against the stylesheet this site is built from, the old behaviour took
+     the page from 38% on the grid to 32%, and its rhythm from 350 of 374 to 299.
+     The test passed throughout, because it was checking that a string appeared.
+  */
+  const withSpace = await run("p { font-size: 17px; line-height: 1.5; margin-top: 24px }");
+  assert.match(withSpace, /text-box-trim:\s*trim-both/);
+  assert.match(withSpace, /text-box-edge:\s*cap alphabetic/);
+  assert.match(withSpace, /margin-top:\s*[\d.]+px/);
+
+  const without = await run("p { font-size: 17px; line-height: 1.5 }");
+  assert.doesNotMatch(
+    without,
+    /text-box-trim/,
+    "the trim was added to a rule the space could not be written into"
+  );
+  assert.match(without, /--quoin-space/, "and the space should still be offered");
 });
 
 test("the space it computes closes that size's cap residue", { skip: !have }, async () => {
@@ -212,13 +233,18 @@ test("a rule with no family and no default is skipped rather than guessed at", a
 test("the family is matched on the first name in the stack", { skip: !have }, async () => {
   /* A stack is what a rule declares and the first name is what the browser
      resolves, which is where the cap height comes from. */
-  const css = await run('p { font-family: Built, Helvetica, sans-serif; font-size: 17px; line-height: 1.5 }');
+  const css = await run(
+    "p { font-family: Built, Helvetica, sans-serif; font-size: 17px; " +
+      "line-height: 1.5; margin-top: 24px }"
+  );
   assert.match(css, /text-box-trim/);
 });
 
 test("quoted and differently-cased families still match", { skip: !have }, async () => {
   for (const family of ['"Built"', "'built'", "BUILT"]) {
-    const css = await run(`p { font-family: ${family}; font-size: 17px; line-height: 1.5 }`);
+    const css = await run(
+      `p { font-family: ${family}; font-size: 17px; line-height: 1.5; margin-top: 24px }`
+    );
     assert.match(css, /text-box-trim/, `${family} did not match`);
   }
 });
@@ -249,10 +275,10 @@ test("a whole stylesheet keeps its shape", { skip: !have }, async () => {
      declarations it has no opinion about. */
   const input = [
     "@media (min-width: 700px) {",
-    "  p { font-size: 17px; line-height: 1.5; color: red }",
+    "  p { font-size: 17px; line-height: 1.5; color: red; margin-top: 24px }",
     "}",
     ".untouched { color: blue }",
-    "h1 { font-size: 44px; line-height: 1.1 }",
+    "h1 { font-size: 44px; line-height: 1.1; margin-top: 48px }",
   ].join("\n");
 
   const css = await run(input);

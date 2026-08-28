@@ -1,5 +1,69 @@
 # Changelog
 
+## 1.21.0
+
+The PostCSS plugin made pages worse. It said it made them better.
+
+### The finding
+
+Every claim in this repository is verified as measurement: the tool tells you
+what is wrong and the number is checked. The plugin claims to *fix* it at build
+time, and that claim had only ever been unit-tested against stylesheets written
+to exercise it. Run against a real hand-written one, this site's own:
+
+```
+                     phase           rhythm
+as written           38%             350/374
+after the plugin     32%             299/374
+```
+
+The tests passed throughout, because they asserted that the output contained
+`text-box-trim` rather than what the page did with it. One of them was called
+"it adds the trim, because every figure assumes it". It did add the trim. That
+was the defect.
+
+### Fixed
+
+**The trim goes on with the space and never without it.** An untrimmed box begins
+half a leading above its first ascent and a trimmed one begins at the cap, so the
+trim moves a block's first baseline and the space is what puts it back on a row.
+Isolated:
+
+```
+as written, no trim                   4 of 5 on the grid
+trim alone                            2 of 5
+trim and the spaces that go with it   5 of 5
+```
+
+The plugin added the trim unconditionally and wrote the space only where a
+`margin-top` already existed, reasoning that spacing is the destructive thing to
+touch. The trim is the destructive thing.
+
+**The leading is not always safe to snap.** A box is its leading plus its border
+and padding, and an author who has made that sum whole has done the thing this
+tool is for by a route it did not expect. This site's table cells set 31px
+against a 1px rule: snapping to 32 makes the box 33. Left alone now, and
+reported.
+
+**`var()` in `font-family` is resolved** from the stylesheet's own custom
+properties. Sixteen of eighteen skips on the real stylesheet were `no font file
+given for "var(--serif)"`, which is to say the plugin did nothing to a stylesheet
+it reported having read.
+
+**Border and padding are read**, so the space closes the lead-in as well as the
+cap, which the fitter learned in 1.14.0 and this had not.
+
+### The honest result
+
+On this site's stylesheet the plugin is now exactly neutral: it writes almost
+nothing, because the spacing lives on containers rather than on text rules, and
+most stylesheets are like that. It earns its keep on one that keeps its type and
+its spacing in the same rules.
+
+Which is a smaller tool than the README described, and the README describes it
+now. For everything else, `quoin fit --from <url>` reads the rendered page and
+knows what the CSS alone cannot.
+
 ## 1.20.1
 
 How far the inline problem reaches, measured rather than assumed.

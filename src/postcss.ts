@@ -1,4 +1,4 @@
-/* A PostCSS plugin, so a build can put its own stylesheet on the grid.
+/* A PostCSS plugin, for the stylesheets it can help.
 
    Everything else in this library needs either a browser or a design file. A
    build has neither at the moment it is processing CSS, and it has the one thing
@@ -9,24 +9,37 @@
    `line-height` is fitted the way `fitScale` fits a design, with cap heights
    read from the font files you name. No size is ever changed.
 
-   ## What it changes, and what it refuses to
+   ## What it can and cannot do, measured
 
-   It snaps the leading to a whole number of rows and adds the trim, because
-   those are the two things that cannot be wrong afterwards: a leading off the
-   grid puts every line after the first off it too, and every figure here assumes
-   the box is trimmed.
+   It used to say it put a stylesheet on the grid. Run against the one this
+   site is built from it took the page from 38% on the grid to 32%, and its
+   rhythm from 350 of 374 to 299. The claim was wrong in the worst direction and
+   the tests did not catch it, because they checked that the output contained
+   `text-box-trim` rather than what the page did with it.
 
-   Spacing is where it stops short. The space before a block is what closes that
-   block's cap height, and without it the page is not on a grid. It is also the
-   most destructive thing to write into somebody's stylesheet, because a real
-   site's vertical spacing lives on its containers rather than on its
-   paragraphs. Rewriting every rule's `margin-top` is how a study in this
-   repository produced numbers that were nonsense in both directions.
+   Three things came out of measuring it.
 
-   So: a rule that already declares `margin-top` gets it rewritten, because the
-   author has already decided that is where the spacing lives. Every other rule
-   gets `--quoin-space` and a note. That is a smaller promise than the CLI makes
-   and it is one a build can keep. */
+   **The trim goes on with the space and never without it.** An untrimmed box
+   begins half a leading above its first ascent and a trimmed one begins at the
+   cap, so adding the trim moves the block's first baseline. The space is what
+   puts it back on a row. Written together they are one change; written apart the
+   first is a page whose blocks have moved and whose spacing has not.
+
+   **The leading is not always safe to snap.** A box is its leading plus its
+   border and padding, and an author who made that sum a whole number of rows has
+   done the thing this tool is for by a route it did not expect. quoin.dev's
+   table cells set a 31px leading against a 1px rule: neither is a whole row and
+   32 is. Snapping to 32 makes the box 33. So it is left alone, and said so.
+
+   **Which leaves a small tool.** On a stylesheet whose vertical spacing lives on
+   its containers rather than on its text rules, and most do, there is almost
+   nothing here for it to write, and it now writes almost nothing rather than
+   writing harm. It earns its keep on a stylesheet that keeps its type and its
+   spacing in the same rules, which is what a design-system stylesheet usually
+   looks like.
+
+   For everything else, `quoin fit --from <url>` reads the rendered page and
+   knows what the CSS alone cannot. */
 
 import { readFileSync } from "node:fs";
 import { resolve as resolvePath, dirname } from "node:path";
@@ -81,6 +94,37 @@ interface Rule {
 }
 interface Root {
   walkRules(callback: (rule: Rule) => void): void;
+  walkDecls(callback: (decl: Declaration) => void): void;
+}
+
+/*
+   `font-family: var(--serif)` is what a modern stylesheet says.
+
+   The plugin matched font files against the literal first family in a rule, so
+   every rule naming its face through a custom property was skipped: on the
+   stylesheet this site is built from, sixteen of the eighteen skips were exactly
+   that, which is to say the plugin did nothing to a stylesheet it reported
+   having read.
+
+   Custom properties are resolved from the stylesheet itself, which is the only
+   place a build can look. A value defined outside it, or by JavaScript, or by a
+   media query that has not applied, is not resolvable here and the rule is
+   skipped with its reason as before.
+*/
+function resolveVars(value: string, defined: Map<string, string>, depth = 0): string {
+  if (depth > 4 || !value.includes("var(")) return value;
+
+  const resolved = value.replace(
+    /var\(\s*(--[\w-]+)\s*(?:,([^()]*))?\)/g,
+    (whole, name: string, fallbackValue: string | undefined) => {
+      const found = defined.get(name);
+      if (found !== undefined) return found;
+      if (fallbackValue !== undefined) return fallbackValue.trim();
+      return whole;
+    }
+  );
+
+  return resolved === value ? value : resolveVars(resolved, defined, depth + 1);
 }
 
 /** The first family in a stack, unquoted and folded. */
@@ -94,6 +138,43 @@ function px(value: string): number | null {
   if (!match) return null;
   const amount = Number.parseFloat(match[1]!);
   return Number.isFinite(amount) ? amount : null;
+}
+
+/*
+   The vertical halves of a box shorthand.
+
+   `padding: 3px 16px` is two numbers meaning four, and a plugin that only reads
+   `padding-top` sees neither. Border and padding are the terms the fitter learned
+   to account for in 1.14.0, when quoin.dev's tables showed it prescribing a
+   leading change that would have broken the rhythm the author had built by hand.
+   The same arithmetic belongs here, and for the same reason: this plugin snapped
+   a 22px leading to 24 on a rule carrying a 2px border and turned a 24px box
+   into a 26px one.
+
+   Returns null when a value is not a plain px length, because a percentage or a
+   calc is not a number this can add.
+*/
+function verticalHalves(value: string): { top: number; bottom: number } | null {
+  const parts = value.trim().split(/\s+/);
+  if (parts.length === 0 || parts.length > 4) return null;
+
+  const top = px(parts[0]!);
+  if (top === null) return null;
+
+  /* One value is all four; two and three put the bottom third; four is explicit. */
+  const bottomRaw = parts.length >= 3 ? parts[2]! : parts[0]!;
+  const bottom = px(bottomRaw);
+  if (bottom === null) return null;
+
+  return { top, bottom };
+}
+
+/* The width out of a `border` or `border-top` shorthand, which leads with it. */
+function borderWidth(value: string): number | null {
+  const first = value.trim().split(/\s+/)[0];
+  if (first === undefined) return null;
+  if (first === "none" || first === "0") return 0;
+  return px(first);
 }
 
 /**
@@ -171,7 +252,19 @@ export function quoinPostcss(options: QuoinPostcssOptions) {
   return {
     postcssPlugin: "quoin",
     Once(root: Root) {
+      /* Every custom property the stylesheet defines, wherever it defines it.
+         Later wins, which is what the cascade does with two definitions at the
+         same specificity and is the best a build can do without one. */
+      const defined = new Map<string, string>();
+      root.walkDecls((decl) => {
+        if (decl.prop.startsWith("--")) defined.set(decl.prop, decl.value.trim());
+      });
+
       root.walkRules((rule) => {
+        let paddingTop: number | null = null;
+        let paddingBottom: number | null = null;
+        let borderTop: number | null = null;
+        let borderBottom: number | null = null;
         let sizeDecl: Declaration | null = null;
         let leadingDecl: Declaration | null = null;
         let familyDecl: Declaration | null = null;
@@ -184,6 +277,28 @@ export function quoinPostcss(options: QuoinPostcssOptions) {
             case "line-height": leadingDecl = decl; break;
             case "font-family": familyDecl = decl; break;
             case "margin-top": marginTopDecl = decl; break;
+            case "padding-top": paddingTop = px(decl.value); break;
+            case "padding-bottom": paddingBottom = px(decl.value); break;
+            case "border-top-width": borderTop = px(decl.value); break;
+            case "border-bottom-width": borderBottom = px(decl.value); break;
+            case "border-top": borderTop = borderWidth(decl.value); break;
+            case "border-bottom": borderBottom = borderWidth(decl.value); break;
+            case "padding": {
+              const halves = verticalHalves(decl.value);
+              if (halves) {
+                paddingTop = halves.top;
+                paddingBottom = halves.bottom;
+              }
+              break;
+            }
+            case "border": {
+              const width = borderWidth(decl.value);
+              if (width !== null) {
+                borderTop = width;
+                borderBottom = width;
+              }
+              break;
+            }
             /* An explicit opt-out, for the rule somebody has already thought
                about and does not want touched. */
             case "--quoin": if (decl.value.trim() === "skip") skip = true; break;
@@ -199,7 +314,9 @@ export function quoinPostcss(options: QuoinPostcssOptions) {
           return;
         }
 
-        const family = familyDecl ? firstFamily((familyDecl as Declaration).value) : fallback;
+        const family = familyDecl
+          ? firstFamily(resolveVars((familyDecl as Declaration).value, defined))
+          : fallback;
         if (!family) {
           onSkip(rule.selector, "no font-family here and no defaultFont given");
           return;
@@ -227,25 +344,90 @@ export function quoinPostcss(options: QuoinPostcssOptions) {
         const cap = capHeightAt(font, size)!;
         const leading = Math.max(1, Math.round(wanted / pitch)) * pitch;
         const currentSpace = marginTopDecl ? px((marginTopDecl as Declaration).value) : null;
-        const space = spaceFor(cap, currentSpace ?? leading, pitch);
+        /*
+           Everything above the first baseline, not just the cap.
+
+           A border-top and a padding-top sit between the top of the box and its
+           first line, so they move the baseline by their sum and the space has
+           to close all three. The fitter learned this in 1.14.0 and this had not.
+        */
+        const leadIn = (borderTop ?? 0) + (paddingTop ?? 0);
+        const space = spaceFor(cap + leadIn, currentSpace ?? leading, pitch);
+
+        /*
+           Snapping the leading is not always safe, which took a real stylesheet
+           to notice.
+
+           A box is its leading plus its border and padding, and an author who
+           has made that sum a whole number of rows has done the thing this tool
+           is for, by a route it did not expect. quoin.dev's table cells set a
+           31px leading against a 1px rule: neither is a whole row and 32 is.
+           Snapping the leading to 32 makes the box 33 and breaks what was right.
+
+           So: snap it when the box is not already whole, or when snapping keeps
+           it whole. Leave it alone and say why otherwise. The page loses the
+           phase correction for that rule and keeps the rhythm it had, which is
+           the better trade when only one of them is on offer.
+        */
+        const boxOwn = (borderTop ?? 0) + (borderBottom ?? 0) +
+          (paddingTop ?? 0) + (paddingBottom ?? 0);
+        const whole = (value: number) => {
+          const over = ((value % pitch) + pitch) % pitch;
+          return over < 0.01 || pitch - over < 0.01;
+        };
+
+        if (whole(wanted + boxOwn) && !whole(leading + boxOwn)) {
+          onSkip(
+            rule.selector,
+            `line-height ${wanted}px with ${boxOwn}px of border and padding is ` +
+              `already a whole number of rows; snapping it to ${leading} would not be`
+          );
+          return;
+        }
 
         (leadingDecl as Declaration).value = `${leading}px`;
 
-        if (rewriteSpace && marginTopDecl && currentSpace !== null) {
-          (marginTopDecl as Declaration).value = `${space}px`;
+        const spaceTarget =
+          rewriteSpace && currentSpace !== null ? (marginTopDecl as Declaration | null) : null;
+
+        if (spaceTarget) {
+          spaceTarget.value = `${space}px`;
+
+          /*
+             The trim goes on with the space and never without it.
+
+             An untrimmed box begins half a leading above its first ascent and a
+             trimmed one begins at the cap, so adding the trim moves the block's
+             first baseline by that half-leading. The space is what puts it back
+             on a row. Written together they are one change; written apart the
+             first is a page whose blocks have moved and whose spacing has not.
+
+             This plugin used to add the trim unconditionally and write the space
+             only where a margin-top already existed, on the reasoning that
+             spacing is the destructive thing to touch. The trim is the
+             destructive thing. On the stylesheet this site is built from that
+             took the page from 38% on the grid to 32%, and its rhythm from 350
+             of 374 to 299.
+          */
+          rule.append(
+            { prop: "text-box-trim", value: "trim-both" },
+            { prop: "text-box-edge", value: "cap alphabetic" }
+          );
         } else {
           /*
              The author has not said the spacing lives here, so it is offered
-             rather than imposed. Writing margin-top onto every rule that sets a
-             size is how you demolish somebody's layout while reporting success.
+             rather than imposed, and the trim is withheld with it. Writing
+             margin-top onto every rule that sets a size is how you demolish
+             somebody's layout while reporting success; writing the trim without
+             it is how you do the same thing more quietly.
           */
           rule.append({ prop: "--quoin-space", value: `${space}px` });
+          onSkip(
+            rule.selector,
+            "no margin-top to write the space into, so the trim was withheld too: " +
+              "set --quoin-space as the space above this block, or turn on rewriteSpace"
+          );
         }
-
-        rule.append(
-          { prop: "text-box-trim", value: "trim-both" },
-          { prop: "text-box-edge", value: "cap alphabetic" }
-        );
       });
     },
   };

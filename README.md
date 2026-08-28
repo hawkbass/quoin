@@ -1435,23 +1435,55 @@ export default {
 };
 ```
 
-Every rule declaring a pixel `font-size` and a `line-height` gets fitted. The
-size is never touched. The leading is snapped to a whole number of rows and the
-trim is added, because those are the two things that cannot be wrong afterwards:
-a leading off the grid puts every line after the first off it too, and every
-figure here assumes the box is trimmed.
+Every rule declaring a pixel `font-size` and a `line-height` is read. The size is
+never touched.
 
-**It stops short of your margins, on purpose.** The space before a block is what
-closes that block's cap height, and without it the page is not on a grid. It is
-also the most destructive thing to write into somebody's stylesheet, because a
-real site's vertical spacing lives on its containers rather than on its
-paragraphs. Rewriting every rule's `margin-top` is exactly how the study further
-up produced numbers that were nonsense in both directions.
+**It used to say it put your stylesheet on the grid. It did the opposite.** Run
+against the stylesheet this site is built from, the plugin took the page from 38%
+on the grid to 32%, and its rhythm from 350 of 374 to 299. Nothing caught it,
+because the tests asserted that the output contained `text-box-trim` rather than
+what the page did with it, which is the failure this repository is otherwise
+written to avoid.
 
-So a rule that already declares `margin-top` gets it rewritten, because the
-author has decided that is where the spacing lives. Every other rule gets
-`--quoin-space` and leaves the decision alone. `rewriteSpace: false` turns even
-that off.
+Three things came out of measuring it properly.
+
+**The trim goes on with the space and never without it.** An untrimmed box begins
+half a leading above its first ascent and a trimmed one begins at the cap, so
+adding the trim moves a block's first baseline. The space is what puts it back on
+a row. Written together they are one change; written apart, the first is a page
+whose blocks have moved and whose spacing has not.
+
+```
+as written, no trim                   4 of 5 on the grid
+trim alone                            2 of 5
+trim and the spaces that go with it   5 of 5
+```
+
+**The leading is not always safe to snap.** A box is its leading plus its border
+and padding, and an author who has made that sum a whole number of rows has done
+the thing this tool is for, by a route it did not expect. This site's table cells
+set a 31px leading against a 1px rule: neither is a whole row and 32 is. Snapping
+the leading to 32 makes the box 33. It is left alone now, and reported.
+
+**`var()` is resolved.** The plugin matched font files against the literal first
+family in a rule, so every rule naming its face through a custom property was
+skipped. Sixteen of eighteen skips on a real stylesheet were exactly that, which
+is to say it did nothing to a stylesheet it reported having read.
+
+### Which leaves a small tool, honestly described
+
+The space before a block is what closes that block's cap height, and a rule that
+does not declare `margin-top` has not told the plugin where its spacing lives.
+Writing one onto every rule that sets a size is how the study further up produced
+numbers that were nonsense in both directions.
+
+So on a stylesheet whose vertical spacing lives on its containers rather than its
+text rules, and most do, there is almost nothing here to write, and it now writes
+almost nothing rather than writing harm. On this site's stylesheet it is exactly
+neutral.
+
+It earns its keep on a stylesheet that keeps its type and its spacing in the same
+rules, which is what a design-system stylesheet usually looks like:
 
 ```css
 /* in */                          /* out */
@@ -1463,6 +1495,9 @@ p {                               p {
                                     text-box-edge: cap alphabetic;
                                   }
 ```
+
+For everything else, `quoin fit --from <url>` reads the rendered page and knows
+what the CSS alone cannot.
 
 `--quoin: skip` on a rule leaves it alone. Anything it cannot fit is reported
 through `onSkip` with the reason: a `line-height: normal` resolves per font and
