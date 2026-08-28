@@ -18,7 +18,13 @@ import { join } from "node:path";
 import { readFontMetrics, capHeightAt, FontFileError } from "../../src/font-file.ts";
 
 const FONTS = "test/browser/fixtures/fonts";
-const have = existsSync(FONTS);
+/*
+   The directory is committed and its contents are not: the fonts are thirty
+   megabytes of somebody else's work, downloaded by `npm run fonts`. Guarding on
+   the directory existing is guarding on the wrong thing, which is how nine of
+   these failed in CI rather than skipping.
+*/
+const have = existsSync(join(FONTS, "Lato.ttf"));
 const font = (name: string) => readFileSync(join(FONTS, name));
 
 /* ------------------------------------------------------------------ *
@@ -208,4 +214,180 @@ test("every font in the corpus parses or explains itself", { skip: !have }, () =
     withCap > files.length / 2,
     `only ${withCap} of ${files.length} fonts declared a usable cap height`
   );
+});
+
+/* ------------------------------------------------------------------ *
+   Fonts built here, so the parser is tested where the corpus is not
+ * ------------------------------------------------------------------ */
+
+/*
+   Every test above this point skips when the font corpus is absent, which is
+   every CI run: the fonts are thirty megabytes of somebody else's work,
+   downloaded by `npm run fonts`, and the fast unit job does not download them.
+   That left the parser `fitFromFiles` completely depends on with no coverage at
+   all in the place coverage matters most.
+
+   So these build fonts byte by byte. It is a narrower test than a real file, and
+   it is the one that runs everywhere: a table directory, a head and an OS/2, put
+   together by hand so the offsets under test are offsets this file chose.
+*/
+
+interface Built {
+  unitsPerEm?: number;
+  os2Version?: number;
+  capHeight?: number;
+  xHeight?: number;
+  os2Length?: number;
+  signature?: number;
+  extraTables?: string[];
+}
+
+function buildFont(options: Built = {}): Uint8Array {
+  const unitsPerEm = options.unitsPerEm ?? 1000;
+  const os2Version = options.os2Version ?? 4;
+  const os2Length = options.os2Length ?? 96;
+
+  const tags = ["OS/2", "head", ...(options.extraTables ?? [])];
+  const headLength = 54;
+
+  const directory = 12 + tags.length * 16;
+  const lengths: Record<string, number> = { "OS/2": os2Length, head: headLength };
+  for (const extra of options.extraTables ?? []) lengths[extra] = 16;
+
+  let offset = directory;
+  const offsets: Record<string, number> = {};
+  for (const tag of tags) {
+    offsets[tag] = offset;
+    offset += lengths[tag]!;
+  }
+
+  const bytes = new Uint8Array(offset);
+  const view = new DataView(bytes.buffer);
+
+  view.setUint32(0, options.signature ?? 0x00010000);
+  view.setUint16(4, tags.length);
+
+  tags.forEach((tag, i) => {
+    const base = 12 + i * 16;
+    for (let c = 0; c < 4; c++) view.setUint8(base + c, tag.charCodeAt(c));
+    view.setUint32(base + 8, offsets[tag]!);
+    view.setUint32(base + 12, lengths[tag]!);
+  });
+
+  view.setUint16(offsets.head! + 18, unitsPerEm);
+
+  view.setUint16(offsets["OS/2"]!, os2Version);
+  view.setInt16(offsets["OS/2"]! + 68, Math.round(unitsPerEm * 0.8));
+  view.setInt16(offsets["OS/2"]! + 70, -Math.round(unitsPerEm * 0.2));
+  if (os2Length >= 96) {
+    view.setInt16(offsets["OS/2"]! + 86, options.xHeight ?? Math.round(unitsPerEm * 0.5));
+    view.setInt16(offsets["OS/2"]! + 88, options.capHeight ?? Math.round(unitsPerEm * 0.7));
+  }
+
+  return bytes;
+}
+
+test("a font built here parses to exactly what was put in it", () => {
+  const metrics = readFontMetrics(buildFont({ unitsPerEm: 1000, capHeight: 700, xHeight: 500 }));
+
+  assert.equal(metrics.unitsPerEm, 1000);
+  assert.equal(metrics.capHeight, 700);
+  assert.equal(metrics.xHeight, 500);
+  assert.equal(metrics.os2Version, 4);
+  assert.equal(metrics.variable, false);
+  assert.equal(metrics.outlines, "truetype");
+  assert.equal(capHeightAt(metrics, 100), 70);
+});
+
+test("an OTTO signature is read as CFF outlines", () => {
+  const metrics = readFontMetrics(buildFont({ signature: 0x4f54544f }));
+  assert.equal(metrics.outlines, "cff");
+});
+
+test("an fvar table makes it variable", () => {
+  const metrics = readFontMetrics(buildFont({ extraTables: ["fvar"] }));
+  assert.equal(metrics.variable, true);
+});
+
+test("version 1 has no cap height however long the table is", () => {
+  /* The length check alone is not enough, because a version 1 table can be
+     padded to the length of a version 2 one. Both conditions, or neither. */
+  const metrics = readFontMetrics(buildFont({ os2Version: 1, capHeight: 700, os2Length: 96 }));
+  assert.equal(metrics.os2Version, 1);
+  assert.equal(metrics.capHeight, null);
+  assert.equal(metrics.capHeightImplausible, false);
+});
+
+test("a version 2 table too short to hold the field is refused too", () => {
+  const metrics = readFontMetrics(buildFont({ os2Version: 2, os2Length: 80 }));
+  assert.equal(metrics.capHeight, null);
+});
+
+test("a cap height taller than the em is refused, at any em size", () => {
+  for (const [unitsPerEm, capHeight] of [
+    [1000, 1001],
+    [1000, 1400],
+    [2048, 2049],
+  ] as [number, number][]) {
+    const metrics = readFontMetrics(buildFont({ unitsPerEm, capHeight }));
+    assert.equal(metrics.capHeight, null, `${capHeight} on ${unitsPerEm}`);
+    assert.equal(metrics.capHeightImplausible, true, `${capHeight} on ${unitsPerEm}`);
+  }
+});
+
+test("a cap height exactly the em is allowed, because it is possible", () => {
+  /* Unusual and not impossible: an all-caps display face can have capitals that
+     fill the em. Refusing it would decline to fit a font the engines accept. */
+  const metrics = readFontMetrics(buildFont({ unitsPerEm: 1000, capHeight: 1000 }));
+  assert.equal(metrics.capHeight, 1000);
+  assert.equal(metrics.capHeightImplausible, false);
+});
+
+test("a negative or zero cap height is not one, and is not called implausible", () => {
+  /* Zero means "not computed", which is a different thing from a lie, and the
+     distinction is what the caller's error message hangs on. */
+  for (const capHeight of [0, -700]) {
+    const metrics = readFontMetrics(buildFont({ capHeight }));
+    assert.equal(metrics.capHeight, null, `cap ${capHeight}`);
+    assert.equal(metrics.capHeightImplausible, false, `cap ${capHeight}`);
+  }
+});
+
+test("units per em of zero is refused rather than divided by", () => {
+  assert.throws(() => readFontMetrics(buildFont({ unitsPerEm: 0 })), /units per em is zero/);
+});
+
+test("a font with no head table cannot be measured", () => {
+  const whole = buildFont();
+  const view = new DataView(whole.buffer);
+  /* Rename `head` to something nothing reads. */
+  for (let i = 0; i < view.getUint16(4); i++) {
+    const base = 12 + i * 16;
+    const tag = String.fromCharCode(
+      view.getUint8(base), view.getUint8(base + 1),
+      view.getUint8(base + 2), view.getUint8(base + 3)
+    );
+    if (tag === "head") {
+      for (const [at, c] of [..."xxxx"].entries()) view.setUint8(base + at, c.charCodeAt(0));
+    }
+  }
+  assert.throws(() => readFontMetrics(whole), /no head table/);
+});
+
+test("a font with no OS/2 table parses, and declares nothing", () => {
+  /* Not an error: plenty of old fonts have no OS/2 at all, and the right answer
+     is that this one cannot be fitted rather than that the file is broken. */
+  const whole = buildFont();
+  const view = new DataView(whole.buffer);
+  for (let i = 0; i < view.getUint16(4); i++) {
+    const base = 12 + i * 16;
+    if (String.fromCharCode(view.getUint8(base)) === "O") {
+      for (const [at, c] of [..."zzzz"].entries()) view.setUint8(base + at, c.charCodeAt(0));
+    }
+  }
+
+  const metrics = readFontMetrics(whole);
+  assert.equal(metrics.os2Version, null);
+  assert.equal(metrics.capHeight, null);
+  assert.ok(metrics.unitsPerEm > 0);
 });
