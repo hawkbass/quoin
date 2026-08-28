@@ -2,8 +2,33 @@
 
 ## 1.13.0
 
-A correction to 1.12, which got columns wrong, and the flags gate that the
-correction exposed.
+A correction to 1.12, which got columns wrong; a defect in the verifier that
+chasing it uncovered; and two gates that would have caught either sooner.
+
+### Fixed
+
+**Quoin did not measure a block that was split across a fragment boundary, and
+reported the page perfect anyway.**
+
+`verifyGrid` read one first baseline per block. `getBoundingClientRect` returns
+the union of a block's fragments, so on a page in columns it gave the first one
+and the continuation in the next column was never in the reading at all. A
+paragraph could be half on the grid and half off it and score 2 of 2.
+
+It reads every fragment now, via `getClientRects`, with the block's border and
+padding counted only on the first because `box-decoration-break` defaults to
+`slice`. For a block that was not fragmented there is exactly one rect and it
+equals the border box, so nothing changes for an ordinary page: the other 347
+browser tests are untouched by it.
+
+What changes is the answer for columns. A split paragraph is out of phase in
+both engines, by 1px in Chromium and 1.5px in WebKit, and Chromium's score for
+padding without `break-inside: avoid` went from perfect at all twelve layouts
+tested to perfect at six.
+
+This is the failure mode the whole test suite is written to avoid, and it got in
+anyway: the check shared a blind spot with the thing it was checking, so the tool
+agreed with itself about something untrue.
 
 ### Corrected
 
@@ -26,6 +51,15 @@ lands in phase and the page scores perfectly with the bug still in it.
 
 Which sharpens the argument for padding. It is not that it fixes one engine. It
 is that with a margin, whether your columns hold is out of your hands.
+
+**And padding alone is not enough either, in either engine.** That claim came
+from the blind verifier above. The recipe is both halves, `padding-top` for the
+space and `break-inside: avoid` on the blocks, and with both it is perfect at
+every width and column count tested in both engines.
+
+Three claims about columns were wrong before they were right, and all three
+failed the same way: a score stood in for a mechanism. Every assertion in that
+file now measures the thing it names.
 
 Constructing the condition rather than waiting for it separates two mechanisms
 that were tangled together:

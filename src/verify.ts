@@ -183,8 +183,24 @@ export function verifyGrid(options: VerifyOptions = {}): VerifyResult {
   const metricCache = new Map<string, FontMetrics>();
 
   for (const el of walked.blocks) {
-    const rect = el.getBoundingClientRect();
-    if (rect.height <= 0) continue;
+    /*
+       Fragments, not the block.
+
+       `getBoundingClientRect` returns the union across every fragment of a
+       block, so on a page in columns it reports the first one and the
+       continuation in the next column is never measured at all. That is not a
+       small omission: a paragraph split across a boundary starts its
+       continuation out of phase in both engines, by 1px in Chromium and 1.5px
+       in WebKit, and this walked straight past it while reporting the page
+       perfect.
+
+       `getClientRects` returns one rect per fragment. For a block that was not
+       fragmented there is exactly one and it equals the border box, so nothing
+       changes for an ordinary page.
+    */
+    const fragments = [...el.getClientRects()].filter((r) => r.height > 0);
+    if (fragments.length === 0) continue;
+    const rect = fragments[0]!;
 
     const transformed = transformedUnder(el, transformCache);
     if (transformed && !includeTransformed) {
@@ -240,19 +256,33 @@ export function verifyGrid(options: VerifyOptions = {}): VerifyResult {
     const borderTop = Number.parseFloat(style.borderTopWidth) || 0;
     const padTop = Number.parseFloat(style.paddingTop) || 0;
 
-    /* Document space, so scroll position does not enter the measurement. */
-    const absolute = rect.top + window.scrollY + borderTop + padTop + within;
+    const path = describe(el);
+    const sample = (el.textContent || "").trim().replace(/\s+/g, " ").slice(0, 40);
 
-    results.push({
-      ...checkBaseline(absolute, grid),
-      path: describe(el),
-      sample: (el.textContent || "").trim().replace(/\s+/g, " ").slice(0, 40),
-      fontSize,
-      lineHeight,
-      resolvedFont: metrics.font,
-      transformed,
-      inShadow: isInShadowRoot(el),
-    });
+    for (const [index, fragment] of fragments.entries()) {
+      /*
+         Only the first fragment carries the block's border and padding.
+         `box-decoration-break` defaults to `slice`, so a continuation begins
+         with its text rather than with the box's own spacing, and adding them
+         again would move a correct reading off the grid by exactly the space
+         that was not there.
+      */
+      const leading = index === 0 ? borderTop + padTop : 0;
+
+      /* Document space, so scroll position does not enter the measurement. */
+      const absolute = fragment.top + window.scrollY + leading + within;
+
+      results.push({
+        ...checkBaseline(absolute, grid),
+        path: fragments.length > 1 ? `${path} [fragment ${index + 1}]` : path,
+        sample,
+        fontSize,
+        lineHeight,
+        resolvedFont: metrics.font,
+        transformed,
+        inShadow: isInShadowRoot(el),
+      });
+    }
   }
 
   let used = grid;

@@ -6,22 +6,33 @@
 
    Two separate things go wrong, and the first version of this file confused
    them, because it set twelve paragraphs in two columns and read whatever came
-   out. Where the browser chooses to balance the break is a function of the font,
-   so the same page measured 6 of 12 on one machine and 12 of 12 on another, and
-   the test asserted the first as a fact. Both mechanisms are now constructed
-   rather than waited for.
+   out. Both are now constructed rather than waited for.
 
    One: css-break-3 truncates a margin at the top of a fragment when the break is
-   unforced. `break-inside: avoid` makes every break land at a paragraph
-   boundary, so the condition holds in any engine with any font. Padding is not
-   truncated, which is the fix.
+   unforced. Padding is not truncated, which is the fix.
 
-   Two: a paragraph split across the boundary starts its continuation off the
-   grid in WebKit. Padding does not help, because padding is not the problem; not
-   splitting the paragraph is.
+   Two: a paragraph split across the boundary starts its continuation out of
+   phase, in both engines. Padding does not help, because padding is not the
+   problem; not splitting the paragraph is.
 
    Together, padding for the space and `break-inside: avoid` on the blocks, two,
-   three and four columns read 12 of 12 in both engines at every width tested. */
+   three and four columns are perfect in both engines at every width tested.
+
+   Three claims in this file were wrong before they were right, and all three
+   failed the same way: a score stood in for a mechanism.
+
+   The first depended on where the browser balanced the break, which is a
+   function of the font, so the same page read 6 of 12 on one machine and 12 of
+   12 on another. The second survived that and still disagreed across platforms,
+   because the truncation is invariant but the damage it does is not: the gap it
+   leaves is the space minus the engine's overhang, and whether that is a whole
+   number of rows depends on the font. The third said padding alone was enough in
+   Chromium, which came from `verifyGrid` reading one first baseline per block.
+   A split block has one, so the continuation was never in the count at all.
+
+   That last one was a defect in the library rather than in the test, and it is
+   fixed: the verifier reads every fragment now. Which is the argument for
+   testing against a real engine rather than a model of one. */
 
 import { test, expect } from "@playwright/test";
 import { readFileSync } from "node:fs";
@@ -277,7 +288,7 @@ test("a truncated margin is what takes a column off the grid, wherever it happen
    Two: a split paragraph, which is the part padding cannot fix
  * ------------------------------------------------------------------ */
 
-test("a paragraph split across the boundary is WebKit's remaining problem", async ({
+test("a paragraph split across the boundary lands out of phase in both engines", async ({
   browser,
   browserName,
 }) => {
@@ -303,19 +314,71 @@ test("a paragraph split across the boundary is WebKit's remaining problem", asyn
         text-box-trim: trim-both; text-box-edge: cap alphabetic }
   </style><main>${long}</main>`;
 
-  const report = await measure(browser, html);
-  expect(report.split, "the long paragraph should have been split").toBeGreaterThan(0);
+  /*
+     Read as a residue rather than a score, and at several widths.
 
-  if (browserName === "chromium") {
-    expect(report.onGrid, "Chromium keeps a split paragraph on the grid").toBe(report.total);
-  } else {
-    /* Asserted as the limitation it is, so that the day WebKit fixes it this
-       test says so rather than quietly continuing to pass. */
-    expect(
-      report.onGrid,
-      "WebKit now keeps a split paragraph on the grid; the recipe can drop break-inside"
-    ).toBeLessThan(report.total);
+     Within one paragraph consecutive baselines are exactly one leading apart,
+     and a leading is a whole number of rows, so every line of that paragraph
+     has the same offset modulo the pitch however it is fragmented. An engine
+     that places the continuation on the grid keeps that true. One that puts it
+     at the top of the column does not, except when the shift happens to be a
+     whole number of rows, which is the same coin flip that has already been
+     paid for twice in this file. Four widths rather than one, so a single
+     lucky landing does not decide it.
+  */
+  const page = await browser.newPage();
+  const widths = [760, 900, 1100, 1400];
+  const matched: number[] = [];
+
+  for (const width of widths) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.setContent(html);
+    await page.evaluate(() => document.fonts?.ready);
+    const reading = await page.evaluate(
+      ({ pitch }) => {
+        const el = document.querySelector(".long")!;
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        const tops = [...range.getClientRects()].map((r) => r.top);
+        const residues = tops.map((t) => {
+          const r = ((t % pitch) + pitch) % pitch;
+          return Math.min(r, pitch - r);
+        });
+        return {
+          fragments: el.getClientRects().length,
+          lines: tops.length,
+          /* Do all lines share one residue, to within the usual tolerance? */
+          consistent: residues.every((r) => Math.abs(r - residues[0]!) < 0.5),
+        };
+      },
+      { pitch: PITCH }
+    );
+    expect(reading.fragments, `at ${width}px the paragraph was not split`).toBeGreaterThan(1);
+    if (reading.consistent) matched.push(width);
   }
+  await page.close();
+
+  console.log(
+    `\n  ${browserName}: the split paragraph stayed in phase at ` +
+      `${matched.length}/${widths.length} widths\n`
+  );
+
+  /*
+     Both engines, not one. This first said it was WebKit's problem, on the
+     strength of a Chromium page that scored perfectly. It scored perfectly
+     because `verifyGrid` read one first baseline per block and a split block
+     has one, so the continuation was never in the reading at all. Measured
+     per line, Chromium is out by 1px and WebKit by 1.5px, and neither is on
+     the grid.
+
+     Asserted as the limitation it is, so the day either engine fixes it this
+     test says so rather than quietly continuing to pass.
+  */
+  expect(
+    matched.length,
+    `${browserName} now keeps a split paragraph in phase at every width; the ` +
+      "recipe can drop break-inside"
+  ).toBeLessThan(widths.length);
 });
 
 /* ------------------------------------------------------------------ *
@@ -349,13 +412,30 @@ test("padding and break-inside: avoid hold at every width and column count", asy
   console.log(`\n  ${browserName}: ${readings.join("  ")}\n`);
 });
 
-test("padding alone is enough in Chromium, and is never worse than margin", async ({
+test("padding alone is not enough, in either engine", async ({
   browser,
   browserName,
 }) => {
-  /* Recorded separately because it is the difference between the two engines,
-     and because a recipe that says "add break-inside: avoid" should be honest
-     about which half of it each engine needs. */
+  /*
+     Padding alone is not the whole fix, in either engine, and two earlier
+     versions of this test said otherwise for two different bad reasons.
+
+     The first compared padding's score against margin's and asserted padding
+     was never worse. On Linux the truncated margin lands in phase and scores
+     perfectly with the bug still in it, so padding lost to a lucky margin.
+     That was measuring the font, not the property.
+
+     The second said padding alone was the whole fix in Chromium, which came
+     from a verifier that could not see a fragment continuation: the split
+     paragraph it was failing on was simply not in the count. With the verifier
+     reading every fragment, Chromium goes from perfect at all twelve layouts
+     to perfect at six.
+
+     So this is swept and every claim is about one configuration rather than a
+     comparison between two. Whether the browser splits anything at a given
+     width is its own decision, and at 1100px in two columns Chromium splits
+     nothing, so measuring only there compares two identical pages.
+  */
   const fitted = await fit(browser, "padding");
   if (fitted.unavailable) {
     test.skip(true, `${browserName} has no text-box-trim`);
@@ -363,16 +443,55 @@ test("padding alone is enough in Chromium, and is never worse than margin", asyn
   }
   const step = fitted.families[0]!.steps[0]!;
 
-  const padding = await measure(browser, pageWith(step, { property: "padding", avoidSplit: false }, 2));
-  const margin = await measure(browser, pageWith(step, { property: "margin", avoidSplit: false }, 2));
+  const readings: { width: number; columns: number; alone: Reading; both: Reading }[] = [];
+  for (const width of [760, 900, 1100, 1400]) {
+    for (const columns of [2, 3, 4]) {
+      readings.push({
+        width,
+        columns,
+        alone: await measure(
+          browser,
+          pageWith(step, { property: "padding", avoidSplit: false }, columns),
+          width
+        ),
+        both: await measure(
+          browser,
+          pageWith(step, { property: "padding", avoidSplit: true }, columns),
+          width
+        ),
+      });
+    }
+  }
 
+  const split = readings.filter((r) => r.alone.split > 0);
+  console.log(
+    `\n  ${browserName}: ${split.length} of ${readings.length} layouts split a ` +
+      `paragraph, and those read ` +
+      `${split.map((r) => `${r.alone.onGrid}/${r.alone.total}`).join(", ")}\n`
+  );
+
+  /* Both halves is the recipe, and it holds in every layout. */
+  for (const reading of readings) {
+    const where = `${reading.width}px in ${reading.columns} columns`;
+    expect(reading.both.split, `${where} still split something`).toBe(0);
+    expect(
+      reading.both.onGrid,
+      `the recipe read ${reading.both.onGrid}/${reading.both.total} at ${where}`
+    ).toBe(reading.both.total);
+  }
+
+  /* And wherever a split actually happened, padding alone left it off. */
   expect(
-    padding.onGrid,
-    `padding scored ${padding.onGrid} against ${margin.onGrid} for margin`
-  ).toBeGreaterThanOrEqual(margin.onGrid);
-
-  if (browserName === "chromium") {
-    expect(padding.onGrid, "padding alone is the whole fix in Chromium").toBe(padding.total);
+    split.length,
+    "no layout split a paragraph, so there was nothing here to compare"
+  ).toBeGreaterThan(0);
+  for (const reading of split) {
+    expect(
+      reading.alone.onGrid,
+      `padding alone read ${reading.alone.onGrid}/${reading.alone.total} at ` +
+        `${reading.width}px in ${reading.columns} columns with ` +
+        `${reading.alone.split} split, so the split cost nothing`
+    ).toBeLessThan(reading.alone.total);
   }
 });
 
@@ -490,4 +609,92 @@ test("the browser's own baseline alignment does not knock a fit off", async ({
     expect(report.total, `${label} rendered`).toBeGreaterThan(2);
     expect(report.onGrid, `${label}: ${report.onGrid}/${report.total}`).toBe(report.total);
   }
+});
+
+/* ------------------------------------------------------------------ *
+   The verifier itself
+ * ------------------------------------------------------------------ */
+
+test("the verifier counts every fragment of a split block", async ({ browser, browserName }) => {
+  /*
+     The defect this file uncovered, gated so it cannot come back quietly.
+
+     `getBoundingClientRect` returns the union of a block's fragments, so
+     reading a block's position from it gives the first fragment and nothing
+     else. A paragraph split across a column boundary could be half off the
+     grid and score 2 of 2, which is worse than a wrong answer: it is a wrong
+     answer that agrees with itself.
+
+     Two things are asserted. That a split block contributes more than one row
+     to the report, which is the fix. And that an unfragmented page reports
+     exactly one row per block, which is the half that would otherwise let a
+     fix double-count every paragraph on every ordinary page and call it
+     progress.
+  */
+  const fitted = await fit(browser, "padding");
+  if (fitted.unavailable) {
+    test.skip(true, `${browserName} has no text-box-trim`);
+    return;
+  }
+  const step = fitted.families[0]!.steps[0]!;
+
+  const body =
+    `<p class="long">` +
+    Array.from({ length: 40 }, (_, i) => `Sentence ${i + 1} of a single long paragraph.`).join(" ") +
+    `</p><p>A short paragraph after it.</p>`;
+
+  const html = (columns: number) => `<!doctype html><meta charset="utf-8"><style>
+    html { font-family: serif } body { margin: 0 }
+    main { width: 92%; max-width: 1000px; margin: 0 auto;
+           ${columns > 1 ? "column-count: 2; column-gap: 40px" : ""} }
+    p { font-size: ${step.size}px; line-height: ${step.leading}px;
+        margin: 0; padding: ${step.space}px 0 0;
+        text-box-trim: trim-both; text-box-edge: cap alphabetic }
+  </style><main>${body}</main>`;
+
+  const page = await browser.newPage({ viewport: { width: 1100, height: 900 } });
+  const read = async (columns: number) => {
+    await page.setContent(html(columns));
+    await page.evaluate(() => document.fonts?.ready);
+    await page.addScriptTag({ content: BUNDLE });
+    return page.evaluate(({ pitch }) => {
+      const measured = window.quoin.verifyGrid({ pitch, origin: "auto" });
+      return {
+        rows: measured.report.total,
+        onGrid: measured.report.onGrid,
+        fragmentRows: measured.results.filter((r) => r.path.includes("fragment")).length,
+        blocks: document.querySelectorAll("p").length,
+        actualFragments: [...document.querySelectorAll("p")].reduce(
+          (sum, el) => sum + el.getClientRects().length,
+          0
+        ),
+      };
+    }, { pitch: PITCH });
+  };
+
+  /* The control: nothing is fragmented, so one row per block and no more. */
+  const single = await read(1);
+  expect(single.actualFragments, "the control page fragmented something").toBe(single.blocks);
+  expect(single.rows, "an unfragmented page reports one row per block").toBe(single.blocks);
+  expect(single.fragmentRows, "and labels none of them a fragment").toBe(0);
+
+  /* The case: the long paragraph is split, and both halves are in the count. */
+  const split = await read(2);
+  await page.close();
+
+  expect(split.actualFragments, "nothing was split, so there is nothing to check").toBeGreaterThan(
+    split.blocks
+  );
+  expect(
+    split.rows,
+    `${split.actualFragments} fragments were laid out and ${split.rows} rows reported`
+  ).toBe(split.actualFragments);
+  expect(split.fragmentRows, "the extra rows say which fragment they are").toBeGreaterThan(0);
+
+  /* And the continuation is off the grid, which is the whole reason it matters
+     that it gets counted. */
+  expect(
+    split.onGrid,
+    `every fragment was on the grid, so counting them changed nothing`
+  ).toBeLessThan(split.rows);
 });
