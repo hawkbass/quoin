@@ -1677,6 +1677,73 @@ The finding is about css-break-3 rather than about Chromium, but the measurement
 is Chromium's and the limitation is stated rather than buried.
 
 
+---
+
+## Finding: the other axis
+
+Everything above this line is the vertical half. A baseline grid is a vertical
+rhythm inside a column grid, and the column grid is the half a designer usually
+means when they say "the grid". This had never looked at it either.
+
+```bash
+npx quoin columns https://example.com
+```
+
+The defect it finds has the same shape as the vertical one, and the same cause.
+A leading of 25.5px cannot land on an 8px row. A module of 341.33px cannot land
+on anything:
+
+```
+1104px container, 3 columns, 40px gutters
+
+  module    (1104 - 80) / 3 = 341.333...
+  column 1  starts at 0
+  column 2  starts at 381.33
+  column 3  starts at 762.67
+```
+
+Every division after the first sits on a fraction, and no care taken with the
+markup moves it, because the arithmetic was decided by the container width before
+any markup existed. So the report says which nearby widths divide rather than
+telling somebody their edges are a third of a pixel out:
+
+```
+1104px does not divide by 3 with a 40px gutter.
+These do: 1100px, 1103px, 1106px, 1109px
+```
+
+1103 gives a module of 341 exactly.
+
+### Solved rather than asked for
+
+The columns and the gutter are read off the page when they are not given, because
+a report you can only produce for a site whose grid you already know is a report
+for the person who needs it least. The gutter is the commonest gap between two
+blocks sitting side by side. The column count is scored.
+
+**Scored against chance, not by count.** Counting how many edges land on a
+division always picks the most columns: sixteen divisions catch more edges than
+three for the same reason a wider net catches more fish. The first version of this
+read a three-column page as fifteen columns of 36.27px. What is scored now is how
+far the hits exceed what that many divisions would catch from edges scattered at
+random, and a page with no column structure comes out with no column structure,
+which is the answer rather than a failure to produce one.
+
+`--grid-columns` and `--gutter` state them instead, when you know.
+
+### Two things that had to be got right first
+
+**Edges are counted in whole pixels.** Subpixel layout produces 1104 and 1103.98
+for the same edge constantly, and counted as written they are two edges used once
+each rather than one used twice. A fixture on a 1104px container was read as a
+722.66px container for exactly that: the real edge appeared twice and neither
+spelling of it reached a count of two.
+
+**A block parked off the page is not a block that is off the grid.** A skip link
+at -10000px was the worst issue on quoin.dev by four thousand pixels, which is a
+report about the tool rather than about the page.
+
+
 ## The command line
 
 ```bash
@@ -1687,6 +1754,7 @@ npx quoin rhythm https://example.com
 npx quoin scale  --font "EB Garamond" --sizes 16,28,44
 npx quoin fit    --design design.json
 npx quoin print  https://example.com
+npx quoin columns https://example.com
 npx quoin engine --browser firefox
 ```
 
@@ -1695,7 +1763,8 @@ npx quoin engine --browser firefox
 a type scale that needs no correction at all. `fit` takes a design and returns it
 unchanged with the spacing that puts it on the grid at every width. `engine` tells
 you whether this browser's cap heights come off the rasteriser. `print` renders
-the page to PDF and reads the baselines back out of the file.
+the page to PDF and reads the baselines back out of the file. `columns` measures
+the other axis, and says whether the column module divides.
 
 ### The flags
 
@@ -1742,6 +1811,8 @@ Reporting:
 ```bash
 --min <percent>       exit 1 below this, for CI
 --print-margin <pt>   the @page margin, for print. Solved when omitted
+--grid-columns <n>    columns for the horizontal check. Solved when omitted
+--gutter <px>         the gutter between them. Solved when omitted
 --json                machine-readable output
 ```
 

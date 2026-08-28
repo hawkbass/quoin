@@ -140,6 +140,16 @@ await build({
   logLevel: "warning",
 });
 
+/* The column check, for the same reason. */
+await build({
+  entryPoints: ["src/columns-global.ts"],
+  format: "iife",
+  outfile: "dist/quoin.columns.js",
+  bundle: true,
+  target: "es2020",
+  logLevel: "warning",
+});
+
 await build({
   ...shared,
   entryPoints: ["src/cli.ts"],

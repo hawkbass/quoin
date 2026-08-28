@@ -1,5 +1,58 @@
 # Changelog
 
+## 1.16.0
+
+The other axis.
+
+### Added
+
+**`quoin columns <url>`.** A baseline grid is a vertical rhythm inside a column
+grid, and every other thing in this library measures the vertical half. This
+measures the half a designer usually means when they say "the grid".
+
+The defect it finds has the same shape as the vertical one and the same cause. A
+leading of 25.5px cannot land on an 8px row; a module of 341.33px cannot land on
+anything. Divide 1104px three ways with 40px gutters and column two starts at
+381.33 and column three at 762.67, and no care taken with the markup moves them,
+because the arithmetic was decided by the container width before any markup
+existed.
+
+So the report names the module, says whether it is whole, and gives the nearby
+container widths that divide. 1103px instead of 1104px gives a module of 341
+exactly.
+
+The columns and the gutter are solved from the page when not given, because a
+report you can only produce for a site whose grid you already know is a report
+for the person who needs it least. `--grid-columns` and `--gutter` state them.
+
+**Scored against chance, not by count.** Counting hits always picks the most
+columns: sixteen divisions catch more edges than three for the same reason a
+wider net catches more fish, and the first version read a three-column page as
+fifteen columns of 36.27px. What is scored is how far the hits exceed what that
+many divisions would catch from edges scattered at random, so a page with no
+column structure is reported as having none.
+
+### Notes
+
+Two things the tests caught before they shipped.
+
+**Edges are counted in whole pixels.** Subpixel layout produces 1104 and 1103.98
+for the same edge constantly, and counted as written they are two edges used once
+each rather than one used twice. A fixture on a 1104px container came out as a
+722.66px container for exactly that reason.
+
+**A block parked off the page is not off the grid.** A skip link at -10000px was
+the worst issue on quoin.dev by four thousand pixels.
+
+And one that is worth writing down: `[a, b].reduce(Math.max)` returns NaN.
+`reduce` hands its callback the index and the array as well, `Math.max` takes
+every argument it is given, and an array coerces to NaN.
+
+It lives in `dist/quoin.columns.js` rather than the console bundle, the same
+argument the fitter got: that bundle has a size budget because it is pasted into
+devtools, the budget has been raised once already, and a column check is a
+review-time question rather than a console one.
+
 ## 1.15.0
 
 Print, which is the case a baseline grid comes from and the one this could say

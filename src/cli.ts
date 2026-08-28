@@ -27,6 +27,7 @@ quoin: it puts a web page on a baseline grid
   quoin rhythm <url>         which boxes are not a whole number of rows, and why
   quoin fit                  fit a whole design to one grid, every family at once
   quoin print <url>          render it to PDF and read the baselines back out
+  quoin columns <url>        the other axis: does the column module divide
 
 Options
   --pitch <px>               grid pitch                        (default 8)
@@ -48,6 +49,8 @@ Options
   --space <margin|padding>   which property carries the space (default margin)
   --columns                  emit break-inside: avoid too, for a page in columns
   --print-margin <pt>        the @page margin, for print. Solved when omitted
+  --grid-columns <n>         columns for the horizontal check. Solved when omitted
+  --gutter <px>              the gutter between them. Solved when omitted
   --from <url>               read the design off a page instead, for fit
   --near <px>                how far from those is acceptable (default 3)
   --json                     machine-readable output
@@ -61,6 +64,7 @@ Examples
   npx quoin scale --font "EB Garamond" --sizes 16,20,28,40
   npx quoin rhythm https://example.com
   npx quoin print https://example.com
+  npx quoin columns https://example.com
 `;
 
 interface Options {
@@ -99,6 +103,10 @@ interface Options {
   printMargin: number | null;
   /* Whether to emit break-inside: avoid, which is the other half of columns. */
   columns: boolean;
+  /* How many columns the horizontal check measures against. Solved when null. */
+  gridColumns: number | null;
+  /* The gutter between them, in px. Solved when null. */
+  gutter: number | null;
 }
 
 function fail(message: string): never {
@@ -129,6 +137,8 @@ function parseArgs(argv: string[]): { command: string; url: string | null; optio
     space: null,
     printMargin: null,
     columns: false,
+    gridColumns: null,
+    gutter: null,
   };
 
   const positional: string[] = [];
@@ -205,6 +215,22 @@ function parseArgs(argv: string[]): { command: string; url: string | null; optio
           fail(`--space wants margin or padding, got ${value}`);
         }
         options.space = value;
+        break;
+      }
+      case "--grid-columns": {
+        const value = Number.parseInt(next(), 10);
+        if (!Number.isFinite(value) || value < 1 || value > 32) {
+          fail(`--grid-columns wants a count between 1 and 32, got ${value}`);
+        }
+        options.gridColumns = value;
+        break;
+      }
+      case "--gutter": {
+        const value = Number.parseFloat(next());
+        if (!Number.isFinite(value) || value < 0) {
+          fail(`--gutter wants a number of px, got ${value}`);
+        }
+        options.gutter = value;
         break;
       }
       case "--print-margin": {
@@ -681,6 +707,97 @@ switch (command) {
       );
     }
     console.log("");
+    break;
+  }
+  case "columns": {
+    /*
+       The other axis. A baseline grid is a vertical rhythm inside a column
+       grid, and this is the half everything else here ignored.
+    */
+    if (!url) fail("columns needs a URL");
+    const { browser, page } = await open(url, options);
+    await page.addScriptTag({ content: bundle("quoin.columns.js") });
+
+    const data = await page.evaluate(
+      (o) => (globalThis as never as { quoinColumns: { verifyColumns: (x: unknown) => unknown } })
+        .quoinColumns.verifyColumns(o),
+      {
+        ignore: options.ignore,
+        tolerance: options.tolerance,
+        limit: 40,
+        ...(options.gridColumns === null ? {} : { columns: options.gridColumns }),
+        ...(options.gutter === null ? {} : { gutter: options.gutter }),
+      }
+    ) as import("./columns.ts").ColumnReport;
+
+    await browser.close();
+
+    if (options.json) {
+      console.log(JSON.stringify({ url, ...data }, null, 2));
+      break;
+    }
+
+    console.log(`\n  ${url}`);
+    console.log(
+      `  ${data.columns} ${data.columns === 1 ? "column" : "columns"} of ` +
+        `${data.module}px with a ${data.gutter}px gutter, in ${data.container.width}px` +
+        (data.solved ? "  (solved from the page)" : "")
+    );
+    console.log(
+      `  ${data.aligned} of ${data.total} blocks have both edges on a division  ` +
+        `(${percent(data.aligned, data.total)}%)`
+    );
+
+    /*
+       The module first, because it is the one thing nothing downstream can
+       recover from. A fractional module is the horizontal version of a leading
+       that is not a whole number of rows: every division after the first sits on
+       a fraction and no care taken with the markup will move it.
+    */
+    console.log("");
+    if (data.moduleWhole) {
+      console.log(`  The module is a whole number of pixels.`);
+    } else {
+      console.log(
+        `  The module is ${data.module}px, which is not a whole number, so every\n` +
+          `  division after the first lands on a fraction. That is decided by the\n` +
+          `  container width, not by the markup.`
+      );
+      if (data.widthsThatDivide.length) {
+        console.log(
+          `\n  ${data.container.width}px does not divide by ${data.columns} with a ` +
+            `${data.gutter}px gutter.\n  These do: ` +
+            data.widthsThatDivide.map((w) => `${w}px`).join(", ")
+        );
+      }
+    }
+
+    if (data.issues.length) {
+      console.log("");
+      for (const issue of data.issues.slice(0, 12)) {
+        console.log(
+          `  ${String(issue.off + "px").padEnd(9)}${issue.which.padEnd(7)}` +
+            `${issue.left} to ${issue.right}`.padEnd(20) +
+            issue.path.slice(0, 40)
+        );
+      }
+    }
+
+    console.log(
+      "\n  Columns are the half of a grid a designer draws and the half this\n" +
+        "  library used to ignore. The vertical answers where a line sits; this\n" +
+        "  answers whether the column it sits in begins anywhere in particular.\n"
+    );
+
+    if (options.min !== null) {
+      const share = data.total === 0 ? 0 : (data.aligned / data.total) * 100;
+      if (share < options.min) {
+        console.error(
+          `quoin: ${share.toFixed(1)}% aligned, below the ${options.min}% floor`
+        );
+        process.exit(1);
+      }
+    }
     break;
   }
   case "rhythm": {
