@@ -1,5 +1,62 @@
 # Changelog
 
+## 1.15.0
+
+Print, which is the case a baseline grid comes from and the one this could say
+nothing about.
+
+### Added
+
+**`quoin print <url>`, and a PDF reader to make it possible.** Everything else
+here measures a page in a browser, where a baseline is a number the engine hands
+you. A paginated rendering is not a DOM, so every claim about how a fit behaves
+across pages was reasoning rather than measurement.
+
+`src/pdf.ts` walks the page tree, inflates each page's content stream, tracks the
+transform stack and reports where every text run landed. It reads positions and
+sizes and nothing else: no fonts, no glyphs, no images. Zero dependencies, with
+inflate passed in the way `readFontMetrics` takes it, so the file does not decide
+that a browser cannot use it.
+
+### Findings
+
+**A margin at the top of a page is truncated, exactly as at the top of a column.**
+Page fragmentation and column fragmentation are the same rule in css-break-3, and
+a fitted document behaves accordingly.
+
+```
+                        page 1   page 2   page 3
+margin-top               32px     11px     11px
+padding-top              32px     32px     32px
+```
+
+34 of 82 against 80 of 80. The fix is the one columns already needed.
+
+**`break-inside: avoid` is not needed here, unlike columns.** A paragraph split
+across a page keeps its phase in Chromium, where one split across a column does
+not. Padding alone reads 80 of 80.
+
+**The page box does not have to be a whole number of rows.** The opposite of what
+a print designer would expect, and worth saying plainly because believing
+otherwise makes people size their page around their grid for nothing. Each page
+restarts its grid at its own content edge, so nothing carries across the break. A
+page whose content is 125.33 rows tall holds as well as one that is 96.
+
+### Notes
+
+The origin is solved rather than asked for. Where a page's content starts depends
+on the `@page` margin, and an early version defaulted it to 24pt and then reported
+first baselines of -10px on a page that set none, which is a tool blaming a
+document for the tool's own guess. One origin is solved across every page at once
+instead. `--print-margin` still takes a figure for an absolute reading.
+
+Chromium only, because it is the one engine Playwright will render a PDF with.
+
+The PDF fixtures in the unit tests are built byte by byte rather than taken from
+a browser, the same argument as the font fixtures: a parser tested only against
+what one engine emits has learned that engine's habits. The cases that found bugs
+were the ones Chromium never produces, an indirect `/Length` among them.
+
 ## 1.14.0
 
 The fitter solved for a block with no border and no padding. Most blocks have

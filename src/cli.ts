@@ -6,11 +6,14 @@
    survey, the cross-engine divergence, came out of the second kind. */
 
 import { readFileSync, writeFileSync } from "node:fs";
+import { inflateSync } from "node:zlib";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import type { GridReport } from "./grid.ts";
+import { bestOrigin } from "./grid.ts";
 import type { TextNodeResult } from "./verify.ts";
 import type { SeatResult } from "./seat.ts";
+import { readPdfText, baselinesFromTop } from "./pdf.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
@@ -23,6 +26,7 @@ quoin: it puts a web page on a baseline grid
   quoin scale                solve a type scale that needs no correction
   quoin rhythm <url>         which boxes are not a whole number of rows, and why
   quoin fit                  fit a whole design to one grid, every family at once
+  quoin print <url>          render it to PDF and read the baselines back out
 
 Options
   --pitch <px>               grid pitch                        (default 8)
@@ -43,6 +47,7 @@ Options
   --edge <text-box-edge>     default "cap alphabetic"; ex and text also work
   --space <margin|padding>   which property carries the space (default margin)
   --columns                  emit break-inside: avoid too, for a page in columns
+  --print-margin <pt>        the @page margin, for print. Solved when omitted
   --from <url>               read the design off a page instead, for fit
   --near <px>                how far from those is acceptable (default 3)
   --json                     machine-readable output
@@ -55,6 +60,7 @@ Examples
   npx quoin engine --browser firefox
   npx quoin scale --font "EB Garamond" --sizes 16,20,28,40
   npx quoin rhythm https://example.com
+  npx quoin print https://example.com
 `;
 
 interface Options {
@@ -89,6 +95,8 @@ interface Options {
   edge: string | null;
   /* Which property carries the space. Padding is what survives a column break. */
   space: "margin" | "padding" | null;
+  /* The @page margin in points, so print knows where each page grid starts. */
+  printMargin: number | null;
   /* Whether to emit break-inside: avoid, which is the other half of columns. */
   columns: boolean;
 }
@@ -119,6 +127,7 @@ function parseArgs(argv: string[]): { command: string; url: string | null; optio
     from: null,
     edge: null,
     space: null,
+    printMargin: null,
     columns: false,
   };
 
@@ -196,6 +205,14 @@ function parseArgs(argv: string[]): { command: string; url: string | null; optio
           fail(`--space wants margin or padding, got ${value}`);
         }
         options.space = value;
+        break;
+      }
+      case "--print-margin": {
+        const value = Number.parseFloat(next());
+        if (!Number.isFinite(value) || value < 0) {
+          fail(`--print-margin wants a number of points, got ${value}`);
+        }
+        options.printMargin = value;
         break;
       }
       case "--columns":
@@ -548,6 +565,124 @@ switch (command) {
     break;
   }
 
+  case "print": {
+    /*
+       The case a baseline grid comes from, and the one this could not answer.
+
+       Everything else here measures a page in a browser, where a baseline is a
+       number the engine hands you. A paginated rendering is not a DOM, so every
+       claim about how a fit behaves across pages was reasoning rather than
+       measurement. This renders the page to PDF and reads the baselines back
+       out of the file.
+    */
+    if (!url) fail("print needs a URL");
+    const { browser, page } = await open(url, options);
+
+    let bytes: Uint8Array;
+    try {
+      bytes = await page.pdf({ preferCSSPageSize: true, printBackground: false });
+    } catch (error) {
+      await browser.close();
+      fail(
+        "print needs Chromium, because it is the only engine Playwright will " +
+          `render a PDF with. ${(error as Error).message}`
+      );
+      break;
+    }
+    await browser.close();
+
+    const pages = readPdfText(bytes, inflateSync);
+
+    /*
+       Measured from the top of the page box, with the origin solved rather than
+       asked for.
+
+       Each page restarts its own grid at its own content edge, and where that
+       edge is depends on the `@page` margin, which the tool does not know and
+       should not have to be told: an early version defaulted it to 24pt, and on
+       a page that sets none it reported first baselines of -10px, which is a
+       tool blaming a document for the tool's own guess.
+
+       So one origin is solved across every page at once, which is the right
+       shape for the question. If the pages agree about where their grid starts,
+       one origin fits all of them. If they do not, none does, and the low score
+       is the finding rather than a measurement error.
+    */
+    const perPage = pages.map((p) => baselinesFromTop(p));
+    const marginPx =
+      options.printMargin === null ? 0 : options.printMargin / 0.75;
+    const shifted = perPage.map((tops) =>
+      tops.map((top) => Math.round((top - marginPx) * 1000) / 1000)
+    );
+
+    const grid = { pitch: options.pitch, tolerance: options.tolerance, origin: 0 };
+    const solved =
+      options.printMargin === null
+        ? bestOrigin(shifted.flat(), grid).origin
+        : 0;
+
+    const onRow = (top: number) => {
+      const residue = (((top - solved) % options.pitch) + options.pitch) % options.pitch;
+      return Math.min(residue, options.pitch - residue) <= options.tolerance;
+    };
+
+    const results = shifted.map((tops, index) => ({
+      page: index + 1,
+      width: pages[index]!.width,
+      height: pages[index]!.height,
+      baselines: tops.length,
+      onGrid: tops.filter(onRow).length,
+      first: tops[0] === undefined ? null : Math.round((tops[0] - solved) * 1000) / 1000,
+    }));
+
+    const onGrid = results.reduce((sum, r) => sum + r.onGrid, 0);
+    const total = results.reduce((sum, r) => sum + r.baselines, 0);
+
+    if (options.json) {
+      console.log(JSON.stringify({ url, pages: results, onGrid, total }, null, 2));
+      break;
+    }
+
+    console.log(`\n  ${url}`);
+    console.log(
+      `  ${onGrid} of ${total} baselines on a ${options.pitch}px grid across ` +
+        `${results.length} ${results.length === 1 ? "page" : "pages"}  ` +
+        `(${percent(onGrid, total)}%)`
+    );
+    console.log("");
+    console.log("  page   baselines   on grid   first baseline");
+    for (const r of results) {
+      console.log(
+        `  ${String(r.page).padEnd(7)}${String(r.baselines).padEnd(12)}` +
+          `${String(r.onGrid).padEnd(10)}${r.first === null ? "-" : r.first + "px"}`
+      );
+    }
+
+    /*
+       The first baseline on each page is the diagnostic, not the score. A
+       margin at the top of a page fragment is truncated at an unforced break,
+       which is css-break-3 and the same rule that costs a fitted page its
+       second column, so page one starts at its space and every page after it
+       starts at the cap alone.
+    */
+    const firsts = results.map((r) => r.first).filter((f): f is number => f !== null);
+    const agree = firsts.every((f) => Math.abs(f - firsts[0]!) <= options.tolerance);
+    console.log("");
+    if (firsts.length > 1 && !agree) {
+      console.log(
+        "  The pages do not start at the same offset, which is the margin at\n" +
+          "  the top of each fragment being truncated. Carry the space as\n" +
+          "  padding-top instead and every page starts where the first one does."
+      );
+    } else if (onGrid === total && total > 0) {
+      console.log(
+        "  Every page holds. A page box does not have to be a whole number of\n" +
+          "  rows for this: each page restarts its grid at its own content edge."
+      );
+    }
+    console.log("");
+    break;
+  }
   case "rhythm": {
     if (!url) fail("rhythm needs a URL");
     const { browser, page } = await open(url, options);

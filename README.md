@@ -1604,6 +1604,79 @@ which ones are not.
 
 ---
 
+---
+
+## Finding: print, which is where this idea comes from
+
+Everything above this line is measured in a browser, where a baseline is a number
+the engine will hand you. A printed page is not a DOM. `getBoundingClientRect`
+does not survive pagination, so every claim about how a fit behaves across pages
+was reasoning rather than measurement, and reasoning is what this repository
+exists to distrust.
+
+A PDF will tell you, if you read it. Text is positioned by a matrix, the matrix
+is in the content stream, and the stream is usually deflated. So `quoin print`
+renders the page, walks the page tree, inflates each page's content, tracks the
+transform stack and reports where every baseline landed.
+
+```bash
+npx quoin print https://example.com
+```
+
+```
+  80 of 80 baselines on a 8px grid across 3 pages  (100%)
+
+  page   baselines   on grid   first baseline
+  1      28          28        80px
+  2      28          28        80px
+  3      24          24        80px
+```
+
+**A margin at the top of a page is truncated, exactly as it is at the top of a
+column.** Page fragmentation and column fragmentation are the same rule in
+css-break-3, and a fitted document behaves accordingly: page one starts at its
+space and every page after it starts at the cap alone.
+
+```
+                        page 1   page 2   page 3
+margin-top               32px     11px     11px
+padding-top              32px     32px     32px
+```
+
+Read as a score that is 34 of 82 against 80 of 80. The fix is the one columns
+already needed, and it is the same fix for the same reason.
+
+**`break-inside: avoid` is not needed here, unlike columns.** A paragraph split
+across a page keeps its phase in Chromium, where a paragraph split across a
+column does not. Padding alone reads 80 of 80.
+
+**The page box does not have to be a whole number of rows.** This is worth saying
+plainly because it is the opposite of what a print designer would expect, and
+believing otherwise makes people size their page around their grid for nothing.
+Each page restarts its own grid at its own content edge, so nothing carries
+across the break and the height of the box is not part of the arithmetic. A page
+whose content is 125.33 rows tall holds exactly as well as one that is 96.
+
+### What the reader is, and is not
+
+It reads text positions and sizes. It is not a PDF renderer and does not try to
+be: no fonts, no glyphs, no colour, no images. A grid check needs to know where
+the baselines are, and that is all it takes out.
+
+The origin is solved rather than asked for. Where a page's content starts depends
+on the `@page` margin, which the tool does not know, and an early version
+defaulted it to 24pt and then reported first baselines of -10px on a page that
+set none, which is a tool blaming a document for the tool's own guess. One origin
+is solved across every page at once instead: if the pages agree about where their
+grid begins, one origin fits all of them, and if they do not then none does, and
+the low score is the finding. `--print-margin` still takes a figure for anyone who
+wants the absolute reading.
+
+Chromium only, because that is the one engine Playwright will render a PDF with.
+The finding is about css-break-3 rather than about Chromium, but the measurement
+is Chromium's and the limitation is stated rather than buried.
+
+
 ## The command line
 
 ```bash
@@ -1613,6 +1686,7 @@ npx quoin seat   https://example.com -o baseline.css
 npx quoin rhythm https://example.com
 npx quoin scale  --font "EB Garamond" --sizes 16,28,44
 npx quoin fit    --design design.json
+npx quoin print  https://example.com
 npx quoin engine --browser firefox
 ```
 
@@ -1620,7 +1694,8 @@ npx quoin engine --browser firefox
 `rhythm` says which boxes are not a whole number of rows and why. `scale` solves
 a type scale that needs no correction at all. `fit` takes a design and returns it
 unchanged with the spacing that puts it on the grid at every width. `engine` tells
-you whether this browser's cap heights come off the rasteriser.
+you whether this browser's cap heights come off the rasteriser. `print` renders
+the page to PDF and reads the baselines back out of the file.
 
 ### The flags
 
@@ -1666,6 +1741,7 @@ Reporting:
 
 ```bash
 --min <percent>       exit 1 below this, for CI
+--print-margin <pt>   the @page margin, for print. Solved when omitted
 --json                machine-readable output
 ```
 
