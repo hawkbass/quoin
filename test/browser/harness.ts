@@ -78,6 +78,7 @@ export interface InPage {
   capOvershootFromFontTable: (font: string, lh: number) => number | null;
   capHeightFromFontTable: (font: string) => number | null;
   canReadFontTableCapHeight: () => boolean;
+  resetMeasurementCache: () => void;
   capHeightIsRasterised: (family?: string) => boolean;
   baselineWithinLineBox: (m: { ascent: number; descent: number }, lh: number) => number;
   check: (pitch?: number) => GridReport;

@@ -163,6 +163,19 @@ function probe(): HTMLElement {
     "margin:0!important;padding:0!important;border:0!important;" +
     "contain:layout style!important;pointer-events:none!important;";
   el.textContent = "Hxp";
+  /*
+     Nothing here resets `font-size-adjust`, and it is the one property that
+     would destroy this measurement: at 0.9 it doubled the trimmed box in both
+     engines, 21.19px to 42.64px. It does not need resetting because the `font`
+     shorthand that every caller sets on this element already does it, along
+     with `font-variation-settings`, `font-feature-settings` and
+     `font-optical-sizing`.
+
+     That is load-bearing and it is invisible. Setting `fontFamily` and
+     `fontSize` separately instead of the shorthand would look equivalent and
+     would silently inherit whatever the page had set, which is checked in
+     verify.spec.ts rather than left as a comment.
+  */
   document.body.appendChild(el);
   capProbe = el;
   return el;

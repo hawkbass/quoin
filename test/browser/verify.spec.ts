@@ -305,3 +305,75 @@ test("an empty page does not crash the solver or invent an origin", async ({ pag
   expect(empty.origin, "the origin it was given, not a guess").toBe(0);
   expect(empty.flag, "nothing was solved").toBe(false);
 });
+
+test("the font shorthand is what protects the cap probe, and it is load-bearing", async ({
+  page,
+  browserName,
+}) => {
+  /*
+     `font-size-adjust` rescales a font to a target x-height. At 0.9 it doubled a
+     trimmed box in both engines, from 21.19px to 42.64px, and every figure the
+     fitter produces comes from that box. A page setting it would make every cap
+     measurement wrong by whatever ratio it chose, consistently and with no
+     symptom at all.
+
+     The probe is immune, and not because anything in it says so. The CSS `font`
+     shorthand resets `font-size-adjust` to `none` along with
+     `font-variation-settings` and `font-feature-settings`, and the probe sets
+     the shorthand. That is the entire defence, it is invisible, and writing
+     `fontFamily` and `fontSize` separately instead would look equivalent while
+     quietly inheriting whatever the page had.
+
+     So this asserts the reset rather than the outcome: the outcome passes either
+     way, which is exactly what makes it a bad test.
+  */
+  await load(page, "prose.html");
+
+  const supported = await page.evaluate(() => window.quoin.canReadFontTableCapHeight());
+  if (!supported) {
+    test.skip(true, `${browserName} cannot read a font table's cap height`);
+    return;
+  }
+
+  const measured = await page.evaluate(() => {
+    const box = (apply: (el: HTMLElement) => void) => {
+      const el = document.createElement("div");
+      el.style.cssText =
+        "position:absolute;left:-99999px;top:0;width:max-content;display:block;" +
+        "white-space:pre;margin:0;padding:0;border:0;contain:layout style;" +
+        "font-size-adjust:0.9;";
+      apply(el);
+      el.style.textBoxTrim = "trim-both";
+      el.style.textBoxEdge = "cap alphabetic";
+      el.textContent = "Hxp";
+      document.body.appendChild(el);
+      const height = el.getBoundingClientRect().height;
+      el.remove();
+      return height;
+    };
+
+    return {
+      /* What the probe does. */
+      shorthand: box((el) => { el.style.font = "32px serif"; }),
+      /* What it would do if somebody simplified it. */
+      separate: box((el) => {
+        el.style.fontFamily = "serif";
+        el.style.fontSize = "32px";
+      }),
+      declared: window.quoin.capHeightFromFontTable("32px serif"),
+    };
+  });
+
+  expect(measured.declared).not.toBeNull();
+  expect(
+    Math.abs(measured.shorthand - measured.declared!),
+    "the shorthand form matches what the probe reports"
+  ).toBeLessThan(0.05);
+
+  expect(
+    measured.separate,
+    `setting the properties separately gave ${measured.separate} against ` +
+      `${measured.shorthand} for the shorthand, so the reset is not load-bearing ` +
+      "after all and this test should be deleted"
+  ).toBeGreaterThan(measured.shorthand * 1.5);
+});
