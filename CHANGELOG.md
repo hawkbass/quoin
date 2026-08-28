@@ -1,5 +1,34 @@
 # Changelog
 
+## 1.18.1
+
+The tool told quoin.dev to change a border that was fine.
+
+### Fixed
+
+**Rhythm blamed a border for a remainder the border did not carry.**
+
+quoin.dev's hero sets 64px of padding above, 53px below and a 3px rule under it,
+with a comment in the stylesheet observing that those come to a whole number of
+rows. They do, exactly: 120px, fifteen rows. The box is nonetheless 2px over,
+because its contents are 2px over. The tool told the author to change the border.
+
+The diagnosis asked whether the border was a whole number of rows **on its own**,
+rather than whether the box's own spacing was. Those are different questions with
+different answers, and only the second one matters: a box is a whole number of
+rows when its border, its padding and its contents sum to one.
+
+So the attribution is on `border + padding` now, and the advice closes that
+rather than the border's own remainder. On quoin.dev the border count went from
+79 to 62, the contents count from 78 to 95, and the drift the page is reported as
+introducing from 272px to 223px. Seventeen boxes were being blamed for a border
+that was already accounted for, and the real cause was listed separately as
+somebody else's problem.
+
+It is the third defect this tool has found by being pointed at its own site, and
+all three were the same shape: an answer that was true about a part and false
+about the thing somebody would act on.
+
 ## 1.18.0
 
 Which grid, rather than how to fit this one.

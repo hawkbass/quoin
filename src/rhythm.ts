@@ -162,12 +162,26 @@ function diagnose(
   const leadingOver = leading > 0 ? remainder(leading, pitch) : 0;
 
   /*
-     Borders first, and not because they are the most common. They are the
-     cheapest to fix and the easiest to miss: a hairline is a pixel in the flow,
-     it is invisible in a design tool, and the fix is to take it out of the
-     box's own padding rather than to remove it.
+     What the box adds to its own contents, taken together.
+
+     A box is a whole number of rows when its border, its padding and its
+     contents SUM to one. Checking each of those separately and blaming the
+     first that is not whole on its own is a different question, and it gets a
+     different and usually wrong answer.
+
+     quoin.dev's hero says so in its own stylesheet: 64px of padding above, 53px
+     below, a 3px rule under it, and a comment observing that those come to a
+     whole number of rows. They do, exactly: 120px, fifteen rows. The box is
+     nonetheless 2px over, because its contents are 2px over, and this told the
+     author to change the border. The border was innocent, the advice was wrong,
+     and the actual cause was reported separately as somebody else's problem.
+
+     Seventy-nine of the hundred and fifty-eight issues on that page were border
+     issues before this. Most of them were that.
   */
-  if (borderOver > 0) {
+  const ownOver = remainder(borders + padding, pitch);
+
+  if (ownOver > 0 && borderOver > 0) {
     /*
        Take it out of the padding when there is padding to take it out of.
 
@@ -181,22 +195,27 @@ function diagnose(
        With no padding to spend, the border has to be made up rather than
        absorbed, so the box grows to the next row instead.
     */
+    /* What has to come off the padding is the box's own remainder, not the
+       border's. A 3px border above 117px of padding needs nothing doing to it:
+       together they are fifteen rows. */
     const bottom = px(style.paddingBottom);
     const fix =
-      padding >= borderOver
-        ? bottom >= borderOver
-          ? `Subtract the border from this box's own padding: ` +
-            `padding-bottom ${tidy(bottom - borderOver)}px instead of ${tidy(bottom)}px ` +
-            `keeps the rule and the rhythm.`
-          : `Subtract the border from this box's own padding, ${borderOver}px off ` +
-            `the ${padding}px it has, and it keeps both the rule and the rhythm.`
-        : `There is no padding to take it out of, so make it up instead: ` +
-          `${tidy(pitch - borderOver)}px of padding takes this box to the next row ` +
-          `and keeps the rule.`;
+      bottom >= ownOver
+        ? `Subtract it from this box's own padding: padding-bottom ` +
+          `${tidy(bottom - ownOver)}px instead of ${tidy(bottom)}px keeps the rule ` +
+          `and the rhythm.`
+        : padding >= ownOver
+          ? `Subtract it from this box's own padding, ${ownOver}px off the ` +
+            `${padding}px it has, and it keeps both the rule and the rhythm.`
+          : `There is not enough padding to take it out of, so make it up instead: ` +
+            `${tidy(pitch - ownOver)}px more padding takes this box to the next row ` +
+            `and keeps the rule.`;
 
     return {
       cause: "border",
-      detail: `${borders}px of border on a ${pitch}px grid`,
+      detail:
+        `${borders}px of border and ${padding}px of padding come to ` +
+        `${tidy(borders + padding)}px, which is ${ownOver}px past a ${pitch}px row`,
       fix,
     };
   }
@@ -221,11 +240,15 @@ function diagnose(
     };
   }
 
-  if (paddingOver > 0) {
+  if (ownOver > 0) {
+    /* The border is zero or already a whole number of rows, so the padding is
+       what is left holding the remainder. */
     return {
       cause: "padding",
-      detail: `${padding}px of vertical padding`,
-      fix: `Round the padding to a multiple of ${pitch}px.`,
+      detail: `${padding}px of vertical padding is ${ownOver}px past a ${pitch}px row`,
+      fix:
+        `Take ${ownOver}px off it, or add ${tidy(pitch - ownOver)}px, whichever ` +
+        `suits the design. Either makes the box a whole number of rows.`,
     };
   }
 

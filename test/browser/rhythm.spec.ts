@@ -304,5 +304,64 @@ test("the border advice can always be followed", async ({ page }) => {
   /* The branch that did not exist: no padding means make it up, not spend it. */
   const bare = issues.find((issue) => issue.path.includes("bare"));
   expect(bare, "the unpadded box was not reported").toBeTruthy();
-  expect(bare!.fix, bare!.fix).toMatch(/no padding to take it out of/);
+  expect(bare!.fix, bare!.fix).toMatch(/not enough padding to take it out of/);
+});
+
+test("a border the padding already accounts for is not the cause", async ({ page }) => {
+  /*
+     The tool told quoin.dev to change a border that was fine.
+
+     Its hero sets 64px of padding above, 53px below and a 3px rule under it,
+     with a comment in the stylesheet observing that those come to a whole number
+     of rows. They do, exactly: 120px, fifteen rows. The box was still 2px over,
+     because its contents were 2px over, and the diagnosis blamed the border,
+     because it asked whether the border was a whole number of rows ON ITS OWN
+     rather than whether the box's own spacing was.
+
+     Those are different questions with different answers, and the second one is
+     the one that matters: a box is a whole number of rows when its border, its
+     padding and its contents SUM to one.
+
+     Seventy-nine of that page's issues were border issues before this. Sixty-two
+     after, and the seventeen that moved were this.
+  */
+  await page.setContent(`<!doctype html><meta charset="utf-8"><style>
+    body { margin: 0; font: 16px/24px serif }
+    /* 3px of border, 117px of padding: 120 together, fifteen whole rows.
+       The contents are 2px over, and they are the cause. */
+    .settled { border-bottom: 3px solid #000; padding: 64px 0 53px }
+    .settled > p { margin: 0; height: 98px }
+    /* 3px of border and 16px of padding: 19 together, 3px over. */
+    .ragged { border-bottom: 3px solid #000; padding: 8px 0 8px }
+    .ragged > p { margin: 0; height: 96px }
+  </style>
+  <div class="settled"><p>Contents two pixels over a row.</p></div>
+  <div class="ragged"><p>Contents exactly twelve rows.</p></div>`);
+  await page.addScriptTag({ content: readFileSync(resolve("dist/quoin.global.js"), "utf8") });
+
+  const found = await page.evaluate(() => {
+    const report = window.quoin.verifyRhythm({ pitch: 8, limit: 50 });
+    const of = (cls: string) =>
+      report.issues.find((issue) => issue.path.includes(cls)) ?? null;
+    return { settled: of("settled"), ragged: of("ragged") };
+  });
+
+  /* Both boxes are off a row, so both should be reported. The control: if
+     neither is, this fixture is not exercising anything. */
+  expect(found.settled, "the settled box was not reported at all").toBeTruthy();
+  expect(found.ragged, "the ragged box was not reported at all").toBeTruthy();
+
+  /* The claim. Its border and padding are fifteen whole rows, so the border is
+     not what to change, and saying so sends somebody to the wrong line of CSS. */
+  expect(
+    found.settled!.cause,
+    `blamed the border again: ${found.settled!.detail}`
+  ).not.toBe("border");
+
+  /* And the box whose own spacing really is off a row still says so, or this
+     fix has just stopped the tool reporting borders at all. */
+  expect(
+    found.ragged!.cause,
+    `${found.ragged!.detail}, and this one is 3px past a row`
+  ).toBe("border");
 });
