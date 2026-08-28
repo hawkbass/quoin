@@ -137,6 +137,73 @@ function remainder(value: number, pitch: number): number {
 }
 
 /*
+   An inline at a different size makes the line taller than the line-height.
+
+   Half-leading is (line-height minus content height) over two, and content
+   height comes from the font at its rendered size. A smaller inline has a
+   smaller content height, so its baseline sits lower inside its own leading
+   box; align the two baselines and the union of the boxes is more than either
+   line-height. The same is true of a larger one, in the other direction.
+
+   Nothing about the CSS looks wrong, which is why this is worth naming rather
+   than leaving under "something inline". On quoin.dev it was eighteen of the
+   nineteen paragraphs off the rhythm, against two of the forty-six on it, and
+   the whole of it was `code` set at 0.82em. One line of CSS took that page from
+   77% to 93.6%.
+
+   The engines disagree about what triggers it, which is why this looks for a
+   difference of any kind rather than for a size. In Chromium only a different
+   size does it: a different family at the same size is harmless. In WebKit a
+   different family alone costs 1.5px, a different size 2.5px, and inline-block
+   does not help either. `line-height: 0` fixes every case in both.
+
+   A zero leading contributes no box at all, which is the fix rather than the
+   fault, so an inline already carrying one is not a culprit.
+*/
+function inlineFix(
+  el: Element,
+  size: number,
+  leading: number,
+  pitch: number,
+  family: string
+): string {
+  let tag = "";
+  let at = 0;
+  let count = 0;
+
+  for (const child of el.querySelectorAll("*")) {
+    const style = getComputedStyle(child);
+    if (style.display !== "inline") continue;
+    const childSize = px(style.fontSize);
+    const childLeading = px(style.lineHeight);
+    if (childLeading === 0) continue;
+    const sameSize = Math.abs(childSize - size) < 0.01;
+    const sameLeading = leading <= 0 || Math.abs(childLeading - leading) < 0.01;
+    const sameFamily = style.fontFamily === family;
+    if (sameSize && sameLeading && sameFamily) continue;
+    if (!tag) {
+      tag = child.tagName.toLowerCase();
+      at = tidy(childSize);
+    }
+    if (child.tagName.toLowerCase() === tag && tidy(childSize) === at) count++;
+  }
+
+  if (!tag) {
+    return (
+      "The fraction is inside this box, not the box: something inline, an " +
+      "image or a control, or a child off the grid."
+    );
+  }
+
+  return (
+    `${count} inline <${tag}> at ${at}px inside ${tidy(size)}px text. A different ` +
+    `size or family moves its baseline in the line box, so the line exceeds its ` +
+    `${leading || pitch}px line-height. Set line-height: 0 on it: no box then, ` +
+    `and the glyphs stay put.`
+  );
+}
+
+/*
    Which part of the box is not a whole number of rows.
 
        height = borderTop + paddingTop + content + paddingBottom + borderBottom
@@ -174,14 +241,13 @@ function diagnose(
     return {
       cause: "collapsed-border",
       detail:
-        `this cell is in a table with collapsed borders, so its height is not ` +
-        `its border plus its padding plus its contents`,
+        `a cell in a table with collapsed borders, so its height is not its ` +
+        `border plus its padding plus its contents`,
       fix:
-        `Set border-collapse: separate and border-spacing: 0 on the table. A ` +
-        `collapsed border is drawn on the edge between two cells and counted ` +
-        `half to each, so the parts stop adding up and nothing here can tell ` +
-        `you which one to change. Separate borders look the same where only ` +
-        `one side is set, and they add up.`,
+        `Set border-collapse: separate and border-spacing: 0. A collapsed border ` +
+        `is drawn on the edge between two cells and counted half to each, so the ` +
+        `parts stop adding up and nothing here can say which to change. Separate ` +
+        `borders look the same where one side is set, and they add up.`,
     };
   }
 
@@ -254,21 +320,19 @@ function diagnose(
     const bottom = px(style.paddingBottom);
     const fix =
       bottom >= ownOver
-        ? `Subtract it from this box's own padding: padding-bottom ` +
-          `${tidy(bottom - ownOver)}px instead of ${tidy(bottom)}px keeps the rule ` +
-          `and the rhythm.`
+        ? `Take it out of the padding: padding-bottom ${tidy(bottom - ownOver)}px ` +
+          `instead of ${tidy(bottom)}px keeps the rule and the rhythm.`
         : padding >= ownOver
-          ? `Subtract it from this box's own padding, ${ownOver}px off the ` +
-            `${padding}px it has, and it keeps both the rule and the rhythm.`
-          : `There is not enough padding to take it out of, so make it up instead: ` +
-            `${tidy(pitch - ownOver)}px more padding takes this box to the next row ` +
-            `and keeps the rule.`;
+          ? `Take ${ownOver}px out of the ${padding}px of padding, which keeps ` +
+            `both the rule and the rhythm.`
+          : `There is not enough padding to take it out of, so make it up: ` +
+            `${tidy(pitch - ownOver)}px more takes this box to the next row.`;
 
     return {
       cause: "border",
       detail:
         `${borders}px of border and ${padding}px of padding come to ` +
-        `${tidy(borders + padding)}px, which is ${ownOver}px past a ${pitch}px row`,
+        `${tidy(borders + padding)}px, ${ownOver}px past a ${pitch}px row`,
       fix,
     };
   }
@@ -298,10 +362,10 @@ function diagnose(
        what is left holding the remainder. */
     return {
       cause: "padding",
-      detail: `${padding}px of vertical padding is ${ownOver}px past a ${pitch}px row`,
+      detail: `${padding}px of vertical padding, ${ownOver}px past a ${pitch}px row`,
       fix:
-        `Take ${ownOver}px off it, or add ${tidy(pitch - ownOver)}px, whichever ` +
-        `suits the design. Either makes the box a whole number of rows.`,
+        `Take ${ownOver}px off it or add ${tidy(pitch - ownOver)}px. Either makes ` +
+        `the box a whole number of rows.`,
     };
   }
 
@@ -315,10 +379,7 @@ function diagnose(
         leading > 0
           ? `${Math.round(content * 100) / 100}px of content is ${lines.toFixed(2)} lines of ${leading}px`
           : `${Math.round(content * 100) / 100}px of content`,
-      fix:
-        `The fraction comes from inside this box rather than from the box. ` +
-        `Either something inline is taller than its line box, an inline-block, ` +
-        `an image or a control, or a child is off the grid. Fix the child.`,
+      fix: inlineFix(el, px(style.fontSize), leading, pitch, style.fontFamily),
     };
   }
 

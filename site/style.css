@@ -132,6 +132,22 @@ code {
   font-size: 0.82em;
   background: var(--paper-sunk);
   padding: 1px 4px;
+  /*
+     Zero, so the code does not make its line taller than the line-height says.
+
+     An inline element at a different font-size sits its baseline differently
+     inside the same line box: the half-leading is (line-height minus content
+     height) over two, and a smaller font has a smaller content height, so its
+     baseline lands lower in its own box. Align the two baselines and the union
+     of the boxes is more than either line-height.
+
+     One pixel, on this page. It was eighteen of the nineteen paragraphs that
+     were off the rhythm, against two of the forty-six that were on it, and
+     nothing about the CSS looks wrong. A zero line-height on an inline
+     contributes no box of its own, so the parent's strut governs the line and
+     the glyphs draw exactly where they did.
+  */
+  line-height: 0;
 }
 
 a { color: var(--brass); text-decoration-thickness: 1px; text-underline-offset: 3px; }

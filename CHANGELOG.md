@@ -1,5 +1,56 @@
 # Changelog
 
+## 1.20.0
+
+An inline element in a different size or family takes its block off the rhythm,
+and nothing about the CSS looks wrong.
+
+### Finding
+
+Half-leading is (line-height minus content height) over two, and content height
+comes from the font at its rendered size. An inline at a different size has a
+different content height, so its baseline sits elsewhere inside its own leading
+box; align the two baselines and the union of the boxes is more than either
+line-height. The block comes out a pixel over and every declaration in it is
+defensible.
+
+**The engines disagree about what triggers it**, which is the part worth knowing:
+
+```
+                                    Chromium   WebKit
+inline, same family and size            -          -
+inline, other family                    -       +1.5
+other family, smaller size            +1        +2.5
+other family, inline-block              -       +1.5
+other family, line-height 0             -          -
+```
+
+Chromium needs a different size; a different family alone is harmless. WebKit
+needs only the family, a size makes it worse, and `inline-block` does not help.
+`line-height: 0` fixes every case in both, because an inline with no leading
+contributes no box, the parent's strut governs the line, and the glyphs draw
+exactly where they did.
+
+**On quoin.dev this was eighteen of the nineteen paragraphs off the rhythm,
+against two of the forty-six on it**, and all of it was `code` set at 0.82em.
+One line of CSS took the page from 77% to 93.6%.
+
+### Fixed
+
+**Rhythm names the inline now rather than gesturing at it.** It used to answer
+"something inline is taller than its line box, an inline-block, an image or a
+control, or a child is off the grid. Fix the child." All true, none of it the
+answer. It says which element, at what size, inside what, and what to set.
+
+Gated with a control that differs in nothing, because that is the only inline
+which contributes nothing in both engines, and with the advice applied: a fix
+whose own advice does not work is an observation.
+
+### The site
+
+quoin.dev is **93.6% in rhythm**, from 57.8% three releases ago, and introduces
+one pixel of drift. Phase is unaffected and still 100% at every breakpoint.
+
 ## 1.19.0
 
 The collapsed border, in both halves of the tool.

@@ -450,3 +450,86 @@ test("a collapsed border is named, not blamed on the contents", async ({ page })
     /border-collapse: separate/
   );
 });
+
+test("an inline at a different size is named, because nothing about it looks wrong", async ({
+  page,
+}) => {
+  /*
+     Half-leading is (line-height minus content height) over two, and content
+     height comes from the font at its rendered size. A smaller inline has a
+     smaller content height, so its baseline sits lower inside its own leading
+     box; align the two baselines and the union is more than either line-height.
+     The block comes out a pixel over and every declaration in the CSS is
+     defensible.
+
+     On quoin.dev that was eighteen of the nineteen paragraphs off the rhythm,
+     against two of the forty-six on it, and all of it was `code` at 0.82em. One
+     line of CSS took the page from 77% to 93.6%.
+
+     The engines disagree about what triggers it. In Chromium only a different
+     size does: a different family at the same size is harmless. In WebKit a
+     different family alone costs 1.5px, a different size 2.5px, and
+     inline-block does not help either. So the control here is an inline that
+     differs in nothing at all, which is the only one that contributes nothing
+     in both, and the case is asserted as "off by something" rather than by a
+     figure one engine happens to produce.
+
+     The tool used to answer "something inline is taller than its line box, an
+     inline-block, an image or a control, or a child is off the grid. Fix the
+     child." All of which is true and none of which is the answer.
+  */
+  const paragraph = (rule: string) => `<!doctype html><meta charset="utf-8"><style>
+    body { margin: 0; font-family: Georgia, serif }
+    p { font-size: 18px; line-height: 32px; margin: 0; width: 460px }
+    ${rule}
+  </style>
+  <p>A paragraph of ordinary reading text that runs to three lines at this width,
+     with <code>an inline code</code> somewhere in the middle of it.</p>`;
+
+  const read = async (rule: string) => {
+    await page.setContent(paragraph(rule));
+    await page.evaluate(() => document.fonts?.ready);
+    await page.addScriptTag({ content: readFileSync(resolve("dist/quoin.global.js"), "utf8") });
+    return page.evaluate(() => {
+      const report = window.quoin.verifyRhythm({ pitch: 8, limit: 10 });
+      const p = document.querySelector("p")!;
+      return {
+        height: Math.round(p.getBoundingClientRect().height * 100) / 100,
+        issue: report.issues.find((i) => i.path.endsWith("p")) ?? null,
+      };
+    });
+  };
+
+  /* The control: an inline differing in nothing contributes nothing, in either
+     engine, so the paragraph is a whole number of rows and nothing is reported.
+     Without this a fix that named every inline would pass. */
+  const same = await read("code { font-family: inherit; font-size: inherit }");
+  expect(same.height, "the control paragraph is not a whole number of rows").toBe(96);
+  expect(
+    same.issue,
+    `an inline differing in nothing was reported: ${same.issue?.fix ?? ""}`
+  ).toBeNull();
+
+  /* The case. Chromium reads 97 and WebKit 98.5, so the assertion is that it is
+     off at all rather than a figure only one of them produces. */
+  const smaller = await read("code { font-family: monospace; font-size: 0.82em }");
+  expect(
+    smaller.height % 8,
+    `a smaller inline left the paragraph at ${smaller.height}px, a whole number of rows`
+  ).not.toBe(0);
+  expect(smaller.issue, "the paragraph was not reported").toBeTruthy();
+  expect(smaller.issue!.cause).toBe("contents");
+  expect(smaller.issue!.fix, smaller.issue!.fix).toMatch(/inline <code> at 14\.76px inside 18px/);
+  expect(smaller.issue!.fix, "it does not say what to do").toMatch(/line-height: 0/);
+
+  /* And the advice works, in both, which is the only thing that makes it
+     advice rather than an observation. */
+  const fixed = await read(
+    "code { font-family: monospace; font-size: 0.82em; line-height: 0 }"
+  );
+  expect(
+    fixed.height,
+    `following the advice left the paragraph at ${fixed.height}px`
+  ).toBe(96);
+  expect(fixed.issue, "still reported after taking its own advice").toBeNull();
+});
