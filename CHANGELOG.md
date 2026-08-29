@@ -1,5 +1,75 @@
 # Changelog
 
+## 1.25.0
+
+The fitter could produce vertical CSS that nothing here could check.
+
+### Added
+
+`quoin check --vertical`, and `verifyVertical()` behind it. It measures a page
+in `vertical-rl` or `vertical-lr` the same way the fitter reasons about one:
+half the leading in from the block-start edge, and nothing else. No font is
+read, no cap height, no `text-box-trim`.
+
+It reports the parity split alongside the percentage, because mixed parity is
+the one thing that breaks such a page and a percentage does not say which
+leading is at fault.
+
+The round trip, on a page written by hand in a system font with no font file
+involved at any point:
+
+```
+  4 text blocks, leadings 41 / 27 / 17.5 on an 8px grid
+  2 of 4 on the grid  (50%)   leadings: 0 even, 0 odd, 3 not a whole number of rows
+
+  quoin fit --vertical  ->  40 / 24 / 24, all odd
+
+  4 of 4 on the grid  (100%)  worst drift 0.00px
+```
+
+Pointed at a horizontal page it says so and counts the blocks it did not
+measure. Nothing measured averages to a perfect score over an empty set, and
+that number would have been believed.
+
+### Fixed
+
+**`fit --vertical` demanded a font it never reads.** A design with sizes and no
+family was refused, with a message explaining that the cap height belongs to
+the typeface. Vertical fitting has no cap height in it. The tool was
+contradicting the claim printed two lines below the refusal. `normaliseDesign`
+now takes `fontOptional`, and the horizontal message points at `--vertical`.
+
+**The walk stopped at a vertical boundary instead of descending through it.** A
+caption set back to `horizontal-tb` inside a vertical layout has an ordinary
+horizontal baseline, and it was skipped along with the whole subtree: never
+measured, never reported, and never counted as unmeasured either. `walk` now
+takes `vertical` and picks an axis rather than abandoning a branch. It went
+unnoticed because until there was a vertical verifier there was no reason to
+look at that boundary.
+
+**quoin.dev is somebody else's company.** It is the login page of Quoin Systems
+Limited and always has been. The README hyperlinked readers to it, and the
+corpus crawler's user-agent gave it as the contact URL, which told every
+surveyed site to complain to a company that had nothing to do with any of this.
+Both now point at the repository. Every figure in this README attributed to
+"quoin.dev" was measured on the page in `site/`, which has never been served
+from that domain.
+
+### Bytes
+
+Two removals paid for the walk change rather than raising the console budget,
+which stands at 28 kB and has been raised three times already:
+
+- `NON_TEXT_SET.has(el.tagName) || NON_TEXT_SET.has(tag)` could not have a true
+  first half and a false second. Every name in `NON_TEXT` is upper case and
+  `tag` is the upper-cased tagName. It read as though it were guarding a
+  mixed-case SVG name and was guarding nothing.
+- `options.vertical ?? false` where the callee's type already requires the
+  field.
+
+`verifyVertical` is not in the console bundle at all, which now has one byte of
+its budget left. That is worth saying plainly rather than discovering next time.
+
 ## 1.24.0
 
 Vertical writing, where the problem this library exists for does not occur.

@@ -276,3 +276,117 @@ test("the vertical baseline is centred and the horizontal one is not", async ({
     }
   }
 });
+
+/* --------------------------------------------------------------------------
+   verifyVertical, which is the other half of the feature.
+
+   `fit --vertical` was shipped before there was any way to check what it
+   emitted. The browser tests above prove the arithmetic by measuring line-box
+   centres with a Range, which is a test harness rather than a tool: nobody
+   auditing their own vertical page can run it. These check the checker.
+   -------------------------------------------------------------------------- */
+
+const FIT_BUNDLE = readFileSync(resolve("dist/quoin.fit.js"), "utf8");
+
+interface VerticalCheck {
+  report: {
+    total: number;
+    onGrid: number;
+    offGrid: number;
+    parities: { even: number; odd: number; fractional: number };
+    mixedParity: boolean;
+  };
+  skippedHorizontal: number;
+  grid: { pitch: number; origin: number };
+}
+
+async function check(
+  page: import("@playwright/test").Page,
+  html: string
+): Promise<VerticalCheck> {
+  await page.setContent(html);
+  await page.evaluate(() => document.fonts?.ready);
+  await page.waitForTimeout(200);
+  await page.addScriptTag({ content: FIT_BUNDLE });
+
+  return page.evaluate((pitch) => {
+    const api = (globalThis as unknown as { quoinFit: Record<string, Function> }).quoinFit;
+    const out = api.verifyVertical!({ pitch }) as VerticalCheck;
+    return {
+      report: out.report,
+      skippedHorizontal: out.skippedHorizontal,
+      grid: out.grid,
+    };
+  }, PITCH) as Promise<VerticalCheck>;
+}
+
+test("verifyVertical reads a page fitted by fitVertical as seated", async ({ page }) => {
+  const design = [
+    { name: "caption", size: 13, leading: 17.5 },
+    { name: "body", size: 20, leading: 27 },
+    { name: "heading", size: 32, leading: 41 },
+  ];
+  const fitted = fitVertical(design, { pitch: PITCH });
+  const steps = fitted.steps.map((s) => ({
+    name: s.name,
+    size: s.size,
+    leading: s.leading,
+    space: s.space,
+  }));
+
+  const seen = await check(page, markup(steps));
+
+  expect(seen.report.total, "nothing was measured").toBeGreaterThan(5);
+  expect(
+    seen.report.onGrid,
+    `a page fitted by the tool read ${seen.report.onGrid}/${seen.report.total} ` +
+      `when checked by the tool`
+  ).toBe(seen.report.total);
+  expect(seen.report.mixedParity).toBe(false);
+});
+
+test("verifyVertical fails the page the arithmetic says should fail", async ({ page }) => {
+  /* The control. Without it the test above passes for a checker that returns
+     100% unconditionally, which is a checker somebody would ship. */
+  const mixed = [
+    { name: "a", size: 13, leading: 16, space: 24 },
+    { name: "b", size: 15, leading: 24, space: 24 },
+    { name: "c", size: 20, leading: 32, space: 24 },
+  ];
+
+  const seen = await check(page, markup(mixed));
+
+  expect(
+    seen.report.offGrid,
+    `16, 24 and 32 are two even row counts and one odd, and the checker read ` +
+      `${seen.report.onGrid}/${seen.report.total} with nothing off it`
+  ).toBeGreaterThan(0);
+  expect(
+    seen.report.mixedParity,
+    `parities counted ${JSON.stringify(seen.report.parities)}, which the checker ` +
+      "did not call mixed"
+  ).toBe(true);
+});
+
+test("a horizontal page is not reported as a seated vertical one", async ({ page }) => {
+  /*
+     The failure this checker could plausibly have. Point it at an ordinary
+     horizontal page and every block is skipped, which leaves nothing measured,
+     which averages to a perfect score over an empty set. That is the exact
+     shape of defect this project keeps finding in itself: an answer that is
+     true about a part and false about the thing somebody would act on.
+  */
+  const horizontal = `<!doctype html><meta charset="utf-8"><style>
+    body { margin: 0; font: 20px/27px serif }
+    p { margin: 0 0 21px }
+  </style><p>${TEXT}</p><p>${TEXT}</p><p>${TEXT}</p>`;
+
+  const seen = await check(page, horizontal);
+
+  expect(seen.report.total, "a horizontal page was measured as vertical text").toBe(0);
+  expect(
+    seen.skippedHorizontal,
+    "the blocks were dropped without being counted, so the caller cannot tell " +
+      "an unmeasurable page from a seated one"
+  ).toBeGreaterThan(0);
+});

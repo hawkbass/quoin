@@ -8,6 +8,8 @@
 
 import { test, expect } from "@playwright/test";
 import { load, GRID } from "./harness.ts";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 
 test("it descends into open shadow roots", async ({ page }) => {
   await load(page, "torture.html");
@@ -250,4 +252,45 @@ test("inline boxes are not counted or seated: their line belongs to the parent",
   expect(result.sawInline, "the walk skipped the inline runs").toBe(false);
   expect(result.moved, "and the seater did not move them").toBe(false);
   expect(result.cssTouchesSpan, "and the stylesheet does not mention them").toBe(false);
+});
+
+test("a horizontal block inside a vertical one is reached, not lost at the boundary", async ({
+  page,
+}) => {
+  /*
+     The walk used to `continue` on any vertical element, which skipped the
+     element AND everything under it. That was correct about the vertical block
+     and wrong about the page: a caption set back to `horizontal-tb` inside a
+     vertical layout has an ordinary horizontal baseline, and it was never
+     measured, never reported, and never counted as unmeasured either.
+
+     It went unnoticed because until there was a vertical verifier there was no
+     reason to look at the boundary at all.
+  */
+  await page.setContent(`<!doctype html><meta charset="utf-8"><style>
+    body { margin: 0; font: 20px/24px serif }
+    main { writing-mode: vertical-rl; height: 400px; width: 900px }
+    .caption { writing-mode: horizontal-tb; font-size: 14px; line-height: 16px }
+  </style><main>
+    <p>縦書きの段落です。これは横書きの格子では測れません。</p>
+    <p class="caption">A caption set back to horizontal inside a vertical page.</p>
+  </main>`);
+
+  await page.addScriptTag({
+    content: readFileSync(resolve("dist/quoin.global.js"), "utf8"),
+  });
+
+  const seen = await page.evaluate(() => {
+    const { results } = window.quoin.verifyGrid({ pitch: 8, origin: 0 });
+    return {
+      total: results.length,
+      samples: results.map((r) => r.sample),
+    };
+  });
+
+  expect(
+    seen.total,
+    "the horizontal caption inside the vertical block was not reached"
+  ).toBe(1);
+  expect(seen.samples[0]).toContain("caption set back to horizontal");
 });

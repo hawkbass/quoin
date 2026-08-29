@@ -84,3 +84,11 @@ export {
   type FittedVerticalScale,
   type FittedVerticalStep,
 } from "./fit-core.ts";
+
+export {
+  verifyVertical,
+  type VerifyVerticalOptions,
+  type VerifyVerticalResult,
+  type VerticalNodeResult,
+  type VerticalReport,
+} from "./verify-vertical.ts";

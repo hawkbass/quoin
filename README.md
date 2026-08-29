@@ -2071,6 +2071,29 @@ centre a line box and put the dominant baseline in the middle, which every
 engine has done since long before any of this existed. Vertical text can be put
 on a grid in a browser from 2019.
 
+### Checking one, which is the other half
+
+`quoin check --vertical` measures a vertical page the same way: half the
+leading in from the block-start edge, no font read. It reports the parity split
+as well as the percentage, because mixed parity is the one thing that breaks
+such a page and a percentage does not say which leading is at fault.
+
+The round trip, on a page written by hand in a system font with no font file
+anywhere in it:
+
+```
+  4 text blocks, leadings 41 / 27 / 17.5 on an 8px grid
+  2 of 4 on the grid  (50%)     leadings: 0 even, 0 odd, 3 not a whole number of rows
+
+  quoin fit --vertical  ->  40 / 24 / 24, all odd
+
+  4 of 4 on the grid  (100%)    worst drift 0.00px
+```
+
+Pointed at a horizontal page it says so and counts the blocks it did not
+measure, rather than returning a percentage over an empty set. That failure was
+available and is the one this project keeps finding in itself.
+
 ### What this does not cover
 
 The measurement is `vertical-rl` with the default `text-orientation: mixed`, in
@@ -2096,7 +2119,8 @@ npx quoin columns https://example.com
 npx quoin engine --browser firefox
 ```
 
-`check` walks a page and reports. `seat` corrects it and prints the stylesheet.
+`check` walks a page and reports, and takes `--vertical` for a page set in a
+vertical writing mode. `seat` corrects it and prints the stylesheet.
 `rhythm` says which boxes are not a whole number of rows and why. `scale` solves
 a type scale that needs no correction at all. `fit` takes a design and returns it
 unchanged with the spacing that puts it on the grid at every width. `engine` tells
@@ -2169,7 +2193,13 @@ Playwright, and says so plainly if you have not got it.
 
 ## The site
 
-[quoin.dev](https://quoin.dev) is built out of this repository with
+> Not deployed anywhere yet, and the obvious domain is taken: `quoin.dev` is
+> the login page of Quoin Systems Limited, an unrelated company. Everything
+> below that names quoin.dev means the page in `site/`, which is where every
+> figure quoted from it was measured. Nothing here has ever been served from
+> that domain.
+
+The site in `site/` is built out of this repository with
 `npm run build:site`, and the last thing that build does is point Quoin at the
 page and write the corrections to `baseline.css`. The claim in its footer is
 true by construction rather than by assertion, and the build fails if seating

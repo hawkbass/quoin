@@ -16,6 +16,7 @@
 import * as library from "./page.ts";
 import { fitScale, fittedScaleToCss, inferDesign } from "./fit.ts";
 import { fitVertical, fittedVerticalToCss } from "./fit-core.ts";
+import { verifyVertical } from "./verify-vertical.ts";
 
 const global = globalThis as unknown as Record<string, unknown>;
 global.quoinFit = {
@@ -26,4 +27,7 @@ global.quoinFit = {
   /* Vertical needs no browser at all, but it belongs beside its sibling. */
   fitVertical,
   fittedVerticalToCss,
+  /* And the checker for what it emits. A fitter whose output the tool
+     cannot verify is half a feature. */
+  verifyVertical,
 };

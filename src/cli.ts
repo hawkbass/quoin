@@ -477,6 +477,130 @@ switch (command) {
     if (!url) fail("check needs a URL");
     const { browser, page } = await open(url, options);
 
+    /*
+       Vertical is a different measurement and forks before the font work, the
+       same way `fit` does. Half the leading in from the block-start edge, and
+       nothing else: no cap height, no trim, no font.
+
+       It needs the fitter bundle rather than the console one. `verifyVertical`
+       is deliberately not in the console bundle, which has one byte of its
+       size budget left.
+    */
+    if (options.vertical) {
+      await page.addScriptTag({ content: bundle("quoin.fit.js") });
+
+      const vertical = await page.evaluate((o) => {
+        const out = (globalThis as unknown as { quoinFit: Record<string, Function> })
+          .quoinFit.verifyVertical!(o) as {
+          results: { drift: number; onGrid: boolean; path: string; sample: string }[];
+          report: {
+            total: number;
+            onGrid: number;
+            worst: number;
+            distinctDrifts: number;
+            systematic: boolean;
+            parities: { even: number; odd: number; fractional: number };
+            mixedParity: boolean;
+          };
+          grid: { pitch: number; origin: number };
+          skippedHorizontal: number;
+          closedShadowRoots: number;
+          frames: number;
+        };
+        return {
+          report: out.report,
+          grid: out.grid,
+          skippedHorizontal: out.skippedHorizontal,
+          closedShadowRoots: out.closedShadowRoots,
+          frames: out.frames,
+          worst: out.results
+            .filter((r) => !r.onGrid)
+            .sort((a, b) => Math.abs(b.drift) - Math.abs(a.drift))
+            .slice(0, 12)
+            .map((r) => ({ drift: r.drift, path: r.path, sample: r.sample })),
+        };
+      }, gridOptions);
+
+      await browser.close();
+
+      const verticalShare = percent(vertical.report.onGrid, vertical.report.total);
+
+      if (options.json) {
+        console.log(
+          JSON.stringify(
+            /* `vertical.grid` rather than the requested one: its origin is the
+               solved one, and a reading taken against a solved origin answers a
+               different question from one taken against a fixed origin. */
+            { url, vertical: true, ...vertical, percent: verticalShare },
+            null,
+            2
+          )
+        );
+      } else {
+        console.log(`
+  ${url}, vertical-rl`);
+
+        /* Said before the percentage, because a percentage over an empty set is
+           the one number here that could be believed and should not be. */
+        if (vertical.report.total === 0) {
+          console.log(
+            `  nothing to measure: no text on this page is set in a vertical ` +
+              `writing mode`
+          );
+          if (vertical.skippedHorizontal > 0) {
+            console.log(
+              `  ${vertical.skippedHorizontal} horizontal text blocks, which are ` +
+                `what \`quoin check\` without --vertical measures`
+            );
+          }
+          console.log("");
+          break;
+        }
+
+        console.log(
+          `  ${vertical.report.onGrid} of ${vertical.report.total} text blocks on a ` +
+            `${options.pitch}px grid  (${verticalShare}%)`
+        );
+        console.log(`  worst drift ${vertical.report.worst.toFixed(2)}px`);
+
+        const p = vertical.report.parities;
+        console.log(
+          `  leadings: ${p.even} even, ${p.odd} odd` +
+            (p.fractional > 0 ? `, ${p.fractional} not a whole number of rows` : "")
+        );
+        if (vertical.report.mixedParity) {
+          console.log(
+            "  mixed parity, which is the one thing that breaks a vertical page:" +
+              "\n  between two baselines lies leadingA/2 + space + leadingB/2, so two" +
+              "\n  leadings of the same parity leave a whole number of rows and one of" +
+              "\n  each leaves half a row over. Run `quoin fit --vertical`."
+          );
+        }
+        if (vertical.skippedHorizontal > 0) {
+          console.log(
+            `  ${vertical.skippedHorizontal} horizontal blocks not measured here`
+          );
+        }
+        if (vertical.frames > 0) {
+          console.log(`  ${vertical.frames} frames: a different document`);
+        }
+        console.log("");
+        for (const row of vertical.worst) {
+          console.log(
+            `  ${row.drift.toFixed(2).padStart(7)}px  ${row.path.padEnd(38).slice(0, 38)}  ` +
+              `${row.sample.slice(0, 34)}`
+          );
+        }
+        console.log("");
+      }
+
+      if (options.min !== null && verticalShare < options.min) {
+        console.error(`quoin: ${verticalShare}% is below the ${options.min}% floor`);
+        process.exit(1);
+      }
+      break;
+    }
+
     const data = await page.evaluate((o) => {
       const { results, report, skippedTransformed, closedShadowRoots, frames } =
         quoin.verifyGrid(o);
@@ -1242,7 +1366,9 @@ switch (command) {
     const { normaliseDesign, DesignError } = await import("./design-input.ts");
     let normalised;
     try {
-      normalised = normaliseDesign(parsed);
+      /* A vertical design needs no font, and demanding one would be the tool
+         contradicting the claim it makes two lines further down. */
+      normalised = normaliseDesign(parsed, { fontOptional: options.vertical });
     } catch (error) {
       if (error instanceof DesignError) fail(error.message);
       throw error;

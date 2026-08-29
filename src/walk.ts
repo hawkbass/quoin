@@ -21,6 +21,21 @@ export interface WalkOptions {
    * as there being nothing there.
    */
   crossShadow?: boolean;
+  /**
+   * Collect blocks in a vertical writing mode instead of horizontal ones.
+   *
+   * A block is on one axis or the other and cannot be on both, so this picks
+   * rather than filters. Either way the walk descends through the other axis
+   * rather than stopping at it: a horizontal caption inside a vertical page is
+   * still a horizontal block, and dropping the whole subtree at that boundary
+   * is how such a caption went unmeasured for as long as the only walk was the
+   * horizontal one.
+   *
+   * A boolean rather than an axis name because there are two axes and because
+   * the console bundle is measured in bytes: comparing to a string literal
+   * twice per element cost more than the feature did.
+   */
+  vertical?: boolean;
 }
 
 export interface WalkResult {
@@ -84,7 +99,7 @@ function matchesAny(el: Element, selectors: readonly string[]): boolean {
 */
 function descend(
   node: Element | ShadowRoot | DocumentFragment,
-  options: Required<Pick<WalkOptions, "ignore" | "crossShadow">>,
+  options: Required<Pick<WalkOptions, "ignore" | "crossShadow" | "vertical">>,
   out: WalkResult,
   depth: number
 ): void {
@@ -100,14 +115,15 @@ function descend(
       out.frames++;
       continue;
     }
-    if (NON_TEXT_SET.has(el.tagName) || NON_TEXT_SET.has(tag)) continue;
+    /* `tag` only. Every name in NON_TEXT is upper case and `tag` is
+       `el.tagName` upper-cased, so a match on the raw tagName implies a match
+       on this one. The pair read as though it were guarding a mixed-case SVG
+       or MathML name and it was not guarding anything. */
+    if (NON_TEXT_SET.has(tag)) continue;
     if (matchesAny(el, options.ignore)) continue;
 
     const style = getComputedStyle(el);
     if (style.display === "none" || style.visibility === "hidden") continue;
-    /* Vertical writing modes have a baseline, but it runs the other way and a
-       horizontal grid has nothing to say about it. */
-    if (style.writingMode && style.writingMode !== "horizontal-tb") continue;
 
     /*
        Only elements that directly own rendered words, and only block-level
@@ -123,7 +139,14 @@ function descend(
        wrapped in a span was pushed seven pixels below the words either side of
        it, by the tool, on the tool's own homepage.
     */
-    if (ownsRenderedText(el) && !style.display.startsWith("inline")) {
+    /* A vertical block has a baseline too. It runs the other way, so it
+       belongs to `verifyVertical` rather than to a horizontal grid, and each
+       walk takes the axis it can say something about. */
+    if (
+      ownsRenderedText(el) &&
+      !style.display.startsWith("inline") &&
+      (style.writingMode !== "horizontal-tb") === options.vertical
+    ) {
       out.blocks.push(el);
     }
 
@@ -171,6 +194,9 @@ export function walk(
      usually means that element. */
   if (root instanceof Element && ownsRenderedText(root)) {
     const style = getComputedStyle(root);
+    /* Not filtered by axis. A caller who names a root has named it, and the
+       walk second-guessing that is worse than handing it back. The verifiers
+       both check the mode of what they are given anyway. */
     if (style.display !== "none" && style.visibility !== "hidden") {
       out.blocks.push(root);
     }
@@ -178,7 +204,11 @@ export function walk(
 
   descend(
     root,
-    { ignore: options.ignore ?? [], crossShadow: options.crossShadow ?? true },
+    {
+      ignore: options.ignore ?? [],
+      crossShadow: options.crossShadow ?? true,
+      vertical: !!options.vertical,
+    },
     out,
     0
   );

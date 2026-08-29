@@ -184,7 +184,25 @@ function toStep(raw: unknown, at: string, notes: string[]): DesignStep {
  * single family with its steps inline. Anything it has to interpret is reported
  * in `notes`; anything it cannot is a `DesignError` naming the exact entry.
  */
-export function normaliseDesign(input: unknown): NormaliseResult {
+/**
+ * Options for reading a design.
+ */
+export interface NormaliseOptions {
+  /**
+   * Accept a design that names no font.
+   *
+   * Off by default, because the cap height that decides horizontal spacing
+   * belongs to the typeface and a design without one cannot be fitted. Vertical
+   * fitting reads no font metrics at all, so for that path the requirement is
+   * not a safeguard, it is the tool contradicting its own claim.
+   */
+  fontOptional?: boolean;
+}
+
+export function normaliseDesign(
+  input: unknown,
+  options: NormaliseOptions = {}
+): NormaliseResult {
   const notes: string[] = [];
 
   if (!input || typeof input !== "object") {
@@ -212,7 +230,7 @@ export function normaliseDesign(input: unknown): NormaliseResult {
       const fontKey = ["font", "fontFamily", "font-family", "family", "stack"].find(
         (k) => typeof family[k] === "string"
       );
-      if (!fontKey) {
+      if (!fontKey && !options.fontOptional) {
         throw new DesignError(
           at,
           'no font. Give it as "font", with the CSS family exactly as the page will set it'
@@ -229,7 +247,7 @@ export function normaliseDesign(input: unknown): NormaliseResult {
 
       return {
         role: typeof family.role === "string" ? family.role : `family-${index + 1}`,
-        font: String(family[fontKey]),
+        font: fontKey ? String(family[fontKey]) : "",
         steps: list.map((step, at2) => toStep(step, `${at}.${stepsKey}[${at2}]`, notes)),
         ...(typeof family.file === "string" ? { file: family.file } : {}),
       } as FamilyRequest;
@@ -244,7 +262,7 @@ export function normaliseDesign(input: unknown): NormaliseResult {
   );
   const stepsKey = ["steps", "sizes", "scale", "tokens"].find((k) => Array.isArray(root[k]));
 
-  if (fontKey && stepsKey) {
+  if ((fontKey || options.fontOptional) && stepsKey) {
     const list = root[stepsKey] as unknown[];
     if (list.length === 0) throw new DesignError(`design.${stepsKey}`, "is empty");
     notes.push("read the whole design as a single family");
@@ -253,7 +271,7 @@ export function normaliseDesign(input: unknown): NormaliseResult {
       families: [
         {
           role: typeof root.role === "string" ? root.role : "body",
-          font: String(root[fontKey]),
+          font: fontKey ? String(root[fontKey]) : "",
           steps: list.map((step, i) => toStep(step, `design.${stepsKey}[${i}]`, notes)),
           ...(typeof root.file === "string" ? { file: root.file } : {}),
         } as FamilyRequest,
@@ -266,7 +284,8 @@ export function normaliseDesign(input: unknown): NormaliseResult {
     throw new DesignError(
       "design",
       `found ${stepsKey} but no font. Every family needs the CSS family it is set in, ` +
-        "because the cap height that decides the spacing belongs to the typeface"
+        "because the cap height that decides the spacing belongs to the typeface.\n" +
+        "  Vertical fitting does not: try --vertical, which reads no font at all"
     );
   }
 
