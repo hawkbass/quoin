@@ -1,5 +1,61 @@
 # Changelog
 
+## 1.23.0
+
+The survey was measured by a tool that has been corrected eighteen times since.
+
+### The audit
+
+Asked whether anything needed repairing before starting something new, the
+honest way to answer was to look rather than to say no. Most of it came back
+clean: no TODO markers anywhere, no unexplained skips, every conditional skip's
+condition met in CI, all four jobs green, and the plugins audited a release ago.
+
+One thing did not. `findings/corpus.json` records `quoin: "1.4.0"`, and the
+published figures drawn from it sat on the front page and in this README while
+`diagnose` was corrected in 1.18.1, gained a cause in 1.19.0 and changed what
+counts as introducing drift along the way.
+
+### Re-measured
+
+The survey was re-run with the shipped build. The headline held, which is the
+part worth saying first:
+
+```
+                     1.4.0    1.22.0
+scored / dropped     153/59   152/60
+median on 8px        28.2%    28.6%
+median rhythm        19.5%    18.6%
+sites over 90%       0        0
+```
+
+The corrections showed up where they should: **border went from 8 to 6, and
+three sites now report `collapsed-border`**, a cause that did not exist when the
+survey first ran and which the tool could not see. Leading went 106 to 104. Every
+table in the README and on the site is updated to the new run.
+
+### Fixed, and it was never right
+
+**Bureau Borsche was never the second-best site.** The README said "the best is
+Fonts In Use at 89.2%, then Bureau Borsche at 82.1%". Bureau Borsche renders 39
+text nodes, under the floor for characterising a page, so it is dropped as thin
+and has no score at all, in this run and in the original. The figure sat there
+through eighteen releases with nothing able to check it.
+
+### Added
+
+**`npm run corpus:check`, in `test:all`.** Every figure the survey produced is
+hand-copied into four places and they rot independently. The gate reads
+`findings/corpus.json` and checks 40 published figures against it: both category
+tables row by row, the headline counts, and the cause breakdown.
+
+It also checks the thing that actually went wrong, which no comparison of the
+tables against the data could have caught: whether the data was measured by a
+build that still measures the same way. `MEASUREMENT_CHANGED_AT` is bumped by
+hand when `verify`, `rhythm` or `grid` changes what a number means, because only
+the person making the change knows whether it moved the measurement or the
+wording.
+
 ## 1.22.0
 
 The column grid, on the site that argues for grids.

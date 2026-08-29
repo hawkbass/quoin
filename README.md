@@ -556,30 +556,37 @@ grid origin solved from each page rather than pinned to zero:
 | Category | Sites | On an 8px grid | Pinned to origin 0 | Rhythm | Distinct drifts |
 |---|---|---|---|---|---|
 | Institutions | 9 | 32.0% | 13.6% | 2.2% | 22 |
-| Type foundries | 15 | 31.3% | 11.9% | 3.7% | 21 |
-| Design systems | 27 | 30.8% | 14.3% | **29.5%** | 21 |
-| Documentation | 39 | 30.5% | 12.8% | 20.9% | 22 |
-| Academic | 7 | 26.9% | 11.5% | 10.0% | 37 |
-| Studios | 11 | 26.5% | 9.1% | 8.1% | 28 |
-| Product | 24 | 25.2% | 10.6% | 27.5% | 40.5 |
-| Editorial | 20 | 24.4% | 10.6% | 18.8% | 47 |
+| Type foundries | 15 | 31.9% | 13.3% | 3.7% | 21 |
+| Academic | 6 | 30.9% | 12.8% | 12.6% | 34.5 |
+| Design systems | 27 | 30.8% | 14.4% | **29.5%** | 21 |
+| Documentation | 39 | 29.3% | 12.8% | 20.9% | 22 |
+| Studios | 11 | 25.7% | 10.9% | 8.1% | 28 |
+| Editorial | 20 | 25.0% | 12.2% | 18.8% | 46 |
+| Product | 25 | 25.0% | 11.8% | 25.4% | 43 |
 
 Medians, not means: one site at 4% drags an average and tells you nothing about
-the category. 153 sites scored, 59 dropped. `npm run corpus` reproduces it; the
+the category. 152 sites scored, 60 dropped. `npm run corpus` reproduces it; the
 full table is in `findings/corpus.md` and the raw readings in
 `findings/corpus.json`.
 
 These are the figures from the committed run. A fresh one moves them by a few
-tenths, because it measures live sites and those sites deploy: two runs an hour
-apart scored the same 153, and every median moved by less than half a point.
+tenths, because it measures live sites and those sites deploy: a run a day later
+scored 152 rather than 153, and every median moved by less than a point. The
+survey is stable; the web is not.
 
 **None of these sites claims a baseline grid, so being off one is not a defect.**
 The table describes the medium rather than the teams: a convention print has had
 since metal type, which nothing on the web has.
 
-**Not one site in 212 reaches 90%.** The best is Fonts In Use at 89.2%, then
-Bureau Borsche at 82.1%, then a gap to Svelte at 60.7%. Seven sites clear 50%.
-The median is 28.2%.
+**Not one site in 212 reaches 90%.** The best is Fonts In Use at 89.2%, then a
+long gap to Svelte at 60.7%, tRPC at 51.5% and Future Fonts at exactly 50. Six
+sites clear 50%. The median is 28.6%.
+
+An earlier version of this paragraph put Bureau Borsche second at 82.1%. It was
+never second: the site renders 39 text nodes, which is under the floor for
+characterising a page, so it is dropped as thin and has no score at all. The
+figure had been sitting there through eighteen releases with nothing able to
+check it, which is what the gate below now exists for.
 
 ### The categories are the same, and that is the finding
 
@@ -611,8 +618,8 @@ measuring.
 
 ### Solving for the origin is worth 14.9 points
 
-Every site was measured twice. Pinned to an origin of zero the median is 11.9%;
-solved from the page it is 28.2%. Zero asks whether baselines sit on multiples of
+Every site was measured twice. Pinned to an origin of zero the median is 12.8%;
+solved from the page it is 28.6%. Zero asks whether baselines sit on multiples of
 the pitch from the top of the document, and a page with a header answers no
 however carefully it is set, because everything below the header moved by the
 same amount. The Met reads 0.8% against zero and 48.8% against its own origin.
@@ -623,11 +630,12 @@ version of this table was taken against zero and understated every row in it.
 
 ### Leading is the cause, on two sites in three
 
-Of the 153 sites scored, the commonest rhythm defect on 106 of them is leading:
+Of the 152 sites scored, the commonest rhythm defect on 104 of them is leading:
 a `line-height` that is a ratio rather than a number of rows. `1.5` on 17px is
 25.5px, and every extra line in the paragraph carries the half pixel down the
 page. After that, 30 sites are led by replaced elements with no quantised height,
-9 by padding and 8 by borders.
+9 by padding, 6 by borders and 3 by a collapsed table border, which is a cause
+the survey could not name the first time it ran because the tool could not see it.
 
 It is the least visible defect available. `line-height: 1.5` looks like a
 decision. It is a decision, and it is also 25.5px.
@@ -646,7 +654,7 @@ sizes give fractional ascents. It now sits at 20 distinct drifts with the highes
 rhythm in the corpus at 44.5%, and at 22.1% on phase, which is below the median.
 Being the surveyor is not the same as being finished.
 
-### What the 59 dropped rows say about the method
+### What the 60 dropped rows say about the method
 
 28 sites render fewer than 25 blocks of text at load, which is too thin for a
 percentage to mean anything. 19 were behind a consent dialog, which is a
@@ -882,7 +890,7 @@ leadings are already whole numbers of rows, which means somebody chose them.
 
 ### The other obstacle, which this does not remove
 
-The median site is 28.6% on the grid and **18.9% in rhythm**, and the second
+The median site is 28.6% on the grid and **18.6% in rhythm**, and the second
 number is the one a type fit does not touch. Fitting sets sizes, leadings and the
 space between blocks. It cannot make a container with thirteen pixels of padding,
 or an image a hundred and thirty-seven pixels tall, into a whole number of rows,
