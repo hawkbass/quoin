@@ -27,6 +27,31 @@ export interface DesignStep {
   /** The space the design wants before a block of this size, in px. */
   space?: number;
   /**
+   * The `rt` font size, in px, for vertical text that carries ruby.
+   *
+   * Read only by `fitVertical`, and only to raise the leading. Furigana is
+   * ordinary in Japanese vertical setting, and an annotation that does not fit
+   * inside the leading is reserved for at the block-start edge: the first
+   * baseline moves in, the block grows by the same amount, and with no trim on
+   * this axis the growth reaches every block below.
+   *
+   * Needs `emRatio` alongside it. Without one the step is reported as unfitted
+   * rather than guessed at.
+   */
+  ruby?: number;
+  /**
+   * The font's (ascent + descent) / em, for steps that carry ruby.
+   *
+   * The only font metric anywhere in the vertical fitter, and it is here for a
+   * reason worth stating: the vertical baseline is font-free, but a ruby
+   * annotation is a box rather than a baseline, and a box is font-sized. Ruby
+   * puts back the dependence that vertical writing takes away.
+   *
+   * Measured the same way the rest of this library measures: from the font the
+   * browser actually resolved, not from a stylesheet's intent.
+   */
+  emRatio?: number;
+  /**
    * The block's own border-top and padding-top, in px.
    *
    * These sit between the top of the box and its first line, so they move the
@@ -710,6 +735,18 @@ export interface FittedVerticalStep {
   space: number;
   spaceWas: number;
   spaceMoved: number;
+  /** The `rt` size this was fitted for, when the design gave one. */
+  ruby?: number;
+  /** True when ruby was asked for without the metric the floor needs. */
+  rubyUnmet?: boolean;
+  /**
+   * The least leading at which the engines reserve nothing for the annotation.
+   *
+   * Present only when `ruby` is. The fitted leading is never below it, so a
+   * step whose `leadingWas` is under this one was raised by the annotation
+   * rather than by the grid, and the report can say which.
+   */
+  rubyFloor?: number;
 }
 
 export interface FittedVerticalScale {
@@ -764,8 +801,48 @@ export function fitVertical(
     const fitted: FittedVerticalStep[] = [];
 
     steps.forEach((step, index) => {
-      const wanted = step.leading ?? (step.ratio ? step.size * step.ratio : step.size * 1.5);
+      const asked = step.leading ?? (step.ratio ? step.size * step.ratio : step.size * 1.5);
 
+      /*
+         Ruby needs headroom, and unlike everything else on this axis it needs
+         the font to say how much.
+
+         An annotation is a second, smaller run of type beside the base text. If
+         the leading cannot hold both, every engine reserves the difference at
+         the block-start edge: the first baseline moves in, the block grows by
+         the same amount, and with no trim on this axis the growth reaches every
+         block below it. Horizontally `text-box-trim` cuts exactly that away.
+
+         The measured floor, with WebKit the binding engine of the three:
+
+             leading >= (size + 2 x ruby) x (ascent + descent) / em
+
+         which held at 58 of 60 held-out combinations of face and size, the
+         other two short by half a pixel, so a pixel is added. The row snap
+         below would absorb that anyway; relying on it silently would not.
+
+         Note what that ratio is. The vertical baseline is font-free, which is
+         the whole finding this fitter rests on, and it stays font-free. The
+         annotation is not a baseline, it is a box, and a box is font-sized. So
+         ruby puts back exactly the dependence that vertical writing takes away,
+         and only for the designs that carry it.
+
+         An earlier version of this used a constant 1.15 in place of the ratio.
+         It was fitted on three faces that were all the same fallback font,
+         because the probe served them from a page on about:blank where the
+         @font-face could not load. Eight faces reporting an identical
+         ascent+descent of 1.11 was the tell, and 1.11 is Times New Roman.
+      */
+      const ratio = step.emRatio ?? null;
+      const rubyFloor =
+        step.ruby && ratio ? Math.ceil((step.size + 2 * step.ruby) * ratio) + 1 : 0;
+
+      /* Given ruby but not the metric it needs, the step is reported rather than
+         guessed at, the same way a font that declares no cap height is left out
+         of the horizontal fit rather than estimated. */
+      const rubyUnmet = Boolean(step.ruby) && !ratio;
+
+      const wanted = Math.max(asked, rubyFloor);
       /* The nearest row count of the right parity. Rounding to the nearest row
          and then nudging by one if the parity is wrong is not the same thing:
          it can land two rows away when one of the neighbours was right. */
@@ -778,7 +855,12 @@ export function fitVertical(
       /* Never zero: a leading of nothing stacks every line on one rule. */
       if (candidates.length === 0) candidates.push(wantEven ? 2 : 1);
 
-      const rows = candidates.reduce((best, rowCount) =>
+      /* Nearest, except never below the ruby floor. Snapping to the nearest row
+         can land under it by a few pixels, and a few pixels under is the whole
+         defect: the engine takes them back at the block edge. */
+      const clears = candidates.filter((rowCount) => rowCount * pitch >= rubyFloor);
+      const usable = clears.length > 0 ? clears : candidates;
+      const rows = usable.reduce((best, rowCount) =>
         Math.abs(rowCount * pitch - wanted) < Math.abs(best * pitch - wanted) ? rowCount : best
       );
       const leading = rows * pitch;
@@ -800,6 +882,9 @@ export function fitVertical(
         space,
         spaceWas: Math.round(wantedSpace * 1000) / 1000,
         spaceMoved,
+        ...(step.ruby ? { ruby: step.ruby } : {}),
+        ...(rubyFloor ? { rubyFloor } : {}),
+        ...(rubyUnmet ? { rubyUnmet: true } : {}),
       });
     });
 

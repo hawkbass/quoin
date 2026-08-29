@@ -1,5 +1,75 @@
 # Changelog
 
+## 1.26.0
+
+Ruby, and the discovery that none of the vertical tests had loaded their font.
+
+### Ruby is supported, and it puts the font back
+
+Furigana is ordinary in Japanese vertical setting. An annotation is a second run
+of type beside the base text, and if the leading cannot hold both, every engine
+reserves the difference at the block-start edge: the first baseline moves in and
+the block grows by the same amount. Horizontally `text-box-trim` cuts that away.
+Vertically nothing does, so it reaches every block below.
+
+No CSS fixes it. `line-height: 0` on `rt`, on `ruby`, on both, and
+`ruby-position: inter-character` leave it exactly where it was. Only
+`rt { display: none }` restores the grid, which is deleting the content.
+
+The floor, at which the reservation is zero in all three engines:
+
+```
+leading >= (size + 2 x ruby) x (ascent + descent) / em
+```
+
+58 of 60 held-out combinations of face and size held; the other two were short
+by half a pixel, so the fitter adds one.
+
+That ratio is a font metric, and that is the interesting part. The vertical
+baseline is font-free and stays font-free. An annotation is not a baseline, it
+is a box, and a box is font-sized. Ruby puts back exactly the dependence that
+vertical writing takes away, and only for designs that carry it.
+
+`DesignStep` takes `ruby` and `emRatio`. Given `ruby` without `emRatio` the step
+comes back `rubyUnmet` with its leading untouched, the same refusal as a font
+that declares no cap height.
+
+### Fixed: the vertical tests were measuring the wrong font
+
+Every one of them loaded the fixture font with a root-relative URL from a page
+created by `setContent`, which leaves the document on `about:blank`. A relative
+URL resolves to nothing there, no request is issued, the interceptor never
+fires, and the browser falls back without complaint. Every test said Noto Sans
+JP and every test was a system serif.
+
+The font is loaded from an absolute URL now, and a new test asserts that the
+face which arrived is the one that was asked for, by its metrics and by
+`document.fonts`. A test that measures the wrong font and passes is worse than
+one that fails.
+
+### Corrected: the baseline is not always exactly centred
+
+With the font actually loading, one reading changed. Firefox honours a CJK
+font's own vertical metrics, and Noto Sans JP does not declare a centred
+vertical origin, so it sits 0.9px off there. Chromium and WebKit centre it, and
+Firefox centres Inter and EB Garamond.
+
+The offset is constant across every leading, which is the property the method
+needs: a constant shifts every baseline equally and solving the origin absorbs
+it, which is why a fitted page still reads 29 of 29 in the engine that is not
+centring it. The mechanism test asserts the constant now rather than zero.
+
+One real limit falls out of it, and is now in the README: two faces on one
+vertical page, where one declares vertical metrics and the other does not, do
+not share a grid in Firefox.
+
+### The half pixel that was not ruby
+
+Four held-out cases looked like the ruby floor failing, all at odd leadings.
+Plain vertical text with no ruby on the page shows the same half pixel at the
+same leadings in Chromium. Baseline rounding, not ruby, and a fitted design on
+an even pitch never has an odd leading.
+
 ## 1.25.0
 
 The fitter could produce vertical CSS that nothing here could check.

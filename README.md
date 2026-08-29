@@ -2010,10 +2010,32 @@ vertical              32         16         centred
 vertical              30         15         centred
 ```
 
-Exactly half, both leadings, both engines, for the CJK sample and for a Latin
-sample set in the same face. There is no ascent in it. The asymmetry is not
-reduced or easier to correct; it is absent, because the baseline the browser
-aligns to vertically is the one defined as the middle of the em.
+There is no ascent in it. The asymmetry is not reduced or easier to correct; it
+is absent, because the baseline the browser aligns to vertically is the one
+defined as the middle of the em.
+
+**With one exception, found late and worth stating precisely.** Firefox honours
+a CJK font's own vertical metrics, and a face that does not declare a centred
+vertical origin is not centred there. Noto Sans JP sits 0.9px off in Firefox and
+exactly centred in the other two; Inter and EB Garamond are centred in all
+three.
+
+The offset is constant across every leading, which is the property that matters.
+A constant shifts every baseline on the page by the same amount, and solving the
+origin absorbs it, which is why a fitted page still reads 29 of 29 in the engine
+that is not centring it. What it costs is one real limit: **two faces on one
+vertical page, where one declares vertical metrics and the other does not, do
+not share a grid in Firefox.**
+
+That exception was invisible for a while, and the reason is the more useful
+lesson. Every probe behind the original claim loaded its fixture font with a
+root-relative URL from a page created by `setContent`, which leaves the document
+on `about:blank`. A relative URL resolves to nothing there, no request is made,
+the interceptor never fires, and the browser falls back in silence. Every
+measurement said Noto Sans JP and every measurement was Times New Roman, whose
+ascent and descent sum to 1.107 em against Noto's 1.448. The tests now assert
+that the face which arrived is the face that was asked for, because a test that
+measures the wrong font and passes is worse than one that fails.
 
 So the vertical rule has no font in it at all:
 
@@ -2094,16 +2116,70 @@ Pointed at a horizontal page it says so and counts the blocks it did not
 measure, rather than returning a percentage over an empty set. That failure was
 available and is the one this project keeps finding in itself.
 
-### What this does not cover
+### Ruby, which puts the font back
 
-The measurement is `vertical-rl` with the default `text-orientation: mixed`, in
-Chromium, Firefox and WebKit, at a range of leadings, for a CJK sample and a
-Latin one. It has not been checked with `text-orientation: upright`, with ruby
-annotations, with `vertical-lr`, or against a real Japanese publication's
-setting. Ruby in particular is the case to be suspicious of, since it adds a
-second line of type inside the first block's leading, and the horizontal
-equivalent of that is the inline-element finding immediately above, which does
-move the line it lands on.
+Furigana is ordinary in Japanese vertical setting, so a tool that claims to fit
+vertical Japanese has to survive it. The 1.24.0 README named ruby as the thing
+to be suspicious of and left it untested. It was right to be suspicious.
+
+An annotation is a second, smaller run of type beside the base text. If the
+leading cannot hold both, every engine reserves the difference at the
+block-start edge: the first baseline moves in, and the block grows by the same
+amount. Horizontally `text-box-trim` cuts exactly that away and the damage stops
+at the block. Vertically there is no trim, so it reaches everything below.
+
+No CSS fixes it. `line-height: 0` on `rt`, on `ruby`, on both, and
+`ruby-position: inter-character` all leave it precisely where it was. Only
+`rt { display: none }` restores the grid, and that is deleting the content
+rather than fitting it.
+
+Give the line enough leading and the reservation is exactly zero in all three
+engines:
+
+```
+leading >= (size + 2 x ruby) x (ascent + descent) / em
+```
+
+Measured across sixteen size pairs, then checked at ten more it had never seen,
+in three engines: 58 of 60 held, the other two short by half a pixel, so the
+fitter adds one.
+
+**And that ratio is a font metric, which is the whole point.** The vertical
+baseline is font-free and stays font-free. An annotation is not a baseline, it
+is a box, and a box is font-sized. Ruby puts back exactly the dependence that
+vertical writing takes away, and only for the designs that carry it.
+
+So `fitVertical` takes `ruby` and `emRatio` together on a step. Given `ruby`
+without `emRatio` it reports the step as `rubyUnmet` and leaves the leading
+alone, the same refusal as a font that declares no cap height: a guess would put
+every baseline on the wrong row while looking like it worked.
+
+### Two wrong answers on the way to that one
+
+Both were nearly published, and both are in the tests by name.
+
+**The first floor was a constant.** `1.15 x (size + 2 x ruby)`, fitted across
+three faces that gave identical readings, from which the conclusion was drawn
+that the floor does not depend on the typeface. The three faces were the same
+fallback font. The probe served them from a page on `about:blank`, where the
+`@font-face` could not load and the request interceptor never fired. Eight faces
+later reporting an identical ascent-plus-descent of 1.107 em was the tell, and
+1.107 is Times New Roman. The conclusion was the exact opposite of the truth,
+and it was reached by a control that could not fail.
+
+**The second was a half pixel.** Four held-out cases looked like the real floor
+failing, and every one of them was at an odd leading. Plain vertical text with
+no ruby anywhere on the page shows the same half pixel at the same leadings in
+Chromium. It is baseline rounding, not ruby, and a fitted design on an even
+pitch never has an odd leading.
+
+### Still not covered
+
+`text-orientation: upright` and `vertical-lr` are measured and hold. Ruby is
+measured and holds under the floor above. What has not been tried is ruby in
+`vertical-lr`, ruby with `ruby-align` other than the default, and any of this
+against a real Japanese publication's setting rather than a fixture.
+
 
 ## The command line
 
