@@ -47,6 +47,20 @@ face which arrived is the one that was asked for, by its metrics and by
 `document.fonts`. A test that measures the wrong font and passes is worse than
 one that fails.
 
+### And CI never had the font either
+
+The fixtures are downloaded rather than committed, and only the `metrics` job
+fetches them. That separation is deliberate: 30MB from a third party failing is
+a network fault and should not read as a defect here. But the browser job runs
+the vertical suite, and it has never had the fonts, so on CI these tests were
+rendering CJK with no CJK font at all, drawing tofu, measuring the boxes, and
+passing.
+
+The suite skips as a whole when the fixture is absent, and says why. It runs in
+the `metrics` job, where the fonts exist. A suite that reports success on a run
+where it measured nothing is the exact failure this project keeps finding in
+itself.
+
 ### Corrected: the baseline is not always exactly centred
 
 With the font actually loading, one reading changed. Firefox honours a CJK

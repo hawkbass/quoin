@@ -40,13 +40,27 @@
    afterwards to justify it. */
 
 import { test, expect } from "@playwright/test";
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 
 import { fitVertical } from "../../src/fit-core.ts";
 
 const BUNDLE = readFileSync(resolve("dist/quoin.global.js"), "utf8");
 const FONT = resolve("test/browser/fixtures/fonts/NotoSansJP.ttf");
+
+/*
+   Everything here measures type, so everything here needs the typeface.
+
+   The fixtures are downloaded rather than committed, and only the `metrics` job
+   fetches them, deliberately: 30MB from a third party failing is a network
+   fault and should not look like a defect in this repository. The browser job
+   never had them, so on CI this file has been rendering CJK with no CJK font at
+   all, drawing tofu, measuring the boxes, and passing.
+
+   Skipped rather than quietly degraded. A suite that reports success on a run
+   where it measured nothing is the failure this whole project keeps finding.
+*/
+const HAS_FONT = existsSync(FONT);
 const PITCH = 8;
 
 const TEXT =
@@ -124,6 +138,12 @@ async function measure(page: import("@playwright/test").Page, html: string) {
 }
 
 test.describe.configure({ mode: "serial" });
+
+test.skip(
+  !HAS_FONT,
+  "the fixture font is not present, so nothing here would be measuring the face it names. " +
+    "Run `npm run fonts` first."
+);
 
 test.beforeEach(async ({ page }) => {
   await page.route("**/font.ttf", (route) => route.fulfill({ path: FONT }));

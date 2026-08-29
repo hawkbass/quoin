@@ -144,7 +144,10 @@ jobs:
       - run: npm run build
       - run: npx playwright install --with-deps chromium firefox webkit
       - run: npm run fonts
-      - run: npx playwright test --project=chromium test/browser/cap-height.spec.ts test/browser/cross-engine.spec.ts
+      # vertical.spec.ts belongs here rather than in the browser job for the
+      # same reason the fonts do: every test in it measures a named typeface,
+      # and without the fixtures it would render tofu and pass.
+      - run: npx playwright test --project=chromium test/browser/cap-height.spec.ts test/browser/cross-engine.spec.ts test/browser/vertical.spec.ts
       - uses: actions/upload-artifact@v4
         if: always()
         with:
