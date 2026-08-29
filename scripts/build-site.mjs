@@ -1,4 +1,4 @@
-/* Build quoin.dev, and seat it with Quoin.
+/* Build the site, and seat it with Quoin.
 
    The last step is the one that matters. The site is written on an 8px rhythm,
    which CSS can do, and rhythm is not phase. So the build serves the page,
@@ -13,6 +13,21 @@ import { readFileSync, writeFileSync, mkdirSync, rmSync, cpSync, existsSync, sta
 import { join } from "node:path";
 import { createServer } from "node:http";
 import { extname } from "node:path";
+
+/*
+   Where the site is served from, in one place.
+
+   It used to be quoin.dev in five of them: the canonical tag, og:url,
+   og:image, robots.txt and the sitemap. quoin.dev is the login page of Quoin
+   Systems Limited, an unrelated company, so all five pointed search engines and
+   social cards at somebody else. The canonical was the worst of them: it told
+   Google their page was the authoritative version of this one.
+
+   One constant now, and the build writes it into the HTML, so the copies
+   cannot drift apart the way they had.
+*/
+const SITE_URL = process.env.SITE_URL ?? "https://quoin.craighawkes.dev";
+const SITE_HOST = new URL(SITE_URL).host;
 
 const SRC = "site";
 const OUT = "site/dist";
@@ -36,6 +51,40 @@ for (const file of ["index.html", "demo.html", "style.css", "main.js"]) {
   cpSync(join(SRC, file), join(OUT, file));
 }
 cpSync("dist/quoin.global.js", join(OUT, "quoin.global.js"));
+
+/*
+   The absolute URLs in the head, written from SITE_URL rather than typed.
+
+   og:image is dropped rather than rewritten. It pointed at /og.png, which has
+   never existed in this build, so it was a 404 on a domain that is not ours. A
+   card with no image is worse than one with an image and better than one that
+   claims an image and fails to load it.
+*/
+{
+  const page = join(OUT, "index.html");
+  const before = readFileSync(page, "utf8");
+  const after = before
+    .replace(/<link rel="canonical" href="[^"]*">/,
+      `<link rel="canonical" href="${SITE_URL}/">`)
+    .replace(/<meta property="og:url" content="[^"]*">/,
+      `<meta property="og:url" content="${SITE_URL}/">`)
+    .replace(/\s*<meta property="og:image" content="[^"]*">/, "");
+
+  if (after.includes("quoin.dev")) {
+    console.error(
+      "\n  FAIL: the built page still refers to quoin.dev, which belongs to" +
+        "\n  Quoin Systems Limited. Every reference has to be built from SITE_URL."
+    );
+    process.exit(1);
+  }
+  writeFileSync(page, after);
+}
+
+/* GitHub Pages reads the host to serve from this file, and Jekyll would eat
+   nothing here, but .nojekyll costs nothing and removes a whole class of
+   surprise. */
+writeFileSync(join(OUT, "CNAME"), SITE_HOST + "\n");
+writeFileSync(join(OUT, ".nojekyll"), "");
 
 /* The specimen loads the same bundle, so the readout above it comes from the
    library rather than from a description of it. */
@@ -66,13 +115,13 @@ writeFileSync(
 
 writeFileSync(
   join(OUT, "robots.txt"),
-  "User-agent: *\nAllow: /\nSitemap: https://quoin.dev/sitemap.xml\n"
+  `User-agent: *\nAllow: /\nSitemap: ${SITE_URL}/sitemap.xml\n`
 );
 writeFileSync(
   join(OUT, "sitemap.xml"),
   `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://quoin.dev/</loc><changefreq>monthly</changefreq><priority>1.0</priority></url>
+  <url><loc>${SITE_URL}/</loc><changefreq>monthly</changefreq><priority>1.0</priority></url>
 </urlset>\n`
 );
 
@@ -289,4 +338,4 @@ if (worst < 95) {
 }
 
 console.log(`\n  worst breakpoint seats to ${worst.toFixed(0)}%`);
-console.log(`  quoin.dev ready in ./${OUT}\n`);
+console.log(`  ${SITE_HOST} ready in ./${OUT}\n`);

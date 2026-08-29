@@ -1,4 +1,4 @@
-/* quoin.dev
+/* The site
 
    Two jobs. Drive the specimen in the iframe, and report this page's own score
    in the footer.
