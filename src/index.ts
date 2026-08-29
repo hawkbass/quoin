@@ -77,3 +77,10 @@ export {
   type ColumnEdge,
   type ColumnOptions,
 } from "./columns.ts";
+
+export {
+  fitVertical,
+  fittedVerticalToCss,
+  type FittedVerticalScale,
+  type FittedVerticalStep,
+} from "./fit-core.ts";

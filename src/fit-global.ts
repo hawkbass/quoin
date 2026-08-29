@@ -15,6 +15,15 @@
 
 import * as library from "./page.ts";
 import { fitScale, fittedScaleToCss, inferDesign } from "./fit.ts";
+import { fitVertical, fittedVerticalToCss } from "./fit-core.ts";
 
 const global = globalThis as unknown as Record<string, unknown>;
-global.quoinFit = { ...library, fitScale, fittedScaleToCss, inferDesign };
+global.quoinFit = {
+  ...library,
+  fitScale,
+  fittedScaleToCss,
+  inferDesign,
+  /* Vertical needs no browser at all, but it belongs beside its sibling. */
+  fitVertical,
+  fittedVerticalToCss,
+};

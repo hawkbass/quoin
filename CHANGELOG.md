@@ -1,5 +1,74 @@
 # Changelog
 
+## 1.24.0
+
+Vertical writing, where the problem this library exists for does not occur.
+
+### The finding
+
+In `writing-mode: vertical-rl` the dominant baseline is the central one, and
+central means centred. Measured with a zero-sized inline box aligned to the
+baseline, in all three engines, at two leadings, for a CJK sample and a Latin
+one set in the same face:
+
+```
+mode              leading   baseline at   off centre
+horizontal            32         23            7
+vertical              32         16         centred
+```
+
+Horizontally the baseline sits at half the leading plus the ascent, and the
+ascent comes out of a table inside a font file. Vertically there is no ascent
+in it. The asymmetry is not smaller or easier to correct. It is absent.
+
+So the vertical rule has no font in it:
+
+1. every leading a whole number of rows,
+2. every leading the same parity in rows,
+3. every space a whole number of rows.
+
+No cap height, no OS/2 table, no rasteriser probe, no `text-box-trim`, no
+browser.
+
+### The parity, which the first prediction got wrong
+
+The obvious reading of `leadingA/2 + space + leadingB/2` is that each half must
+be a whole number of rows, so each leading must be an even number of them. That
+was predicted here and written into a probe as the expected result, and the
+probe disagreed: all-odd holds too, because two half-rows sum to a whole one.
+Only a mix fails. The test that carries this records the wrong prediction in
+its name.
+
+`fitVertical` solves both parities, costs each in pixels moved, and takes the
+cheaper. Ties go to even.
+
+### Added
+
+- `quoin fit --vertical`, and `--parity <even|odd>` to force one.
+- `fitVertical()` and `fittedVerticalToCss()`, exported from the library and
+  from the global build. The emitted CSS writes the space as
+  `margin-inline-start`, emits no trim and no `text-box-edge`, and names no
+  font anywhere.
+
+### Fixed
+
+The vertical browser spec skipped Firefox, with a comment saying the horizontal
+control needed `text-box-trim`. Nothing in that file has ever used trim. The
+skip was copied from another spec and the reason written afterwards to justify
+it. Removed, and the Firefox Playwright ships passes all four: a fitted page
+reads 29 of 29 in chromium, firefox and webkit alike.
+
+Which is the useful form of the finding. The horizontal method needs a property
+that reached Baseline three weeks ago. The vertical method asks the engine only
+to centre a line box, which every engine has done for years.
+
+### Not covered
+
+`text-orientation: upright`, ruby annotations, and `vertical-lr` are untested.
+Ruby is the one to be suspicious of, since it puts a second line of type inside
+the first block's leading, and the horizontal equivalent of that does move the
+line it lands on.
+
 ## 1.23.0
 
 The survey was measured by a tool that has been corrected eighteen times since.

@@ -692,3 +692,177 @@ export function surveyPitches(
 
   return { costs, cheapest, coarsestAffordable };
 }
+
+/* ------------------------------------------------------------------ *
+   Vertical writing, which turns out to be a different problem
+ * ------------------------------------------------------------------ */
+
+export interface FittedVerticalStep {
+  name: string;
+  /** The design's size, unchanged, as everywhere else here. */
+  size: number;
+  /** The leading, snapped to a whole number of rows of the chosen parity. */
+  leading: number;
+  leadingWas: number;
+  leadingMoved: number;
+  rows: number;
+  /** The space before the block, snapped to a whole number of rows. */
+  space: number;
+  spaceWas: number;
+  spaceMoved: number;
+}
+
+export interface FittedVerticalScale {
+  grid: GridConfig;
+  /** Whether every leading came out an even or an odd number of rows. */
+  parity: "even" | "odd";
+  steps: FittedVerticalStep[];
+  /** Leading and space movement, summed, in px. */
+  cost: number;
+}
+
+/**
+ * Fit a design for `writing-mode: vertical-rl`.
+ *
+ * A different problem from the horizontal one, and a smaller one.
+ *
+ * Horizontally the first baseline sits at half the leading plus the ascent, the
+ * ascent belongs to the typeface, and closing that residue is what the rest of
+ * this file does. Vertically the dominant baseline is the central one, which is
+ * centred by construction: measured in both engines, at every leading, for CJK
+ * and Latin alike, it sits at exactly half the leading and the typeface does not
+ * enter into it.
+ *
+ * So the vertical rule has no font in it:
+ *
+ *   1. every leading a whole number of rows,
+ *   2. every leading the same parity in rows, all even or all odd,
+ *   3. every space a whole number of rows.
+ *
+ * The parity condition is the whole of the difference. Between one block's last
+ * baseline and the next block's first lies `leadingA/2 + space + leadingB/2`. Two
+ * even leadings give two whole rows; two odd ones give two half-rows which sum to
+ * a whole one; one of each leaves half a row over, and the page comes apart. All
+ * even and all odd both hold, and that was measured rather than assumed: the
+ * first prediction here said odd would fail and it does not.
+ *
+ * Which means no cap height, no OS/2 table, no trim and no browser. It is
+ * arithmetic on two numbers the designer already wrote down, and it is the one
+ * thing in this library that needs nothing but the design.
+ */
+export function fitVertical(
+  steps: readonly DesignStep[],
+  options: Partial<GridConfig> & { parity?: "even" | "odd" } = {}
+): FittedVerticalScale {
+  const grid = gridConfig(options);
+  const pitch = grid.pitch;
+
+  /* What one parity costs: every leading snapped to the nearest whole number of
+     rows with that parity, plus every space snapped to a whole number. */
+  const solve = (parity: "even" | "odd") => {
+    let cost = 0;
+    const fitted: FittedVerticalStep[] = [];
+
+    steps.forEach((step, index) => {
+      const wanted = step.leading ?? (step.ratio ? step.size * step.ratio : step.size * 1.5);
+
+      /* The nearest row count of the right parity. Rounding to the nearest row
+         and then nudging by one if the parity is wrong is not the same thing:
+         it can land two rows away when one of the neighbours was right. */
+      const exact = wanted / pitch;
+      const wantEven = parity === "even";
+      const candidates: number[] = [];
+      for (const rows of [Math.floor(exact) - 1, Math.floor(exact), Math.ceil(exact), Math.ceil(exact) + 1]) {
+        if (rows >= 1 && rows % 2 === (wantEven ? 0 : 1)) candidates.push(rows);
+      }
+      /* Never zero: a leading of nothing stacks every line on one rule. */
+      if (candidates.length === 0) candidates.push(wantEven ? 2 : 1);
+
+      const rows = candidates.reduce((best, rowCount) =>
+        Math.abs(rowCount * pitch - wanted) < Math.abs(best * pitch - wanted) ? rowCount : best
+      );
+      const leading = rows * pitch;
+
+      const wantedSpace = step.space ?? leading;
+      const space = Math.max(1, Math.round(wantedSpace / pitch)) * pitch;
+
+      const leadingMoved = Math.round((leading - wanted) * 1000) / 1000;
+      const spaceMoved = Math.round((space - wantedSpace) * 1000) / 1000;
+      cost += Math.abs(leadingMoved) + Math.abs(spaceMoved);
+
+      fitted.push({
+        name: step.name ?? `step-${index + 1}`,
+        size: step.size,
+        leading,
+        leadingWas: Math.round(wanted * 1000) / 1000,
+        leadingMoved,
+        rows,
+        space,
+        spaceWas: Math.round(wantedSpace * 1000) / 1000,
+        spaceMoved,
+      });
+    });
+
+    return { parity, steps: fitted, cost: Math.round(cost * 1000) / 1000 };
+  };
+
+  /* Both parities are solved and the cheaper wins, because which one a design is
+     nearer to is a property of the design rather than a thing to have an opinion
+     about. Ties go to even, which keeps half a leading a whole number of rows
+     and makes a single block land on the grid without an origin solve. */
+  const asked = options.parity;
+  const even = solve("even");
+  const odd = solve("odd");
+  const chosen = asked ? (asked === "even" ? even : odd) : odd.cost < even.cost ? odd : even;
+
+  return { grid, ...chosen };
+}
+
+/**
+ * The vertical fit as CSS.
+ *
+ * No trim and no `text-box-edge`, which is the point: there is no residue to
+ * close, so there is nothing for them to do. A vertical page needs `line-height`
+ * and `margin-inline-start`, and the margin is logical rather than physical
+ * because `vertical-rl` puts the block axis across the page.
+ */
+export function fittedVerticalToCss(fitted: FittedVerticalScale): string {
+  const lines: string[] = [
+    `/* Fitted by quoin to a ${fitted.grid.pitch}px grid, for vertical writing.`,
+    " *",
+    " * No trim here and no text-box-edge. Vertically the dominant baseline is",
+    " * the central one, which is centred in the line box by construction, so",
+    ` * there is no residue to close: every leading is a whole number of rows,`,
+    ` * all ${fitted.parity}, and every space is a whole number of rows.`,
+    " *",
+    " * The parity is the whole of it. Between one block's last baseline and the",
+    " * next block's first lies leadingA/2 + space + leadingB/2, and two leadings",
+    " * of the same parity leave a whole number of rows between them where one of",
+    " * each leaves half a row over.",
+    " *",
+    " * Which is why no font is named below. There is no cap height in this.",
+    " */",
+    ":root {",
+    `  --pitch: ${fitted.grid.pitch}px;`,
+  ];
+
+  for (const step of fitted.steps) {
+    lines.push(
+      `  --size-${step.name}: ${step.size}px;`,
+      `  --leading-${step.name}: ${step.leading}px;` +
+        (step.leadingMoved === 0 ? "" : `  /* was ${step.leadingWas} */`),
+      `  --space-${step.name}: ${step.space}px;` +
+        (step.spaceMoved === 0 ? "" : `  /* was ${step.spaceWas} */`)
+    );
+  }
+
+  lines.push(
+    "}",
+    "",
+    "/* Set --space-* as margin-inline-start: the block axis runs across the page,",
+    " * so the space that separates one block from the next is a logical one and",
+    " * writing it as margin-top puts it on the wrong axis. */"
+  );
+
+  return lines.join("\n");
+}

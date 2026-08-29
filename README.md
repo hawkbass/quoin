@@ -1981,6 +1981,107 @@ not that.
 two of the forty-six on it**, and all of it was `code` set at 0.82em. One line of
 CSS took the page from 77% to 93.6%.
 
+## Finding: vertically the problem does not exist
+
+Everything above assumes lines stack downwards and baselines are horizontal
+rules. In `writing-mode: vertical-rl`, which is how Japanese and Chinese and
+Korean have been set for most of their history and how they are still set in
+novels and newspapers and manga, the block axis runs across the page and lines
+stack sideways. The question is whether the same correction applies, turned
+ninety degrees.
+
+It does not, and the reason is better than the answer.
+
+Horizontally the alphabetic baseline sits at half the leading plus the ascent.
+Half the leading is a number the designer wrote down; the ascent belongs to the
+typeface, and comes out of a table inside a font file that the designer has
+never opened. The sum lands wherever that asymmetry puts it, which is the whole
+reason this library exists.
+
+Vertically the dominant baseline is the central one, and central means centred.
+Measured with a zero-sized inline box aligned to the baseline, which is the one
+probe that reports the dominant baseline in whichever mode it is in:
+
+```
+mode              leading   baseline at   off centre
+horizontal            32         23            7
+horizontal            30         22            7
+vertical              32         16         centred
+vertical              30         15         centred
+```
+
+Exactly half, both leadings, both engines, for the CJK sample and for a Latin
+sample set in the same face. There is no ascent in it. The asymmetry is not
+reduced or easier to correct; it is absent, because the baseline the browser
+aligns to vertically is the one defined as the middle of the em.
+
+So the vertical rule has no font in it at all:
+
+1. every leading a whole number of rows,
+2. every leading the same parity in rows,
+3. every space a whole number of rows.
+
+**No cap height, no OS/2 table, no rasteriser probe, no `text-box-trim` and no
+browser.** `quoin fit --vertical` reads a design and returns it fitted without
+opening a font file, because there is nothing in the arithmetic that depends on
+one.
+
+### The parity, which the first prediction got wrong
+
+Between one block's last baseline and the next block's first lies
+`leadingA/2 + space + leadingB/2`. The obvious reading is that each half must be
+a whole number of rows, so each leading must be an even number of them, and that
+is what was predicted here and written into a probe as the expected result.
+
+The probe disagreed. All-odd holds too, and it holds in all three engines. Two
+odd leadings leave half a row on each side and the two halves sum to a whole
+one. What fails is a mix, which is exactly what the horizontal method's
+composability is for: any two blocks in the design must be able to meet without
+consulting each other. So the condition is parity rather than evenness, and the
+fitter solves both parities, costs each in pixels moved, and takes the cheaper.
+Ties go to even, because even leadings also put every half-line on a row and
+that is worth having for nothing.
+
+The test that carries this records the wrong prediction in its name, so the
+correction cannot be quietly lost the next time somebody reasons about it from
+first principles and reaches the same wrong place.
+
+### The engine that cannot run the horizontal suite runs this one
+
+The Firefox this repository can test against is the one Playwright ships, which
+is 153: one release short of `text-box-trim`. Every horizontal browser test here
+skips it for that reason, and the skips are real rather than defensive. Shipped
+Firefox has had trim since 154 in August 2026, so this is a gap in what the
+suite can verify rather than a gap in what Firefox can do.
+
+The vertical tests do not skip it, and it passes all of them. A fitted page
+reads the same in all three engines:
+
+```
+chromium   odd parity, rows 3/3/5, 29 of 29 baselines on the grid
+firefox    odd parity, rows 3/3/5, 29 of 29
+webkit     odd parity, rows 3/3/5, 29 of 29
+```
+
+Which follows from the rest of it rather than being a separate piece of luck,
+and it is the useful form of the finding. The horizontal method needs a CSS
+property that reached Baseline three weeks ago and is absent from every browser
+older than that. The vertical method asks the engine for nothing except that it
+centre a line box and put the dominant baseline in the middle, which every
+engine has done since long before any of this existed. Vertical text can be put
+on a grid in a browser from 2019.
+
+### What this does not cover
+
+The measurement is `vertical-rl` with the default `text-orientation: mixed`, in
+Chromium, Firefox and WebKit, at a range of leadings, for a CJK sample and a
+Latin one. It has not been checked with `text-orientation: upright`, with ruby
+annotations, with `vertical-lr`, or against a real Japanese publication's
+setting. Ruby in particular is the case to be suspicious of, since it adds a
+second line of type inside the first block's leading, and the horizontal
+equivalent of that is the inline-element finding immediately above, which does
+move the line it lands on.
+
 ## The command line
 
 ```bash
@@ -2042,6 +2143,8 @@ Solving a design:
 --font <family>       the family to solve for, for scale
 --sizes <a,b,c>       the sizes to solve, for scale
 --near <px>           how far from those is acceptable (default 3)
+--vertical            fit for vertical-rl, which needs no font
+--parity <even|odd>   force the vertical parity. Solved when omitted
 ```
 
 Reporting:

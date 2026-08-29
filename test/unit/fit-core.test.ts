@@ -22,6 +22,8 @@ import {
   fittedScaleToCss,
   pitchCost,
   surveyPitches,
+  fitVertical,
+  fittedVerticalToCss,
   type CapSource,
   type FamilyRequest,
 } from "../../src/fit-core.ts";
@@ -636,4 +638,122 @@ test("a step with no leading at all is costed against the default ratio", () => 
   assert.equal(wanted, 24);
   assert.equal(leading, 24);
   assert.equal(cost.cost, 0);
+});
+
+/* ------------------------------------------------------------------ *
+   Vertical writing
+ * ------------------------------------------------------------------ */
+
+test("a vertical fit needs no font, because there is no cap height in it", () => {
+  /*
+     The whole difference. Horizontally the first baseline is half the leading
+     plus the ascent, and the ascent is the typeface's. Vertically the dominant
+     baseline is the central one, measured in both engines at exactly half the
+     leading, for CJK and Latin alike. So `fitVertical` takes steps and nothing
+     else: no cap source, no font file, no browser.
+  */
+  const fitted = fitVertical([{ name: "body", size: 20, leading: 27 }], { pitch: 8 });
+  assert.equal(fitted.steps.length, 1);
+  assert.equal(fitted.steps[0]!.size, 20, "the size is never changed here either");
+  assert.equal(fitted.steps[0]!.leading % 8, 0);
+});
+
+test("every leading comes out the same parity in rows", () => {
+  /*
+     Between one block's last baseline and the next block's first lies
+     leadingA/2 + space + leadingB/2. Two even leadings give two whole rows; two
+     odd ones give two half-rows that sum to a whole one; one of each leaves half
+     a row over and the page comes apart. Measured: all even holds, all odd
+     holds, mixed reads 17 of 23.
+  */
+  const fitted = fitVertical(
+    [
+      { name: "a", size: 13, leading: 17 },
+      { name: "b", size: 20, leading: 30 },
+      { name: "c", size: 32, leading: 46 },
+    ],
+    { pitch: 8 }
+  );
+
+  const parities = new Set(fitted.steps.map((s) => s.rows % 2));
+  assert.equal(parities.size, 1, `rows came out ${fitted.steps.map((s) => s.rows).join(", ")}`);
+  assert.equal(fitted.parity, fitted.steps[0]!.rows % 2 === 0 ? "even" : "odd");
+});
+
+test("odd is chosen when odd is nearer, which took measuring to believe", () => {
+  /* The first prediction said odd parity would fail and it does not: two odd
+     leadings leave two half-rows, and two half-rows are a row. So the solver is
+     allowed to pick it, and picks it when it costs less. */
+  const nearOdd = fitVertical(
+    [
+      { name: "a", size: 15, leading: 24 },
+      { name: "b", size: 26, leading: 40 },
+      { name: "c", size: 36, leading: 56 },
+    ],
+    { pitch: 8 }
+  );
+  assert.equal(nearOdd.parity, "odd");
+  assert.equal(nearOdd.cost, 0, "a design already on odd rows should not move");
+});
+
+test("even is chosen when even is nearer", () => {
+  const nearEven = fitVertical(
+    [
+      { name: "a", size: 13, leading: 16 },
+      { name: "b", size: 20, leading: 32 },
+      { name: "c", size: 32, leading: 48 },
+    ],
+    { pitch: 8 }
+  );
+  assert.equal(nearEven.parity, "even");
+  assert.equal(nearEven.cost, 0);
+});
+
+test("the parity can be stated, and then it is honoured whatever it costs", () => {
+  const forced = fitVertical([{ name: "a", size: 20, leading: 32 }], {
+    pitch: 8,
+    parity: "odd",
+  });
+  assert.equal(forced.parity, "odd");
+  assert.equal(forced.steps[0]!.rows % 2, 1);
+});
+
+test("the nearest row of the right parity, not the nearest row then nudged", () => {
+  /*
+     33px wants 4 rows at an 8px pitch. Forced odd, the answer is 5 rows and not
+     3: nudging up from the nearest is a different algorithm that lands two rows
+     away as often as one, and on a leading that is the difference between 40 and
+     24.
+  */
+  const forced = fitVertical([{ name: "a", size: 22, leading: 33 }], {
+    pitch: 8,
+    parity: "odd",
+  });
+  assert.equal(forced.steps[0]!.leading, 40);
+});
+
+test("a space is a whole number of rows and never nothing", () => {
+  const fitted = fitVertical(
+    [{ name: "a", size: 20, leading: 32, space: 20 }, { name: "b", size: 20, leading: 32, space: 1 }],
+    { pitch: 8 }
+  );
+  assert.equal(fitted.steps[0]!.space % 8, 0);
+  assert.equal(fitted.steps[1]!.space % 8, 0);
+  assert.ok(fitted.steps[1]!.space > 0, "a space of zero stacks two baselines on one rule");
+});
+
+test("the CSS names no font and carries no trim", () => {
+  /* Because there is nothing for either to do. Emitting `text-box-trim` here
+     would be copying the horizontal answer to a question that is not asked. */
+  const css = fittedVerticalToCss(
+    fitVertical([{ name: "body", size: 20, leading: 32, space: 24 }], { pitch: 8 })
+  );
+  /* A declaration, not a mention: the comment above the tokens names both
+     properties in order to say they are absent, and a test that cannot tell the
+     difference would force the explanation out of the file. */
+  assert.doesNotMatch(css, /^\s*text-box-trim\s*:/m);
+  assert.doesNotMatch(css, /^\s*text-box-edge\s*:/m);
+  assert.match(css, /--leading-body: 32px/);
+  assert.match(css, /margin-inline-start/, "the block axis runs across the page");
+  assert.match(css, /central/, "and it says why there is no residue");
 });

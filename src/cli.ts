@@ -55,6 +55,8 @@ Options
   --figma                    read --design as a Figma export (usually detected)
   --figma-minimum <n>        nodes a combination needs to count  (default 1)
   --budget <px>              leading you will spend, for pitch
+  --vertical                 fit for vertical-rl, which needs no font
+  --parity <even|odd>        force the vertical parity. Solved when omitted
   --from <url>               read the design off a page instead, for fit
   --near <px>                how far from those is acceptable (default 3)
   --json                     machine-readable output
@@ -118,6 +120,10 @@ interface Options {
   figmaMinimum: number;
   /* Leading you are willing to spend, for pitch. */
   budget: number | null;
+  /* Fit for writing-mode: vertical-rl, which needs no font at all. */
+  vertical: boolean;
+  /* Force a parity for the vertical fit. Solved when null. */
+  parity: "even" | "odd" | null;
 }
 
 function fail(message: string): never {
@@ -153,6 +159,8 @@ function parseArgs(argv: string[]): { command: string; url: string | null; optio
     figma: false,
     figmaMinimum: 1,
     budget: null,
+    vertical: false,
+    parity: null,
   };
 
   const positional: string[] = [];
@@ -229,6 +237,17 @@ function parseArgs(argv: string[]): { command: string; url: string | null; optio
           fail(`--space wants margin or padding, got ${value}`);
         }
         options.space = value;
+        break;
+      }
+      case "--vertical":
+        options.vertical = true;
+        break;
+      case "--parity": {
+        const value = next();
+        if (value !== "even" && value !== "odd") {
+          fail(`--parity wants even or odd, got ${value}`);
+        }
+        options.parity = value;
         break;
       }
       case "--budget": {
@@ -1237,6 +1256,75 @@ switch (command) {
     /* Anything that had to be interpreted is said out loud on stderr, so it does
        not pollute `--json` and is still impossible to miss. */
     for (const note of normalised.notes) console.error(`quoin: ${note}`);
+
+    /*
+       Vertical is a different problem and a smaller one, so it forks here and
+       never reaches the cap-height machinery below.
+
+       Vertically the dominant baseline is the central one, which sits at exactly
+       half the leading whatever the typeface, so there is no residue to close.
+       No font file, no browser, no trim: every leading a whole number of rows,
+       all of the same parity, and every space a whole number of rows.
+    */
+    if (options.vertical) {
+      const { fitVertical, fittedVerticalToCss } = await import("./fit-core.ts");
+      const verticalSteps = normalised.families.flatMap((family) => family.steps);
+      if (verticalSteps.length === 0) fail("that design has no sizes in it");
+
+      const fittedVertical = fitVertical(verticalSteps, {
+        pitch: options.pitch,
+        tolerance: options.tolerance,
+        ...(options.parity === null ? {} : { parity: options.parity }),
+      });
+
+      const verticalCss = fittedVerticalToCss(fittedVertical);
+
+      if (options.json) {
+        console.log(JSON.stringify(fittedVertical, null, 2));
+        break;
+      }
+
+      console.log(`
+  ${options.pitch}px grid, vertical-rl`);
+      console.log(
+        `  ${fittedVertical.steps.length} sizes on ${fittedVertical.parity} rows, ` +
+          `${fittedVertical.cost === 0 ? "nothing" : fittedVertical.cost + "px"} had to move
+`
+      );
+      console.log("    name          size      leading   rows   space     moved");
+      for (const step of fittedVertical.steps) {
+        const moved =
+          step.leadingMoved === 0 && step.spaceMoved === 0
+            ? "exact"
+            : `${step.leadingMoved === 0 ? "" : "leading " + step.leadingMoved}` +
+              `${step.leadingMoved !== 0 && step.spaceMoved !== 0 ? ", " : ""}` +
+              `${step.spaceMoved === 0 ? "" : "space " + step.spaceMoved}`;
+        console.log(
+          "    " +
+            step.name.padEnd(14) +
+            String(step.size + "px").padEnd(10) +
+            String(step.leading + "px").padEnd(10) +
+            String(step.rows).padEnd(7) +
+            String(step.space + "px").padEnd(10) +
+            moved
+        );
+      }
+
+      console.log(
+        "\n  No font was read, because there is nothing in this that depends on\n" +
+          "  one. Vertically the baseline is the central one and it sits at half\n" +
+          "  the leading whatever the typeface, so the only condition is that the\n" +
+          "  halves add up: same parity, and the spaces on whole rows.\n"
+      );
+
+      if (options.out) {
+        writeFileSync(options.out, verticalCss + "\n");
+        console.log(`  CSS written to ${options.out}\n`);
+      } else {
+        console.log(verticalCss + "\n");
+      }
+      break;
+    }
 
     /*
        When every family names a font file, none of this needs a browser.

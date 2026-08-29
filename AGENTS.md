@@ -168,6 +168,40 @@ needs a different size, WebKit needs only a different family.
 On quoin.dev this was eighteen of the nineteen paragraphs off the rhythm against
 two of the forty-six on it, and one line of CSS moved the page from 77% to 93.6%.
 
+## Vertical writing, which is a different and smaller problem
+
+If the design is `writing-mode: vertical-rl`, do not use any of the above. Use:
+
+```bash
+npx quoin fit --design design.json --vertical --pitch 8
+```
+
+**It needs no font file, no browser and no `text-box-trim`.** Vertically the
+dominant baseline is the central one, so it sits at exactly half the leading
+whatever the typeface. The ascent, which is the entire reason the horizontal
+method has to read a font, is not in the equation. The rule is arithmetic on
+numbers the designer already wrote down:
+
+1. every leading a whole number of rows,
+2. every leading the same parity in rows,
+3. every space a whole number of rows.
+
+Parity, not evenness. Between one block's last baseline and the next block's
+first lies `leadingA/2 + space + leadingB/2`, so two odd leadings leave half a
+row on each side and the halves sum to a whole one. All-even holds and all-odd
+holds; a mix does not. `fitVertical` solves both and takes the cheaper, so you
+do not have to reason about it. Pass `--parity even` or `--parity odd` only if
+you are matching an existing design that already commits to one.
+
+The emitted CSS writes the space as `margin-inline-start`, because the block
+axis runs across the page and `margin-top` would put it on the wrong axis. It
+emits no trim and no `text-box-edge`, and there is no font named in it anywhere.
+
+What this has not been checked against: `text-orientation: upright`, ruby
+annotations, and `vertical-lr`. Treat ruby with suspicion in particular, since
+it puts a second line of type inside the first block's leading, and the
+horizontal equivalent of that is the inline-element problem above.
+
 ## Checking your work
 
 ```bash
