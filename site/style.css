@@ -601,7 +601,11 @@ code, kbd, samp { line-height: 0; }
   line-height: 16px;
   color: #8B897F;
 }
-.colo__links { display: grid; gap: 4px; align-content: start; }
+.colo__links { display: grid; gap: 0; align-content: start; }
+/* Three rows each, so the link is a target and not just a line of text.
+   These were 13px tall, which is under the 24px WCAG 2.2 asks for and a
+   long way under the 44px every control on craighawkes.dev holds to. */
+.colo__links a { display: block; line-height: 24px; }
 .colo a { color: var(--y); text-decoration: none; }
 .colo a:hover { text-decoration: underline; }
 .colo__score {
@@ -631,6 +635,47 @@ code, kbd, samp { line-height: 0; }
 }
 .skip:focus { left: 0; }
 :focus-visible { outline: 2px solid var(--k); outline-offset: 2px; }
+
+/* ---------------------------------------------------------------- *
+   Touch
+* ---------------------------------------------------------------- */
+/*
+   A finger is not a cursor, and the rest of the site already knows it:
+   craighawkes.dev puts 47 controls on a phone and not one is under 44px.
+   This page had nine and eight of them were, three at 13px.
+
+   The first attempt at this was a `@media (pointer: coarse)` block that added
+   padding, and it was worse than the problem. The build seats the page with a
+   fine pointer, so every correction it wrote was computed against a layout no
+   phone ever renders: the page measured 100% in the harness and 7.3% on a
+   touch profile at every width. A rule that changes geometry for some readers
+   and not others needs the whole build to know about it.
+
+   So the hit area is extended without moving anything. The controls below sit
+   side by side, so a box that reaches past them vertically overlaps nothing,
+   and the layout is the same on every pointer, which is the only way the one
+   stylesheet the build measured stays true.
+*/
+.docket__actions button,
+.spec__duo button { position: relative; }
+.docket__actions button::after,
+.spec__duo button::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 48px;
+  transform: translateY(-50%);
+}
+
+/* The colophon links stack, so an overlay would put each one's target over its
+   neighbour. Six real rows instead, which the build measures like anything
+   else and which reads as a list rather than a paragraph of links. */
+.colo__links a { line-height: 48px; }
+
+
+
 .docket :focus-visible, .spec__panel :focus-visible, .findings :focus-visible { outline-color: var(--y); }
 
 /* ---------------------------------------------------------------- *
