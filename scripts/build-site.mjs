@@ -9,7 +9,16 @@
    assertion, and it means the site cannot quietly stop being on the grid: the
    build fails if seating it does not work. */
 
-import { readFileSync, writeFileSync, mkdirSync, rmSync, cpSync, existsSync, statSync } from "node:fs";
+import {
+  readFileSync,
+  writeFileSync,
+  mkdirSync,
+  readdirSync,
+  rmSync,
+  cpSync,
+  existsSync,
+  statSync,
+} from "node:fs";
 import { join } from "node:path";
 import { createServer } from "node:http";
 import { extname } from "node:path";
@@ -40,8 +49,18 @@ if (!existsSync("dist/quoin.global.js")) {
   process.exit(1);
 }
 
-rmSync(OUT, { recursive: true, force: true });
+/* Empty the directory, but leave `.git` where it is.
+
+   `site/dist` is a checkout of the repo GitHub Pages serves. Removing the whole
+   directory takes its `.git` with it, and the next `git` command run in there
+   walks up and finds this repo instead, so a commit meant for the site lands on
+   the library under the site's message. It has happened. Empty the contents and
+   keep the checkout. */
 mkdirSync(OUT, { recursive: true });
+for (const entry of readdirSync(OUT)) {
+  if (entry === ".git") continue;
+  rmSync(join(OUT, entry), { recursive: true, force: true });
+}
 
 /* ------------------------------------------------------------------ *
    Copy, and drop the library in beside it
@@ -94,15 +113,16 @@ const demo = readFileSync(join(OUT, "demo.html"), "utf8").replace(
 );
 writeFileSync(join(OUT, "demo.html"), demo);
 
-/* The wedge, as a favicon. */
+/* The colour bar, as a favicon: the four inks at the head of the sheet, full
+   bleed. The old wedge came from the palette the site had before the forme,
+   and a favicon in colours the page no longer uses reads as a leftover. */
 writeFileSync(
   join(OUT, "icon.svg"),
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" fill="#EFE9DC"/>
-  <rect x="3" y="8" width="26" height="2" fill="#191512"/>
-  <rect x="3" y="16" width="26" height="2" fill="#191512"/>
-  <rect x="3" y="24" width="26" height="2" fill="#191512"/>
-  <path d="M29 8 L29 26 L14 17 Z" fill="#7A4A20"/>
+  <rect x="0" y="0" width="8" height="32" fill="#00A6E0"/>
+  <rect x="8" y="0" width="8" height="32" fill="#E5007D"/>
+  <rect x="16" y="0" width="8" height="32" fill="#FFE400"/>
+  <rect x="24" y="0" width="8" height="32" fill="#0F0F0E"/>
 </svg>\n`
 );
 
@@ -182,15 +202,81 @@ const IGNORE = ["h1", ".standfirst", ".live", "pre", "pre *"];
    corrections are wrapped in a media query for that range. The ranges are
    mutually exclusive, because these rules set absolute values and two sets
    applying at once is one set applying twice.
+
+   The range edges are the stylesheet's own breakpoints, and that is not a
+   convention, it is the whole correctness condition. A correction is measured
+   at one width and applied across a range; if the layout changes inside that
+   range, half the range is wearing the other half's numbers. These ranges used
+   to divide at 440/600/768/960/1152 while the page divided at 641 and 1081,
+   and the gate reported 100% at every width it sampled while 620px sat at 12%
+   and 1100px at 16% — both of them inside a range, neither of them sampled.
+   `assertRangesCoverBreakpoints` below now refuses to build that.
 */
 const BREAKPOINTS = [
   { at: 380, query: "(max-width: 439px)" },
-  { at: 500, query: "(min-width: 440px) and (max-width: 599px)" },
-  { at: 660, query: "(min-width: 600px) and (max-width: 767px)" },
-  { at: 860, query: "(min-width: 768px) and (max-width: 959px)" },
-  { at: 1040, query: "(min-width: 960px) and (max-width: 1151px)" },
-  { at: 1280, query: "(min-width: 1152px)" },
+  { at: 540, query: "(min-width: 440px) and (max-width: 640px)" },
+  { at: 760, query: "(min-width: 641px) and (max-width: 880px)" },
+  { at: 980, query: "(min-width: 881px) and (max-width: 1080px)" },
+  { at: 1180, query: "(min-width: 1081px) and (max-width: 1279px)" },
+  { at: 1400, query: "(min-width: 1280px)" },
 ];
+
+/*
+   Refuse to seat a range the page changes shape inside.
+
+   Reads the breakpoints out of the site's own stylesheet and checks that none
+   of them falls strictly inside a seating range. It is a structural check, not
+   a sampled one, which is the point: sampling is exactly what missed this.
+*/
+function assertRangesCoverBreakpoints() {
+  const css = readFileSync(join(SRC, "style.css"), "utf8");
+
+  /* A `max-width: N` divides the page between N and N+1; a `min-width: N`
+     divides it between N-1 and N. Either way the boundary sits after `edge`. */
+  const edges = new Set();
+  for (const [, value] of css.matchAll(/\(\s*max-width:\s*(\d+)px\s*\)/g)) {
+    edges.add(Number(value));
+  }
+  for (const [, value] of css.matchAll(/\(\s*min-width:\s*(\d+)px\s*\)/g)) {
+    edges.add(Number(value) - 1);
+  }
+
+  const ranges = BREAKPOINTS.map(({ query, at }) => ({
+    at,
+    query,
+    from: Number(query.match(/min-width:\s*(\d+)px/)?.[1] ?? 0),
+    to: Number(query.match(/max-width:\s*(\d+)px/)?.[1] ?? Infinity),
+  }));
+
+  const straddled = [];
+  for (const edge of [...edges].sort((a, b) => a - b)) {
+    for (const range of ranges) {
+      if (edge >= range.from && edge < range.to) {
+        straddled.push({ edge, range });
+      }
+    }
+  }
+
+  if (straddled.length > 0) {
+    console.error(
+      "\n  FAIL: the page changes layout inside a seating range, so the" +
+        "\n  corrections measured at one width would be applied at another.\n"
+    );
+    for (const { edge, range } of straddled) {
+      console.error(
+        `    style.css changes at ${edge}/${edge + 1}px, inside ${range.query}` +
+          ` (measured at ${range.at}px)`
+      );
+    }
+    console.error(
+      "\n  Either move the stylesheet breakpoint onto a range edge, or move the" +
+        "\n  range edge onto the breakpoint. They have to be the same number.\n"
+    );
+    process.exit(1);
+  }
+}
+
+assertRangesCoverBreakpoints();
 
 const browser = await playwright.chromium.launch();
 const results = [];

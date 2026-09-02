@@ -28,9 +28,26 @@
 * { box-sizing: border-box; }
 
 html { -webkit-text-size-adjust: 100%; }
-/* No element may drag the sheet wider than the viewport. Tables scroll inside
-   their own boxes instead of pushing the whole page off canvas. */
-html, body { overflow-x: hidden; }
+
+/*
+   Grid items may be narrower than their contents.
+
+   A grid item's `min-width` is `auto`, which means a track never shrinks below
+   its item's min-content width. One `pre` holding `npx quoin fit --design
+   design.json` is 347px that will not fold, so the single-column track on a
+   phone measured 395px against a 375px screen and the whole sheet hung 20px
+   off the right edge.
+
+   `overflow-x: hidden` on the root used to sit here and hide it. It hid the
+   symptom in both directions: the page looked contained, and the next element
+   to do the same thing would also look contained. The tables scroll in their
+   own `.tscroll` boxes, the code blocks scroll in theirs, and nothing needs the
+   root to clip for it.
+*/
+.spec, .mast__strip, .defect, .defect__side, .survey, .fit__body,
+.holds, .findings, .ways, .colo { min-width: 0; }
+.spec > *, .mast__strip > *, .defect > *, .defect__side > *, .survey > *,
+.fit__body > *, .holds > *, .findings > *, .ways > *, .colo > * { min-width: 0; }
 
 body {
   margin: 0;
@@ -78,9 +95,17 @@ body.rule-live .cursor-rule { opacity: .5; }
 /* ---------------------------------------------------------------- *
    Colour bar, trim marks, registration
 * ---------------------------------------------------------------- */
+/* Three rows tall, stated rather than inherited.
+
+   The height used to come from `.bar__label`'s line box, which is the one thing
+   in here that is hidden on a narrow screen. So hiding the caption collapsed
+   the whole colour bar to the 1px of its own border, and the four inks the page
+   is printed in disappeared on every phone. A strip whose height depends on the
+   caption it can do without is not a strip, it is a caption. */
 .bar {
   display: flex;
   align-items: stretch;
+  height: 24px;
   background: var(--white);
   border-bottom: 1px solid var(--k);
 }
