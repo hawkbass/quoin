@@ -107,7 +107,11 @@ body.rule-live .cursor-rule { opacity: .5; }
   align-items: stretch;
   height: 24px;
   background: var(--white);
-  border-bottom: 1px solid var(--k);
+  /* The rule is drawn, not laid out. A 1px border inside a 24px box leaves
+     the swatches 23px, which is three rows less a pixel for every ink on
+     the strip. A shadow puts the line on the bottom edge and costs the
+     layout nothing. */
+  box-shadow: 0 1px 0 var(--k);
 }
 .sw { width: 24px; flex: none; }
 .sw-c  { background: var(--c); }
@@ -125,7 +129,7 @@ body.rule-live .cursor-rule { opacity: .5; }
   padding: 2px 12px;
   font-family: var(--t);
   font-size: 10px;
-  line-height: 20px;
+  line-height: 16px;
   color: var(--faint);
   letter-spacing: .1em;
   white-space: nowrap;
@@ -222,12 +226,12 @@ body.rule-live .cursor-rule { opacity: .5; }
   text-transform: uppercase;
   color: var(--faint);
 }
-.spec__sheet [data-seat] { position: relative; margin: 0 0 20px; font-size: 17px; line-height: 1.47; }
+.spec__sheet [data-seat] { position: relative; margin: 0 0 24px; font-size: 17px; line-height: 24px; }
 .spec__sheet [data-seat]:last-child { margin-bottom: 0; }
 .spec__title {
   font-family: var(--m2);
   font-size: 31px;
-  line-height: 1.47;
+  line-height: 40px;
   font-weight: 800;
   letter-spacing: -.02em;
 }
@@ -263,6 +267,7 @@ body.rule-live .cursor-rule { opacity: .5; }
   font-weight: 800;
   font-size: 15px;
   letter-spacing: .02em;
+  line-height: 24px;
   padding: 12px 16px;
   border: 0;
   background: var(--m);
@@ -275,14 +280,15 @@ body.rule-live .cursor-rule { opacity: .5; }
 .spec__duo button {
   font-family: var(--t);
   font-size: 12px;
-  padding: 8px 12px;
+  line-height: 16px;
+  padding: 7px 12px;
   border: 1px solid #444;
   background: transparent;
   color: var(--paper);
   cursor: pointer;
 }
 .spec__duo button:hover { border-color: var(--paper); }
-.spec__foot { margin: auto 0 0; font-family: var(--t); font-size: 11px; line-height: 20px; color: #7E7C73; }
+.spec__foot { margin: auto 0 0; font-family: var(--t); font-size: 11px; line-height: 16px; color: #7E7C73; }
 
 /* ---------------------------------------------------------------- *
    Masthead, cropped
@@ -298,7 +304,20 @@ body.rule-live .cursor-rule { opacity: .5; }
      leaves headroom and both rows sit fully on canvas from a phone up to a wall,
      never cropped by the sheet's overflow. */
   font-size: min(130px, calc((100cqw - 24px) / 11));
-  line-height: .95;
+  /*
+     Snapped, because a ratio on a fluid size cannot be on a grid.
+
+     The size above is continuous in the container width, so a ratio leading is
+     continuous too, and a two-line masthead whose height changes by fractions
+     of a pixel as the window moves takes the whole page below it along. That is
+     the largest single reason a correction measured at one width was wrong at
+     the next one.
+
+     round() snaps the computed leading to whole rows, so the height steps by
+     8px instead of sliding. The type stays fluid; only its leading is discrete,
+     which is the arrangement the README recommends and this page had not taken.
+  */
+  line-height: round(.95em, 8px);
   letter-spacing: -.04em;
   white-space: nowrap;
   color: var(--k);
@@ -307,6 +326,7 @@ body.rule-live .cursor-rule { opacity: .5; }
 }
 body.reg-in .mast__title { text-shadow: none; }
 .mast__strip { display: grid; grid-template-columns: 1fr 1fr 456px; border-top: 2px solid var(--k); }
+.mast__strip { padding-bottom: 6px; }
 .mast__strip p { margin: 0; padding: 16px 24px; border-right: 2px solid var(--k); font-size: 17px; line-height: 24px; }
 .mast__fine { font-family: var(--t); font-size: 12px; line-height: 24px; border-right: 0; }
 
@@ -320,6 +340,10 @@ body.reg-in .mast__title { text-shadow: none; }
   background: var(--k);
   color: var(--paper);
   padding: 8px 24px;
+  /* Seven rows, stated. Three faces at three sizes aligned on their baselines
+     make a row whose height is a fact about the fonts, not about the design,
+     and it came out at 43px. */
+  height: 56px;
 }
 .platehead__num { font-family: var(--m2); font-weight: 900; font-size: 40px; line-height: 40px; }
 .platehead__num--c { color: var(--c); }
@@ -329,6 +353,13 @@ body.reg-in .mast__title { text-shadow: none; }
 .platehead__fig { margin-left: auto; font-family: var(--t); font-size: 11px; color: #8B897F; white-space: nowrap; }
 
 /* Inline measurement chips */
+/* An inline run at a different size makes its line taller than the
+   line-height says: its baseline sits lower inside its own box, and the
+   line box is the union of the two. One pixel per wrapped line, which is
+   how a table of five rows came out 41px tall against a 16px leading. A
+   zero contributes no box of its own, so the parent's strut governs the
+   line and the glyphs draw exactly where they did. */
+code, kbd, samp { line-height: 0; }
 .chip { font-family: var(--t); font-size: .85em; line-height: 0; background: var(--y); padding: 1px 3px; }
 .chip--plain { background: none; }
 .chip--m { background: none; color: var(--m); }
@@ -358,7 +389,7 @@ body.reg-in .mast__title { text-shadow: none; }
 .linebox__tag--cap { top: 42px; color: var(--m); }
 .linebox__tag--base { top: 122px; font-weight: 700; }
 .linebox__dims { display: flex; justify-content: space-between; gap: 8px; padding-top: 8px; margin: 0; font-family: var(--t); font-size: 11px; color: var(--faint); }
-.defect__caption { margin: 24px 0 0; font-family: var(--t); font-size: 12px; line-height: 20px; color: var(--faint); }
+.defect__caption { margin: 24px 0 0; font-family: var(--t); font-size: 12px; line-height: 16px; color: var(--faint); }
 .defect__side { display: grid; grid-template-columns: 1fr 1fr; background: var(--paper); }
 .defect__lead { margin: 0; padding: 24px; border-right: 1px solid var(--rule); font-size: 16px; line-height: 24px; }
 .defect__cells { padding: 24px; }
@@ -370,7 +401,7 @@ body.reg-in .mast__title { text-shadow: none; }
 .defect__banner {
   grid-column: span 2;
   margin: 0;
-  padding: 16px 24px;
+  padding: 14px 24px 16px;
   border-top: 2px solid var(--k);
   background: var(--c);
   color: #fff;
@@ -415,15 +446,15 @@ body.reg-in .mast__title { text-shadow: none; }
   font-size: 15px;
   font-weight: 700;
   line-height: 24px;
-  padding: 3.5px 16px 4px 0;
+  padding: 4px 16px 3px 0;
   border-bottom: 1px solid rgba(15, 15, 14, .25);
 }
-.t-survey tbody td { text-align: right; line-height: 24px; padding: 3.5px 0 4px 16px; border-bottom: 1px solid rgba(15, 15, 14, .25); }
+.t-survey tbody td { text-align: right; line-height: 24px; padding: 4px 0 3px 16px; border-bottom: 1px solid rgba(15, 15, 14, .25); }
 .t-survey tbody td.l { text-align: left; }
-.t-survey tbody tr:last-child th, .t-survey tbody tr:last-child td { border-bottom: 0; }
+.t-survey tbody tr:last-child th, .t-survey tbody tr:last-child td { border-bottom: 0; padding-bottom: 4px; }
 .barcell { display: flex; align-items: center; gap: 12px; }
-.track { flex: none; width: 200px; height: 10px; background: rgba(15, 15, 14, .14); }
-.fill { display: block; height: 10px; background: var(--m); mix-blend-mode: multiply; }
+.track { flex: none; width: 200px; height: 8px; background: rgba(15, 15, 14, .14); }
+.fill { display: block; height: 8px; background: var(--m); mix-blend-mode: multiply; }
 .barcell b { font-weight: 700; }
 .survey__big {
   margin: 0;
@@ -436,9 +467,9 @@ body.reg-in .mast__title { text-shadow: none; }
   line-height: 56px;
   letter-spacing: -.03em;
 }
-.survey__note { margin: 0; padding: 16px 24px; border-bottom: 2px solid var(--k); font-family: var(--t); font-size: 13px; line-height: 24px; }
-.survey__finding { margin: 0; padding: 16px 24px; border-bottom: 2px solid var(--k); font-size: 15px; line-height: 24px; }
-.survey__finding--last { border-bottom: 0; }
+.survey__note { margin: 0; padding: 16px 24px 14px; border-bottom: 2px solid var(--k); font-family: var(--t); font-size: 13px; line-height: 24px; }
+.survey__finding { margin: 0; padding: 16px 24px 14px; border-bottom: 2px solid var(--k); font-size: 15px; line-height: 24px; }
+.survey__finding--last { border-bottom: 0; padding-bottom: 16px; }
 
 /* ---------------------------------------------------------------- *
    Plate III — the fit
@@ -447,7 +478,7 @@ body.reg-in .mast__title { text-shadow: none; }
 .fit__body { display: grid; grid-template-columns: 1fr 520px; background: var(--white); }
 .fit__text { padding: 24px; border-right: 2px solid var(--k); }
 .fit__text p { margin: 0 0 16px; font-size: 15px; line-height: 24px; }
-.fit__lead { font-size: 19px; line-height: 28px; }
+.fit__lead { font-size: 19px; line-height: 32px; }
 .formula { padding: 12px 16px; background: var(--c); color: #fff; font-family: var(--t); font-size: 15px; line-height: 24px; }
 .t-fit caption {
   text-align: left;
@@ -464,7 +495,7 @@ body.reg-in .mast__title { text-shadow: none; }
   font-size: 10px;
   letter-spacing: .12em;
   border-bottom: 3px solid var(--k);
-  padding: 4px 12px 5px;
+  padding: 2px 12px 3px;
   line-height: 16px;
   text-align: right;
 }
@@ -477,16 +508,16 @@ body.reg-in .mast__title { text-shadow: none; }
   font-size: 14px;
   font-weight: 700;
   line-height: 24px;
-  padding: 3.5px 12px 4px 24px;
+  padding: 4px 12px 3px 24px;
   border-bottom: 1px solid var(--rule);
 }
-.t-fit tbody td { text-align: right; padding: 3.5px 0 4px 12px; border-bottom: 1px solid var(--rule); }
+.t-fit tbody td { text-align: right; padding: 4px 0 3px 12px; border-bottom: 1px solid var(--rule); }
 .t-fit tbody td:last-child { padding-right: 24px; }
 .t-fit tbody tr:hover { background: var(--y); }
 .t-fit .strong { font-weight: 700; }
 .t-fit .faint { color: var(--faint); }
 .t-fit .moved { color: var(--m); }
-.fit__mod { margin: 0; padding: 16px 24px; font-family: var(--t); font-size: 12px; line-height: 20px; color: var(--faint); }
+.fit__mod { margin: 0; padding: 16px 24px; font-family: var(--t); font-size: 12px; line-height: 16px; color: var(--faint); }
 .fit__banner {
   margin: 0;
   padding: 24px;
@@ -506,21 +537,21 @@ body.reg-in .mast__title { text-shadow: none; }
 .holds { display: grid; grid-template-columns: 1fr 1fr 1fr; background: var(--paper); border-bottom: 8px solid var(--k); }
 .holds__cell { padding: 24px; border-right: 1px solid var(--rule); }
 .holds__cell:last-child { border-right: 0; }
-.stat { margin: 0 0 16px; display: flex; align-items: baseline; gap: 12px; }
+.stat { margin: 0 0 16px; display: flex; align-items: baseline; gap: 16px; height: 80px; }
 .stat__num { font-family: var(--m2); font-weight: 900; font-size: 72px; line-height: 64px; }
 .stat__num--c { color: var(--c); }
 .stat__num--m { color: var(--m); }
 .stat__label { font-family: var(--t); font-size: 11px; line-height: 16px; color: var(--faint); }
 .holds__body { margin: 0 0 16px; font-size: 15px; line-height: 24px; }
 .holds__body--last { margin-bottom: 0; }
-.t-csp { width: 100%; border-collapse: separate; border-spacing: 0; font-family: var(--t); font-size: 11px; line-height: 20px; }
+.t-csp { width: 100%; border-collapse: separate; border-spacing: 0; font-family: var(--t); font-size: 11px; line-height: 16px; }
 .t-csp thead th {
   font-family: var(--m2);
   font-size: 9px;
   letter-spacing: .1em;
   font-weight: 800;
   border-bottom: 2px solid var(--k);
-  padding: 2px 8px 3px;
+  padding: 3px 8px 3px;
   text-align: right;
 }
 .t-csp thead th.l { text-align: left; }
@@ -537,11 +568,11 @@ body.reg-in .mast__title { text-shadow: none; }
 .findings article:last-child { border-right: 0; }
 [data-reveal] { opacity: 0; transform: translateY(10px); }
 [data-reveal].is-in { transition: opacity 700ms cubic-bezier(.2, .6, .2, 1), transform 700ms cubic-bezier(.2, .6, .2, 1); opacity: 1; transform: translateY(0); }
-.f-kick { margin: 0 0 12px; font-family: var(--m2); font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--y); }
-.findings h3 { margin: 0 0 16px; font-family: var(--m2); font-size: 22px; line-height: 28px; font-weight: 800; letter-spacing: -.01em; color: #fff; }
-.f-body { margin: 0 0 16px; font-family: var(--t); font-size: 12px; line-height: 20px; color: #A9A79D; }
-.f-figs { margin: 0; border-top: 2px solid var(--c); }
-.f-figs div { display: flex; align-items: baseline; gap: 8px; line-height: 24px; border-bottom: 1px solid #2C2C29; }
+.f-kick { margin: 0 0 16px; font-family: var(--m2); font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--y); }
+.findings h3 { margin: 0 0 16px; font-family: var(--m2); font-size: 22px; line-height: 32px; font-weight: 800; letter-spacing: -.01em; color: #fff; }
+.f-body { margin: 0 0 16px; font-family: var(--t); font-size: 12px; line-height: 16px; color: #A9A79D; }
+.f-figs { margin: 0; padding-bottom: 6px; border-top: 2px solid var(--c); }
+.f-figs div { display: flex; align-items: baseline; gap: 8px; height: 24px; line-height: 24px; border-bottom: 1px solid #2C2C29; }
 .f-figs dt { font-family: var(--t); font-size: 11px; color: #8B897F; flex: 1 1 auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .f-figs dd { margin: 0; flex: none; font-family: var(--m2); font-weight: 700; font-size: 15px; font-variant-numeric: tabular-nums; color: var(--c); }
 
@@ -551,9 +582,9 @@ body.reg-in .mast__title { text-shadow: none; }
 .ways { display: grid; grid-template-columns: repeat(3, 1fr); border-bottom: 8px solid var(--k); background: var(--white); }
 .ways article { padding: 24px; border-right: 1px solid var(--rule); }
 .ways article:nth-child(3n) { border-right: 0; }
-.ways h3 { margin: 0 0 12px; font-family: var(--m2); font-size: 15px; line-height: 24px; font-weight: 800; letter-spacing: .02em; }
-.ways pre { margin: 0 0 12px; padding: 12px; background: var(--k); overflow-x: auto; }
-.ways code { font-family: var(--t); font-size: 11px; line-height: 20px; color: var(--y); white-space: pre; }
+.ways h3 { margin: 0 0 16px; font-family: var(--m2); font-size: 15px; line-height: 24px; font-weight: 800; letter-spacing: .02em; }
+.ways pre { margin: 0 0 16px; padding: 12px; background: var(--k); overflow-x: auto; }
+.ways code { font-family: var(--t); font-size: 11px; line-height: 16px; color: var(--y); white-space: pre; }
 .ways p { margin: 0; font-size: 15px; line-height: 24px; }
 .ways p code { white-space: normal; background: var(--y); color: var(--k); padding: 1px 3px; font-size: .85em; line-height: 0; }
 
@@ -567,7 +598,7 @@ body.reg-in .mast__title { text-shadow: none; }
   list-style: none;
   font-family: var(--t);
   font-size: 11px;
-  line-height: 20px;
+  line-height: 16px;
   color: #8B897F;
 }
 .colo__links { display: grid; gap: 4px; align-content: start; }
@@ -581,7 +612,7 @@ body.reg-in .mast__title { text-shadow: none; }
   font-family: var(--m2);
   font-weight: 800;
   font-size: 15px;
-  line-height: 20px;
+  line-height: 16px;
 }
 
 /* ---------------------------------------------------------------- *
@@ -614,37 +645,37 @@ body.reg-in .mast__title { text-shadow: none; }
   .bigscore { font-size: 96px; line-height: 88px; }
 
   .mast__strip { grid-template-columns: 1fr; }
-  .mast__strip p { border-right: 0; border-bottom: 2px solid var(--k); }
-  .mast__strip p:last-child { border-bottom: 0; }
+  .mast__strip p { border-right: 0; border-bottom: 2px solid var(--k); padding-bottom: 14px; }
+  .mast__strip p:last-child { border-bottom: 0; padding-bottom: 16px; }
 
-  .platehead { flex-wrap: wrap; gap: 8px 16px; }
+  .platehead { flex-wrap: wrap; gap: 8px 16px; height: auto; min-height: 56px; padding-bottom: 16px; }
   .platehead__fig { margin-left: 0; width: 100%; white-space: normal; }
 
   .defect { grid-template-columns: 1fr; }
-  .defect__figcell { border-right: 0; border-bottom: 2px solid var(--k); padding: 32px 24px 24px; }
+  .defect__figcell { border-right: 0; border-bottom: 2px solid var(--k); padding: 32px 24px 22px; }
   .defect__side { grid-template-columns: 1fr; }
-  .defect__lead { border-right: 0; border-bottom: 1px solid var(--rule); }
+  .defect__lead { border-right: 0; border-bottom: 1px solid var(--rule); padding-bottom: 23px; }
   .defect__banner { grid-column: span 1; font-size: 28px; line-height: 40px; }
 
   .survey { grid-template-columns: 1fr; }
-  .survey__tablewrap { border-right: 0; border-bottom: 2px solid var(--k); }
+  .survey__tablewrap { border-right: 0; border-bottom: 2px solid var(--k); padding-bottom: 22px; }
   .survey__big { font-size: 40px; line-height: 48px; }
 
   .fit__body { grid-template-columns: 1fr; }
-  .fit__text { border-right: 0; border-bottom: 2px solid var(--k); }
+  .fit__text { border-right: 0; border-bottom: 2px solid var(--k); padding-bottom: 22px; }
   .fit__banner { font-size: 40px; line-height: 48px; }
 
   .holds { grid-template-columns: 1fr; }
-  .holds__cell { border-right: 0; border-bottom: 1px solid var(--rule); }
-  .holds__cell:last-child { border-bottom: 0; }
+  .holds__cell { border-right: 0; border-bottom: 1px solid var(--rule); padding-bottom: 23px; }
+  .holds__cell:last-child { border-bottom: 0; padding-bottom: 24px; }
 
   .findings { grid-template-columns: 1fr; }
-  .findings article { border-right: 0; border-bottom: 1px solid #2C2C29; }
-  .findings article:last-child { border-bottom: 0; }
+  .findings article { border-right: 0; border-bottom: 1px solid #2C2C29; padding-bottom: 23px; }
+  .findings article:last-child { border-bottom: 0; padding-bottom: 24px; }
 
   .ways { grid-template-columns: 1fr; }
-  .ways article { border-right: 0; border-bottom: 1px solid var(--rule); }
-  .ways article:last-child { border-bottom: 0; }
+  .ways article { border-right: 0; border-bottom: 1px solid var(--rule); padding-bottom: 23px; }
+  .ways article:last-child { border-bottom: 0; padding-bottom: 24px; }
 
   .colo { grid-template-columns: 1fr 1fr; }
 }

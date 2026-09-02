@@ -187,7 +187,22 @@ try {
 
 /* Display type opts out, and it is named here rather than hidden, because a
    score with a quiet exclusion list is a score with a thumb on it. */
-const IGNORE = ["h1", ".standfirst", ".live", "pre", "pre *"];
+const IGNORE = [
+  "h1",
+  ".standfirst",
+  ".live",
+  "pre",
+  "pre *",
+  /* The docket is a machine strip, not prose. Every cell in it is
+     line-height 24 inside 4px of padding, so a row is exactly 32px and the
+     strip is a whole number of rows however its cells wrap. Correcting it
+     is what breaks it: a correction is measured against one wrap and the
+     cells wrap differently 5px later, so the padding lands on a cell that
+     has moved to another row and the strip stops being 32px rows. That is
+     the whole reason 375px scored 2% while 380px scored 100%. */
+  ".docket",
+  ".docket *",
+];
 
 /*
    Seated once per breakpoint, not once.
@@ -213,12 +228,14 @@ const IGNORE = ["h1", ".standfirst", ".live", "pre", "pre *"];
    `assertRangesCoverBreakpoints` below now refuses to build that.
 */
 const BREAKPOINTS = [
-  { at: 380, query: "(max-width: 439px)" },
+  { at: 340, query: "(max-width: 359px)" },
+  { at: 400, query: "(min-width: 360px) and (max-width: 439px)" },
   { at: 540, query: "(min-width: 440px) and (max-width: 640px)" },
   { at: 760, query: "(min-width: 641px) and (max-width: 880px)" },
   { at: 980, query: "(min-width: 881px) and (max-width: 1080px)" },
   { at: 1180, query: "(min-width: 1081px) and (max-width: 1279px)" },
-  { at: 1400, query: "(min-width: 1280px)" },
+  { at: 1340, query: "(min-width: 1280px) and (max-width: 1439px)" },
+  { at: 1600, query: "(min-width: 1440px)" },
 ];
 
 /*

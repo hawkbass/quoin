@@ -182,7 +182,16 @@
      rather than a line of reading, and forcing one onto an 8px rhythm makes it
      worse. Stated here rather than hidden, because a score with a quiet
      exclusion list is a score with a thumb on it. */
-  var IGNORE = [".mast__title", ".bigscore", "pre", "pre *", "[data-score]"];
+  /* The same list the build seats against, because a page that reports one
+     number in its header and another in its build is reporting neither.
+
+     The docket is on it for a reason worth stating rather than hiding: it
+     is a machine strip of 32px rows that wraps its cells differently every
+     few pixels of width, so a correction measured against one wrap lands on
+     a cell that has moved to another row. It is rhythmic by construction
+     and it is the one thing on the page seating makes worse. */
+  var IGNORE = [".mast__title", ".bigscore", "pre", "pre *", "[data-score]",
+                ".docket", ".docket *"];
 
   function reportSelf() {
     if (!window.quoin) return;
