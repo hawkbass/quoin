@@ -1,246 +1,232 @@
 /* The site
 
-   Two jobs. Drive the specimen in the iframe, and report this page's own score
-   in the footer.
-
-   The second one is the point. A site arguing that pages should be measured,
-   which does not publish its own measurement, is asking to be measured by
-   somebody else. */
+   Three jobs. Drive the working specimen on the sheet. Keep the docket honest
+   — the baseline overlay, the register, and this page's own score, measured
+   by the library rather than a copy of it. And reveal Plate V as it arrives.
+*/
 
 (function () {
   "use strict";
 
-  var GRID = { pitch: 8, tolerance: 0.5 };
+  var PITCH = 8;
+  var ctx = null;
 
-  /* Display type opts out. A headline at 72px with tight leading is a shape
+  function measure(font) {
+    if (!ctx) ctx = document.createElement("canvas").getContext("2d");
+    ctx.font = font;
+    return ctx.measureText("Hxy");
+  }
+
+  /* First baseline of a block, in page coordinates: half-leading plus ascent
+     from the line box top. The same construction the library makes. */
+  function baselineOf(n) {
+    var cs = getComputedStyle(n);
+    var lh = parseFloat(cs.lineHeight);
+    if (!lh) return null;
+    var m = measure(cs.fontStyle + " " + cs.fontWeight + " " + cs.fontSize + " " + cs.fontFamily);
+    var asc = m.fontBoundingBoxAscent, desc = m.fontBoundingBoxDescent;
+    if (asc == null) return null;
+    var r = n.getBoundingClientRect();
+    var pad = parseFloat(cs.paddingTop) || 0;
+    var bt = parseFloat(cs.borderTopWidth) || 0;
+    return r.top + bt + pad + (lh - (asc + desc)) / 2 + asc;
+  }
+
+  function pageEl() { return document.querySelector(".page"); }
+  function sheetEl() { return document.querySelector("[data-sheet]"); }
+  function seatBlocks() {
+    return Array.prototype.slice.call(document.querySelectorAll("[data-seat]"));
+  }
+
+  /* ---------------------------------------------------------------- *
+     The specimen. Correcting a block moves every block below it, so the
+     deltas accumulate down the sheet.
+   * ---------------------------------------------------------------- */
+
+  var seated = false;
+
+  function readSpecimen() {
+    var sheet = sheetEl();
+    var blocks = seatBlocks();
+    if (!sheet || !blocks.length) return;
+    var big = document.querySelector("[data-bigscore]");
+    var note = document.querySelector("[data-specnote]");
+    var origin = sheet.getBoundingClientRect().top;
+    var hit = 0;
+    blocks.forEach(function (b) {
+      var base = baselineOf(b);
+      if (base == null) return;
+      var d = ((base - origin) % PITCH + PITCH) % PITCH;
+      if (Math.min(d, PITCH - d) <= 0.5) hit++;
+    });
+    var pct = Math.round((hit / blocks.length) * 100);
+    if (big) big.textContent = pct + "%";
+    if (note && !seated) note.textContent = hit + " of " + blocks.length + " first baselines on the grid";
+  }
+
+  function seatSpecimen() {
+    var sheet = sheetEl();
+    var blocks = seatBlocks();
+    var note = document.querySelector("[data-specnote]");
+    var big = document.querySelector("[data-bigscore]");
+    if (!sheet || !blocks.length) return;
+    var origin = sheet.getBoundingClientRect().top;
+    var cum = 0, moved = 0;
+    blocks.forEach(function (b) {
+      var base = baselineOf(b);
+      if (base == null) return;
+      var rel = base - origin + cum;
+      var delta = (PITCH - (((rel % PITCH) + PITCH) % PITCH)) % PITCH;
+      b.style.transition = "padding-top 420ms cubic-bezier(.2,.7,.2,1)";
+      b.style.paddingTop = delta.toFixed(2) + "px";
+      if (delta > 0.01) moved++;
+      cum += delta;
+    });
+    seated = true;
+    if (note) note.textContent = "seated — " + moved + " of " + blocks.length +
+      " blocks moved, " + cum.toFixed(2) + "px of correction";
+    if (big) big.style.color = "var(--y)";
+    setTimeout(function () { readSpecimen(); reportSelf(); }, 480);
+  }
+
+  function resetSpecimen() {
+    var blocks = seatBlocks();
+    var note = document.querySelector("[data-specnote]");
+    if (!blocks.length) return;
+    blocks.forEach(function (b) {
+      b.style.transition = "padding-top 420ms cubic-bezier(.2,.7,.2,1)";
+      b.style.paddingTop = "0px";
+    });
+    seated = false;
+    setTimeout(function () { readSpecimen(); reportSelf(); }, 480);
+    if (note) note.textContent = "reset — back to a leading of 1.47";
+  }
+
+  function toggleSpecGrid() {
+    var g = document.querySelector("[data-specgrid]");
+    if (g) g.classList.toggle("on");
+  }
+
+  /* ---------------------------------------------------------------- *
+     The docket
+   * ---------------------------------------------------------------- */
+
+  var misreg = true; // out of register by default. It is a decision, not an accident.
+
+  function setMisreg(on) {
+    misreg = on;
+    document.body.classList.toggle("reg-in", !misreg);
+    var btn = document.getElementById("regToggle");
+    if (btn) btn.textContent = misreg ? "in register" : "out of register";
+  }
+
+  function driveDocket() {
+    var gridBtn = document.getElementById("gridToggle");
+    if (gridBtn) {
+      gridBtn.addEventListener("click", function () {
+        var on = document.body.classList.toggle("grid-on");
+        gridBtn.setAttribute("aria-pressed", String(on));
+      });
+    }
+
+    var regBtn = document.getElementById("regToggle");
+    if (regBtn) regBtn.addEventListener("click", function () { setMisreg(!misreg); });
+
+    /* The cursor rule snaps to the pitch, because a rule that lands between
+       rows is not showing the grid, it is showing its own opinion of it. */
+    var page = pageEl();
+    var rule = document.querySelector(".cursor-rule");
+    if (page && rule) {
+      document.addEventListener("pointermove", function (e) {
+        var r = page.getBoundingClientRect();
+        var y = Math.round((e.clientY - r.top) / PITCH) * PITCH;
+        rule.style.transform = "translateY(" + y + "px)";
+        document.body.classList.add("rule-live");
+      });
+      document.documentElement.addEventListener("mouseleave", function () {
+        document.body.classList.remove("rule-live");
+      });
+    }
+  }
+
+  /* ---------------------------------------------------------------- *
+     Plate V, revealed
+   * ---------------------------------------------------------------- */
+
+  function driveReveal() {
+    var targets = Array.prototype.slice.call(document.querySelectorAll("[data-reveal]"));
+    if (!targets.length) return;
+    var show = function (n) { n.classList.add("is-in"); };
+    if (window.IntersectionObserver) {
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          if (en.isIntersecting) { show(en.target); io.unobserve(en.target); }
+        });
+      }, { rootMargin: "0px 0px -8% 0px", threshold: 0.05 });
+      targets.forEach(function (n) { io.observe(n); });
+    } else {
+      targets.forEach(show);
+    }
+    /* A score that never arrives reads as broken, so nothing waits on the
+       observer alone. */
+    setTimeout(function () { targets.forEach(show); }, 2600);
+  }
+
+  /* ---------------------------------------------------------------- *
+     This page's own score. The library measures it, not a copy of the
+     library: a site arguing that pages should be measured publishes its own
+     measurement or is asking to be measured by somebody else.
+   * ---------------------------------------------------------------- */
+
+  /* Display type opts out. A headline at 136px with tight leading is a shape
      rather than a line of reading, and forcing one onto an 8px rhythm makes it
      worse. Stated here rather than hidden, because a score with a quiet
      exclusion list is a score with a thumb on it. */
-  var IGNORE = ["h1", ".standfirst", ".live", "pre", "pre *"];
+  var IGNORE = [".mast__title", ".bigscore", "pre", "pre *", "[data-score]"];
+
+  function reportSelf() {
+    if (!window.quoin) return;
+    var result = window.quoin.verifyGrid({
+      pitch: PITCH,
+      tolerance: 0.5,
+      ignore: IGNORE,
+    });
+    var total = result.report.total;
+    var pct = total ? Math.round((result.report.onGrid / total) * 100) : 0;
+    var text = pct + "% on the 8px grid · " + result.report.onGrid + " of " + total + " blocks";
+    Array.prototype.forEach.call(document.querySelectorAll("[data-score]"), function (out) {
+      out.textContent = text;
+    });
+  }
+
+  /* ---------------------------------------------------------------- */
 
   function ready(fn) {
     if (document.readyState !== "loading") fn();
     else document.addEventListener("DOMContentLoaded", fn);
   }
 
-  /* ---------------------------------------------------------------- *
-     The specimen
-   * ---------------------------------------------------------------- */
-
-  function driveSpecimen() {
-    var frame = document.getElementById("specimen");
-    var score = document.getElementById("demoScore");
-    var dot = document.querySelector(".demo-readout .dot");
-    var gridButton = document.getElementById("demoGrid");
-    var seatButton = document.getElementById("demoSeat");
-    var foot = document.getElementById("demoFoot");
-    if (!frame || !score) return;
-
-    var inner = null;
-    var seated = null;
-    var overlay = null;
-
-    function say(html, state) {
-      score.innerHTML = html;
-      if (dot) dot.setAttribute("data-state", state || "off");
-    }
-
-    function report() {
-      /* The specimen loads the same bundle this page does, so the numbers in
-         the readout come from the library rather than from a copy of it. */
-      var result = inner.quoin.verifyGrid(GRID);
-      var share = result.report.total
-        ? Math.round((result.report.onGrid / result.report.total) * 100)
-        : 0;
-      return { share: share, report: result.report };
-    }
-
-    function refresh() {
-      var r = report();
-      say(
-        "<b>" + r.report.onGrid + " of " + r.report.total + "</b> lines on an 8px grid" +
-        " &middot; " + r.share + "%" +
-        " &middot; " + r.report.distinctDrifts + " distinct drifts",
-        r.share > 90 ? "good" : "bad"
-      );
-      return r;
-    }
-
-    frame.addEventListener("load", function () {
-      try {
-        inner = frame.contentWindow;
-        if (!inner.quoin) {
-          say("The specimen could not load the library.", "bad");
-          return;
-        }
-        refresh();
-      } catch (error) {
-        say("The specimen is on another origin and cannot be measured.", "bad");
-      }
-    });
-
-    gridButton.addEventListener("click", function () {
-      if (!inner) return;
-      if (overlay) {
-        overlay.parentNode.removeChild(overlay);
-        overlay = null;
-        gridButton.setAttribute("aria-pressed", "false");
-        gridButton.textContent = "Show the grid";
-        return;
-      }
-      var doc = inner.document;
-      overlay = doc.createElement("div");
-      overlay.style.cssText =
-        "position:fixed;inset:0;pointer-events:none;z-index:9999;" +
-        "background-image:repeating-linear-gradient(to bottom," +
-        "rgba(122,74,32,0.30) 0 1px,transparent 1px 8px)";
-      doc.documentElement.appendChild(overlay);
-      gridButton.setAttribute("aria-pressed", "true");
-      gridButton.textContent = "Hide the grid";
-    });
-
-    seatButton.addEventListener("click", function () {
-      if (!inner) return;
-
-      if (seated) {
-        seated.undo();
-        seated = null;
-        seatButton.setAttribute("aria-pressed", "false");
-        seatButton.textContent = "Seat it";
-        var back = refresh();
-        foot.textContent =
-          "Back where it started, at " + back.share + "%. Nothing on the specimen " +
-          "is a mistake: a fluid type scale, a spacing scale in round numbers, " +
-          "and leading set as a ratio.";
-        return;
-      }
-
-      var before = report();
-      var t0 = performance.now();
-      seated = inner.quoin.seatPage({
-        pitch: GRID.pitch,
-        tolerance: GRID.tolerance,
-        ignore: ["h1"],
-        mode: "full",
-      });
-      var elapsed = Math.round(performance.now() - t0);
-      var after = refresh();
-
-      seatButton.setAttribute("aria-pressed", "true");
-      seatButton.textContent = "Lift it back off";
-
-      var missed = seated.missed
-        ? ", and " + seated.missed + " it could not move, which it says rather than counts as fixed"
-        : "";
-      foot.textContent =
-        before.share + "% to " + after.share + "% in " + seated.passes +
-        (seated.passes === 1 ? " sweep" : " sweeps") + ", " + elapsed + "ms" + missed +
-        ". Press it again to compare.";
-    });
-
-    /* The frame may already be loaded by the time this runs. */
-    if (frame.contentDocument && frame.contentDocument.readyState === "complete") {
-      frame.dispatchEvent(new Event("load"));
-    }
-  }
-
-  /* ---------------------------------------------------------------- *
-     This page's own score
-   * ---------------------------------------------------------------- */
-
-  function reportSelf() {
-    var out = document.getElementById("liveScore");
-    var note = document.getElementById("liveNote");
-    if (!out || !window.quoin) return;
-
-    var result = window.quoin.verifyGrid({
-      pitch: GRID.pitch,
-      tolerance: GRID.tolerance,
-      ignore: IGNORE,
-    });
-    var total = result.report.total;
-    var share = total ? Math.round((result.report.onGrid / total) * 100) : 0;
-
-    out.textContent = result.report.onGrid + " of " + total + "  ·  " + share + "%";
-
-    /* Whatever it says, it says. A footer that only appears on a good day is
-       decoration. */
-    var lines = [
-      "Measured in your browser just now, on the fonts your browser resolved, " +
-      "at an 8px pitch with display type excluded.",
-    ];
-    if (result.report.distinctDrifts) {
-      lines.push(result.report.distinctDrifts + " distinct drift values.");
-    }
-    if (result.closedShadowRoots || result.frames) {
-      lines.push(
-        "Not counted: " +
-        [
-          result.frames ? result.frames + " frame" + (result.frames === 1 ? "" : "s") : null,
-          result.closedShadowRoots ? result.closedShadowRoots + " closed shadow roots" : null,
-        ].filter(Boolean).join(", ") + "."
-      );
-    }
-    if (note) note.textContent = lines.join(" ");
-
-    /* Which regime this viewport is in, said plainly. A number without the
-       thing that governs it invites the reader to draw the wrong conclusion. */
-    var where = document.getElementById("liveWhere");
-    if (where) {
-      where.textContent = window.innerWidth >= 1040
-        ? "Above 1040px the layout has stopped reflowing, so the build-time " +
-          "corrections hold at every width."
-        : "Below 1040px the layout reflows continuously, so corrections " +
-          "computed at one width only approximate another. Widen the window " +
-          "and watch this climb.";
-    }
-  }
-
-  function selfGrid() {
-    var button = document.getElementById("footGrid");
-    if (button) {
-      button.addEventListener("click", function () {
-        var on = document.body.classList.toggle("grid-on");
-        button.textContent = on ? "Hide the grid" : "Show the grid on this page";
-      });
-    }
-
-    /* The other axis. Separate toggles rather than one, because they answer
-       separate questions and a page is often right about one and wrong about
-       the other. */
-    var columnButtons = [
-      document.getElementById("footColumns"),
-      document.getElementById("inlineColumns"),
-    ].filter(Boolean);
-
-    columnButtons.forEach(function (columns) {
-      columns.addEventListener("click", function () {
-        var on = document.body.classList.toggle("columns-on");
-        /* Both buttons say the same thing, because they toggle the same thing
-           and a control that lies about the state it is in is worse than one
-           that is not there. */
-        columnButtons.forEach(function (other) {
-          other.textContent = on ? "Hide the columns" : "Show the columns";
-        });
-      });
-    });
-  }
-
   ready(function () {
     var version = document.querySelector("[data-version]");
     if (version && window.quoin) version.textContent = window.quoin.version;
 
-    driveSpecimen();
-    selfGrid();
+    driveDocket();
+    driveReveal();
 
     /* Webfonts change every metric on the page, so measuring before they land
        measures a fallback. */
     if (document.fonts && document.fonts.ready) {
-      document.fonts.ready.then(function () {
-        requestAnimationFrame(reportSelf);
-      });
+      document.fonts.ready.then(function () { reportSelf(); readSpecimen(); });
     } else {
-      window.addEventListener("load", reportSelf);
+      window.addEventListener("load", function () { reportSelf(); readSpecimen(); });
     }
+    setTimeout(function () { reportSelf(); readSpecimen(); }, 1200);
+
+    var seat = document.getElementById("seatIt");
+    if (seat) seat.addEventListener("click", seatSpecimen);
+    var reset = document.getElementById("resetIt");
+    if (reset) reset.addEventListener("click", resetSpecimen);
+    var grid = document.getElementById("specGridBtn");
+    if (grid) grid.addEventListener("click", toggleSpecGrid);
   });
 })();

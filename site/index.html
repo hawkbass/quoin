@@ -6,21 +6,19 @@
 
 <title>Quoin: a baseline grid for the web</title>
 <meta name="description" content="It puts a web page on a baseline grid. Seats every line on a rendered page, re-measures each correction, and exports CSS you can ship without the JavaScript. MIT, no dependencies, 26 kB.">
-<link rel="canonical" href="https://quoin.dev/">
+<link rel="canonical" href="https://quoin.craighawkes.dev/">
 
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://quoin.dev/">
+<meta property="og:url" content="https://quoin.craighawkes.dev/">
 <meta property="og:title" content="Quoin: a baseline grid for the web">
-<meta property="og:description" content="Print has had baseline grids since metal type. The web has never had one. Seventeen of the best-designed sites measured, and not one is on a grid.">
-<meta property="og:image" content="https://quoin.dev/og.png">
+<meta property="og:description" content="Print has had baseline grids since metal type. The web has never had one. 212 sites measured, 152 scored, and not one reaches 90%.">
 <meta name="twitter:card" content="summary_large_image">
 
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;700&display=block">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,400&family=Archivo:wght@500;700;800;900&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap">
 <link rel="stylesheet" href="/style.css">
-<link rel="stylesheet" href="/baseline.css">
 
 <script type="application/ld+json">
 {
@@ -37,634 +35,316 @@
 </head>
 <body>
 
-<a class="skip" href="#start">Skip to the argument</a>
+<a class="skip" href="#main">Skip to the argument</a>
 
-<!-- ============================================================
-     Hero
-     ============================================================ -->
-<header class="hero">
-  <div class="shell">
-    <p class="kicker">Quoin <span class="ver" data-version>1.1</span> &middot; MIT &middot; no dependencies &middot; 26 kB</p>
+<div class="page">
 
-    <h1>It puts a web page on a <em>baseline grid</em>.</h1>
+  <div class="grid-overlay" aria-hidden="true"></div>
+  <div class="cursor-rule" aria-hidden="true"></div>
 
-    <p class="standfirst">
-      A quoin is the wedge a printer hammers into the chase to lock the type so
-      nothing shifts on the press. Same job. Print has had this since metal
-      type. The web has never had it at all.
-    </p>
+  <!-- colour bar, trim marks, registration -->
+  <div class="bar" aria-hidden="true">
+    <span class="sw sw-c"></span><span class="sw sw-m"></span><span class="sw sw-y"></span><span class="sw sw-k"></span>
+    <span class="sw sw-c2"></span><span class="sw sw-m2"></span><span class="sw sw-y2"></span><span class="sw sw-k2"></span>
+    <span class="sw sw-ov1"></span><span class="sw sw-ov2"></span>
+    <span class="bar__fill"></span>
+    <span class="bar__label">DENSITY &middot; C M Y K &middot; OVERPRINT &middot; TRAP 0</span>
+    <span class="bar__reg"><i></i><i></i><i></i></span>
+  </div>
 
-    <div class="demo" id="demo">
-      <div class="demo-bar">
-        <div class="demo-readout">
-          <span class="dot" data-state="off" aria-hidden="true"></span>
-          <output id="demoScore">measuring the specimen&hellip;</output>
+  <!-- docket -->
+  <header class="docket">
+    <span class="docket__brand">QUOIN</span>
+    <span class="docket__cell">FORME &#8470; <span data-version>1.1</span> &mdash; LOCKED UP</span>
+    <span class="docket__cell docket__pitch">PITCH 8px</span>
+    <span class="docket__cell docket__mit">MIT &middot; NO DEPENDENCIES &middot; 26 kB</span>
+    <span class="docket__actions">
+      <button type="button" id="gridToggle" aria-pressed="false">baseline</button>
+      <button type="button" id="regToggle">in register</button>
+    </span>
+    <span class="docket__score" data-score>measuring&hellip;</span>
+  </header>
+
+  <!-- full-bleed working specimen -->
+  <section class="spec" aria-label="A page like any other, seated live">
+    <div class="spec__sheet" data-sheet>
+      <div class="spec__grid" data-specgrid aria-hidden="true"></div>
+      <p class="spec__kicker">Specimen &mdash; a page like any other. A fluid type scale, a spacing scale in round numbers, leading set as a ratio. Nothing on it is a mistake.</p>
+      <h2 class="spec__title" data-seat>The letters were never centred</h2>
+      <p data-seat>Every font reserves a band of empty space above its capitals and another below its baseline for descenders, and those two bands are almost never the same size.</p>
+      <p data-seat>The browser measures the font's box, subtracts it from the line height, and splits what is left equally. So it centres the box perfectly. The letters inside that box were never centred.</p>
+      <p data-seat>Print solved this with the baseline grid: one invisible ruler down the page, and every line of text in every column seated on it. It has existed since metal type and it is a checkbox in InDesign.</p>
+      <p data-seat>There is no number you can write down once.</p>
+    </div>
+    <aside class="spec__panel">
+      <p class="spec__eyebrow">Seated on the 8px grid</p>
+      <p class="bigscore" data-bigscore>&mdash;</p>
+      <p class="spec__note" data-specnote>measuring the specimen&hellip;</p>
+      <div class="spec__controls">
+        <button type="button" id="seatIt" class="btn-seat">SEAT IT &rarr;</button>
+        <div class="spec__duo">
+          <button type="button" id="specGridBtn">show grid</button>
+          <button type="button" id="resetIt">reset</button>
         </div>
-        <div class="demo-buttons">
-          <button type="button" id="demoGrid" aria-pressed="false">Show the grid</button>
-          <button type="button" id="demoSeat" class="primary" aria-pressed="false">Seat it</button>
+      </div>
+      <p class="spec__foot">Its leading is 1.47 &mdash; a ratio, like everybody's. 17 &times; 1.47 = 24.99px, and the missing hundredth walks down the page. Press SEAT IT and watch every block move.</p>
+    </aside>
+  </section>
+
+  <!-- masthead, cropped -->
+  <section class="mast">
+    <h1 class="mast__title" data-misreg>IT PUTS A WEB PAGE<br>ON A BASELINE GRID</h1>
+    <div class="mast__strip">
+      <p>A quoin is the wedge a printer hammers into the chase to lock the type so nothing shifts on the press. Same job.</p>
+      <p>Print has had this since metal type. The web has never had it at all.</p>
+      <p class="mast__fine">Every measurement on this sheet is taken in your browser, on the fonts your browser resolved.</p>
+    </div>
+  </section>
+
+  <main id="main">
+
+    <!-- PLATE I -->
+    <header class="platehead">
+      <span class="platehead__num platehead__num--c">I</span>
+      <h2 class="platehead__title">THE DEFECT</h2>
+      <span class="platehead__fig">fig. 1 &mdash; the line box, dimensioned</span>
+    </header>
+    <section class="defect">
+      <div class="defect__figcell">
+        <figure class="linebox">
+          <div class="linebox__box">
+            <i class="linebox__cap"></i>
+            <i class="linebox__base"></i>
+            <p class="linebox__glyph">Hxp</p>
+            <span class="linebox__tag linebox__tag--top">box top &middot; half-leading</span>
+            <span class="linebox__tag linebox__tag--cap">cap height</span>
+            <span class="linebox__tag linebox__tag--base">BASELINE &mdash; where it must land</span>
+          </div>
+          <p class="linebox__dims"><span>|&larr; ascent 0.727em</span><span>descent 0.273em &rarr;|</span></p>
+        </figure>
+        <p class="defect__caption">The browser centres the box. Nothing centres the letters. The two bands are never equal, so the baseline lands where the typeface's asymmetry puts it.</p>
+      </div>
+      <div class="defect__side">
+        <p class="defect__lead">The web has never had one, because <code class="chip">line-height</code> centres text in its box rather than seating it on a line, so the baseline lands wherever a particular typeface's asymmetry puts it. There is no number you can write down once.</p>
+        <div class="defect__cells">
+          <h3 class="kick kick--c">RHYTHM</h3>
+          <p>Every vertical distance a whole number of grid rows. CSS gives you this exactly.</p>
+          <h3 class="kick kick--m">PHASE</h3>
+          <p>The first baseline inside each box landing on one. CSS gives you nothing.</p>
         </div>
+        <p class="defect__banner">So: CSS for the rhythm, this for the phase.</p>
       </div>
-      <iframe id="specimen" src="/demo.html" title="A specimen page, seated live" loading="eager"></iframe>
-      <p class="demo-foot" id="demoFoot">
-        A page like any other: a fluid type scale, a spacing scale in round
-        numbers, leading set as a ratio. Nothing on it is a mistake.
-      </p>
-    </div>
-  </div>
-</header>
+    </section>
 
-<!-- ============================================================
-     The problem
-     ============================================================ -->
-<section id="start">
-  <div class="shell column">
-    <h2>The letters were never centred</h2>
-    <p>
-      Every font reserves a band of empty space above its capitals and another
-      below its baseline for descenders, and those two bands are almost never
-      the same size. The browser measures the font's box, subtracts it from the
-      line height, and splits what is left equally. So it centres the
-      <strong>box</strong> perfectly. The <strong>letters</strong> inside that
-      box were never centred.
-    </p>
-    <p>
-      Print solved this with the baseline grid: one invisible ruler down the
-      page, and every line of text in every column seated on it. It has existed
-      since metal type and it is a checkbox in InDesign.
-    </p>
-    <p>
-      The web has never had one, because <code>line-height</code> centres text
-      in its box rather than seating it on a line, so the baseline lands
-      wherever a particular typeface's asymmetry puts it. There is no number you
-      can write down once.
-    </p>
-
-    <div class="split">
-      <div>
-        <h3>Rhythm</h3>
-        <p>
-          Every vertical distance a whole number of grid rows. CSS gives you
-          this exactly: fix the spacing scale to multiples of the pitch and snap
-          the leading with <code>round()</code>.
-        </p>
+    <!-- PLATE II -->
+    <header class="platehead">
+      <span class="platehead__num platehead__num--m">II</span>
+      <h2 class="platehead__title">THE SURVEY</h2>
+      <span class="platehead__fig">212 measured &middot; 152 scored &middot; 1280&times;900 &middot; half-pixel tolerance</span>
+    </header>
+    <section class="survey">
+      <div class="survey__tablewrap">
+        <table class="t-survey">
+          <thead><tr>
+            <th scope="col" class="l">CATEGORY</th>
+            <th scope="col">SITES</th>
+            <th scope="col" class="l wide">8PX GRID</th>
+            <th scope="col">RHYTHM</th>
+            <th scope="col">DRIFTS</th>
+          </tr></thead>
+          <tbody>
+            <tr><th scope="row">Institutions</th><td>9</td><td class="l"><span class="barcell"><span class="track"><span class="fill" style="width:32%"></span></span><b>32.0%</b></span></td><td>2.2%</td><td>22</td></tr>
+            <tr><th scope="row">Type foundries</th><td>15</td><td class="l"><span class="barcell"><span class="track"><span class="fill" style="width:32%"></span></span><b>31.9%</b></span></td><td>3.7%</td><td>21</td></tr>
+            <tr><th scope="row">Academic</th><td>6</td><td class="l"><span class="barcell"><span class="track"><span class="fill" style="width:31%"></span></span><b>30.9%</b></span></td><td>12.6%</td><td>34.5</td></tr>
+            <tr><th scope="row">Design systems</th><td>27</td><td class="l"><span class="barcell"><span class="track"><span class="fill" style="width:31%"></span></span><b>30.8%</b></span></td><td>29.5%</td><td>21</td></tr>
+            <tr><th scope="row">Documentation</th><td>39</td><td class="l"><span class="barcell"><span class="track"><span class="fill" style="width:29%"></span></span><b>29.3%</b></span></td><td>20.9%</td><td>22</td></tr>
+            <tr><th scope="row">Studios</th><td>11</td><td class="l"><span class="barcell"><span class="track"><span class="fill" style="width:26%"></span></span><b>25.7%</b></span></td><td>8.1%</td><td>28</td></tr>
+            <tr><th scope="row">Editorial</th><td>20</td><td class="l"><span class="barcell"><span class="track"><span class="fill" style="width:25%"></span></span><b>25.0%</b></span></td><td>18.8%</td><td>46</td></tr>
+            <tr><th scope="row">Products</th><td>25</td><td class="l"><span class="barcell"><span class="track"><span class="fill" style="width:25%"></span></span><b>25.0%</b></span></td><td>25.4%</td><td>43</td></tr>
+          </tbody>
+        </table>
       </div>
-      <div>
-        <h3>Phase</h3>
-        <p>
-          The first baseline inside each box landing on one. Half-leading plus
-          ascent, and ascent belongs to the typeface at its rendered size. CSS
-          gives you nothing.
-        </p>
+      <aside class="survey__side">
+        <p class="survey__big">NOT ONE REACHES 90%</p>
+        <p class="survey__note">The median is 28%. Two hundred and twelve sites: design systems, documentation, editorial, type foundries, studios, products, museums and universities. 152 rendered enough to score.</p>
+        <p class="survey__finding"><strong>The categories are the same, and that is the finding.</strong> Type foundries, whose entire trade is typography and who sell the fonts everyone else sets, land where the documentation sites land. Knowing more about type does not put a page on a grid, because the thing in the way is not knowledge.</p>
+        <p class="survey__finding survey__finding--last"><strong>Leading is the cause on 104 of the 152.</strong> 1.5 on 17px is 25.5px, and every extra line carries the half pixel down the page. It is the least visible defect available, because 1.5 looks like a decision.</p>
+      </aside>
+    </section>
+
+    <!-- PLATE III -->
+    <header class="platehead">
+      <span class="platehead__num platehead__num--y">III</span>
+      <h2 class="platehead__title">MOVE THE GRID TO THE DESIGN</h2>
+      <span class="platehead__fig">npx quoin fit --design design.json &middot; three families &middot; 76ms</span>
+    </header>
+    <section class="fit">
+      <div class="fit__body">
+        <div class="fit__text">
+          <p class="fit__lead">Everything above is remedial. It measures a page that is off the grid and pushes each block into place, and what you get back is a list of pixel corrections that describe one arrangement of line breaks. <strong>There is a better answer, and it does not ask you to change a single size.</strong></p>
+          <p>Trim the boxes. Under <code class="chip">text-box-trim: trim-both</code> with <code class="chip">text-box-edge: cap alphabetic</code>, a block starts at its cap height and ends at its baseline, so the distance from one baseline to the next across a block boundary is</p>
+          <p class="formula">(lines &minus; 1) &times; leading + space + cap</p>
+          <p><code class="chip">lines</code> is the only term that changes with the viewport, and it is multiplied by a leading that is already a whole number of rows. So modulo the pitch what is left is <code class="chip">space + cap</code>, and <strong>every term in that belongs to one block by itself.</strong> Nothing relates one size to another. The sizes are free.</p>
+          <p>So a design keeps every size it asked for. The leading is snapped to the nearest whole number of rows, which is the one thing that moves and is the same thing InDesign moves when you tick the box. The space before each block is then solved to close that block's own cap height.</p>
+        </div>
+        <aside class="fit__side">
+          <div class="tscroll"><table class="t-fit">
+            <caption>Three families, five sizes, nothing moved but the leading.</caption>
+            <thead><tr>
+              <th scope="col" class="l">NAME</th>
+              <th scope="col">SIZE</th>
+              <th scope="col">LEADING</th>
+              <th scope="col">SPACE</th>
+              <th scope="col">MOVED</th>
+            </tr></thead>
+            <tbody>
+              <tr><th scope="row">h1</th><td>44px</td><td class="strong">48px</td><td class="faint">57.516px</td><td class="moved">exact</td></tr>
+              <tr><th scope="row">h2</th><td>27px</td><td class="strong">32px</td><td class="faint">29.297px</td><td class="moved">leading &minus;0.4</td></tr>
+              <tr><th scope="row">body</th><td>17px</td><td class="strong">24px</td><td class="faint">27.828px</td><td class="moved">leading &minus;1.5</td></tr>
+              <tr><th scope="row">lead</th><td>21px</td><td class="strong">32px</td><td class="faint">24.953px</td><td class="moved">leading +1.55</td></tr>
+              <tr><th scope="row">code</th><td>15px</td><td class="strong">24px</td><td class="faint">22.422px</td><td class="moved">exact</td></tr>
+            </tbody>
+          </table></div>
+          <p class="fit__mod">A clamped size varies continuously, so its phase does too. CSS has <code class="chip chip--plain">mod()</code>, so the browser can do at layout time what the fitter does at build time: <code class="chip chip--m">margin-top: calc(6 &times; var(--pitch) &minus; mod(var(--cap), var(--pitch)))</code>. Eleven widths from 320 to 1440: a clamped heading goes from on the grid at no width to on the grid at every one.</p>
+        </aside>
       </div>
-    </div>
+      <p class="fit__banner">The grid is not asking you to accept type that looks different. It is asking how many sizes you actually needed.</p>
+    </section>
 
-    <p class="pull">
-      So: CSS for the rhythm, this for the phase.
-    </p>
+    <!-- PLATE IV -->
+    <header class="platehead">
+      <span class="platehead__num platehead__num--m">IV</span>
+      <h2 class="platehead__title">WHERE A CORRECTION HOLDS</h2>
+      <span class="platehead__fig">seated at 1280 &middot; carried to 375</span>
+    </header>
+    <section class="holds">
+      <div class="holds__cell">
+        <p class="stat"><span class="stat__num stat__num--c">100%</span><span class="stat__label">when only the line breaks moved</span></p>
+        <p class="stat"><span class="stat__num stat__num--m">0%</span><span class="stat__label">when a media query changed a container's padding by thirteen pixels</span></p>
+        <p class="holds__body"><strong>Corrections survive reflow and do not survive a layout change</strong>, and every real site has one. Snapping every leading to whole rows means an extra line adds a whole number of rows and nothing shifts.</p>
+      </div>
+      <div class="holds__cell">
+        <h3 class="kick kick--m">AND IT CHECKS THE STYLESHEET IT GIVES YOU</h3>
+        <p class="holds__body">Pointed at five design system homepages, four reproduced the seating from the exported CSS alone. Material Design 3 went from 123 of 123 with the script to <strong>18 of 123</strong> with the stylesheet: nine <code class="chip">line-height</code> declarations lost the cascade to Angular's four-component scoped selectors.</p>
+        <p class="holds__body holds__body--last">So the export applies itself, measures every declaration, and adds <code class="chip">!important</code> to exactly the ones that lost.</p>
+      </div>
+      <div class="holds__cell">
+        <h3 class="kick kick--c">WHY AN EXTENSION, NOT A PASTE-YOUR-URL BOX</h3>
+        <p class="holds__body">A page's Content-Security-Policy governs script tags injected from outside, and a hosted service has no other way in. The two most famous URLs anyone would paste are the two it could not measure.</p>
+        <div class="tscroll"><table class="t-csp">
+          <thead><tr>
+            <th scope="col" class="l">ROUTE IN</th>
+            <th scope="col">STRIPE</th>
+            <th scope="col">GITHUB</th>
+            <th scope="col">KLIM</th>
+            <th scope="col">LINEAR</th>
+          </tr></thead>
+          <tbody>
+            <tr><th scope="row" class="l">A <code>&lt;script&gt;</code> tag, which a hosted service must use</th><td class="bad">no</td><td class="bad">no</td><td class="ok">yes</td><td class="ok">yes</td></tr>
+            <tr><th scope="row" class="l"><code>chrome.scripting</code>, which the extension uses</th><td class="ok">yes</td><td class="ok">yes</td><td class="ok">yes</td><td class="ok">yes</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </section>
 
-    <p>
-      Both of those are the vertical. A baseline grid sits inside a column grid
-      and the column grid is the half a designer usually means by the word, so
-      <code>quoin columns</code> measures that too. It has the same defect and
-      the same cause: 1104px divided three ways with 40px gutters is a module of
-      341.33px, every division after the first sits on a fraction, and no care
-      taken with the markup moves it because the container width settled it
-      before any markup existed.
-    </p>
-
-    <p>
-      This page was 15.4% aligned on a fractional module when the check was
-      written. The gutter is 48px now, which divides the shell whole at two,
-      three, four and six columns, and which is six grid rows: the two axes are
-      measured in the same unit rather than in two conventions that happened to
-      sit next to each other. <button type="button" class="link" id="inlineColumns">Show the columns</button>
-      and you can see the one this page is set on.
-    </p>
-  </div>
-</section>
-
-<!-- ============================================================
-     The survey
-     ============================================================ -->
-<section class="survey">
-  <div class="shell">
-    <div class="column">
-      <h2>Nobody's site is on a baseline grid</h2>
-      <p>
-        Two hundred and twelve sites, measured at 1280px with Quoin: design
-        systems, documentation, editorial, type foundries, studios, products,
-        museums and universities. 152 rendered enough to score.
-      </p>
-      <p class="lede">
-        <strong>Not one of them reaches 90%.</strong> The median is 28%.
-      </p>
-    </div>
-
-    <div class="tablewrap">
-      <table>
-        <caption>Medians by category. 1280&times;900, half-pixel tolerance, grid origin solved per page. Reproduce with <code>npm run corpus</code>.</caption>
-        <thead>
-          <tr>
-            <th scope="col">Category</th>
-            <th scope="col">Sites</th>
-            <th scope="col">8px grid</th>
-            <th scope="col">Rhythm</th>
-            <th scope="col">Distinct drifts</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><th scope="row">Institutions</th><td>9</td><td><i style="width:32%"></i>32.0%</td><td>2.2%</td><td>22</td></tr>
-          <tr><th scope="row">Type foundries</th><td>15</td><td><i style="width:32%"></i>31.9%</td><td>3.7%</td><td class="ok">21</td></tr>
-          <tr><th scope="row">Academic</th><td>6</td><td><i style="width:31%"></i>30.9%</td><td>12.6%</td><td class="bad">34.5</td></tr>
-          <tr><th scope="row">Design systems</th><td>27</td><td><i style="width:31%"></i>30.8%</td><td class="ok">29.5%</td><td class="ok">21</td></tr>
-          <tr><th scope="row">Documentation</th><td>39</td><td><i style="width:29%"></i>29.3%</td><td>20.9%</td><td>22</td></tr>
-          <tr><th scope="row">Studios</th><td>11</td><td><i style="width:26%"></i>25.7%</td><td>8.1%</td><td>28</td></tr>
-          <tr><th scope="row">Editorial</th><td>20</td><td><i style="width:25%"></i>25.0%</td><td>18.8%</td><td class="bad">46</td></tr>
-          <tr><th scope="row">Products</th><td>25</td><td><i style="width:25%"></i>25.0%</td><td>25.4%</td><td class="bad">43</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="column">
-      <p>
-        <strong>None of these teams claims a baseline grid, so being off one is
-        not a defect.</strong> The table describes the medium rather than the
-        teams: a convention print has had since metal type, which nothing on the
-        web has.
-      </p>
-      <p>
-        <strong>The categories are the same, and that is the finding.</strong>
-        Best to worst runs 32.0% to 25.0%. Type foundries, whose entire trade is
-        typography and who sell the fonts everyone else sets, land where the
-        documentation sites land. Knowing more about type does not put a page on
-        a grid, because the thing in the way is not knowledge.
-      </p>
-      <p>
-        <strong>Except in one column.</strong> Rhythm is whether each box is a
-        whole number of grid rows tall. Design systems median 29.5% against 3.7%
-        for the foundries, eight times better and the largest gap in the study.
-        That is exactly what a design system is for, and it buys them nothing on
-        phase, where they sit mid-table.
-      </p>
-      <p>
-        Quantising your CSS gives you rhythm. Rhythm is not phase. The teams
-        doing the most disciplined vertical spacing on the web are doing it
-        correctly and still landing where everyone else lands, and that gap is
-        the whole reason this exists.
-      </p>
-      <p>
-        <strong>Leading is the cause on 104 of the 152.</strong> A
-        <code>line-height</code> that is a ratio rather than a number of rows.
-        <code>1.5</code> on 17px is 25.5px, and every extra line carries the half
-        pixel down the page. It is the least visible defect available, because
-        <code>1.5</code> looks like a decision.
-      </p>
-    </div>
-  </div>
-</section>
-
-<!-- ============================================================
-     What it does
-     ============================================================ -->
-<section>
-  <div class="shell column">
-    <h2>What it actually does</h2>
-    <p>
-      Seating one element is arithmetic, and several tools do it well. Seating a
-      page is a constraint problem, and that is the part nobody had built.
-    </p>
-
-    <h3>Correcting a block moves every block below it</h3>
-    <p>
-      So the corrections cannot be computed in a batch and then applied. Each
-      block has to be measured after the ones above it are already corrected.
-      Compute-then-apply gives you a perfect first paragraph and a page that is
-      worse than when you started.
-    </p>
-
-    <h3>Correcting a block can move blocks above it too</h3>
-    <p>
-      In a flex row under <code>align-items: flex-end</code>, making any item
-      taller grows the line's cross size and shifts every end-aligned sibling.
-      Seating the third item lifted two already seated ones back off, which cost
-      17 blocks on one homepage before it was caught. So it sweeps until nothing
-      moves.
-    </p>
-
-    <h3>It checks its own corrections</h3>
-    <p>
-      <code>padding-top</code> is the lever you want, because it moves the text
-      and pushes everything below it down. It does not always work: a flex child
-      under <code>align-items: center</code> grows when you pad it and the
-      container re-centres the bigger box, so the text moves half as far as you
-      asked. So it applies the padding, measures again, and reverts to a
-      relative offset if the text did not land where it was sent. If neither
-      lever works the block is reported as missed rather than counted as fixed.
-    </p>
-    <p class="pull">
-      A corrector that trusts its own corrections is the verifier with extra
-      steps.
-    </p>
-
-    <h3>And it checks the stylesheet it gives you</h3>
-    <p>
-      Pointed at five design system homepages, four reproduced the seating from
-      the exported CSS alone. Material Design 3 went from 123 of 123 with the
-      script to <strong>18 of 123</strong> with the stylesheet: nine
-      <code>line-height</code> declarations lost the cascade to Angular's
-      four-component scoped selectors, and a block whose leading stays 2px short
-      moves everything below it. So the export applies itself, measures every
-      declaration, and adds <code>!important</code> to exactly the ones that
-      lost.
-    </p>
-
-    <div class="tablewrap tight">
-      <table class="compact">
-        <caption>Seat, export, undo, inject the stylesheet alone, measure again. <code>npm run wild</code>.</caption>
-        <thead><tr><th scope="col">Site</th><th scope="col">Before</th><th scope="col">Seated</th><th scope="col">Stylesheet alone</th></tr></thead>
-        <tbody>
-          <tr><th scope="row">GOV.UK Design System</th><td>16%</td><td>100%</td><td class="ok">100%</td></tr>
-          <tr><th scope="row">Shopify Polaris</th><td>29%</td><td>100%</td><td class="ok">100%</td></tr>
-          <tr><th scope="row">Tailwind CSS</th><td>12%</td><td>100%</td><td class="ok">99%</td></tr>
-          <tr><th scope="row">Material Design 3</th><td>17%</td><td>100%</td><td class="ok">100%</td></tr>
-          <tr><th scope="row">Ant Design</th><td>21%</td><td>98%</td><td class="ok">98%</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</section>
-
-<!-- ============================================================
-     Solving instead of correcting
-     ============================================================ -->
-<section class="solve">
-  <div class="shell">
-    <div class="column">
-      <h2>Or keep your design and move the grid to it</h2>
-      <p class="lede">
-        Everything above is remedial. It measures a page that is off the grid and
-        pushes each block into place, and what you get back is a list of pixel
-        corrections that describe one arrangement of line breaks. There is a
-        better answer, and it does not ask you to change a single size.
-      </p>
-      <p>
-        Trim the boxes. Under <code>text-box-trim: trim-both</code> with
-        <code>text-box-edge: cap alphabetic</code>, a block starts at its cap
-        height and ends at its baseline, so the distance from one baseline to the
-        next across a block boundary is
-      </p>
-      <p class="formula"><code>(lines &minus; 1) &times; leading + space + cap</code></p>
-      <p>
-        <code>lines</code> is the only term that changes with the viewport, and
-        it is multiplied by a leading that is already a whole number of rows. So
-        modulo the pitch what is left is <code>space + cap</code>, and
-        <strong>every term in that belongs to one block by itself.</strong>
-        Nothing relates one size to another. The sizes are free.
-      </p>
-      <p>
-        So a design keeps every size it asked for. The leading is snapped to the
-        nearest whole number of rows, which is the one thing that moves and is
-        the same thing InDesign moves when you tick the box. The space before
-        each block is then solved to close that block's own cap height.
-      </p>
-    </div>
-
-    <div class="tablewrap tight">
-      <table class="compact">
-        <caption><code>npx quoin fit --design design.json</code> &middot; three families, five sizes, nothing moved but the leading</caption>
-        <thead><tr><th scope="col">Name</th><th scope="col">Size</th><th scope="col">Leading</th><th scope="col">Space</th><th scope="col">Cap</th><th scope="col">Moved</th></tr></thead>
-        <tbody>
-          <tr><th scope="row">h1</th><td>44px</td><td>48px</td><td>57.516px</td><td>30.484</td><td class="ok">exact</td></tr>
-          <tr><th scope="row">h2</th><td>27px</td><td>32px</td><td>29.297px</td><td>18.703</td><td>leading &minus;0.4</td></tr>
-          <tr><th scope="row">body</th><td>17px</td><td>24px</td><td>27.828px</td><td>12.172</td><td>leading &minus;1.5</td></tr>
-          <tr><th scope="row">lead</th><td>21px</td><td>32px</td><td>24.953px</td><td>15.047</td><td>leading +1.55</td></tr>
-          <tr><th scope="row">code</th><td>15px</td><td>24px</td><td>22.422px</td><td>9.578</td><td class="ok">exact</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="column">
-      <h3>It holds at every width, with no media queries</h3>
-      <p>
-        A page built from a fit, with headings that wrap at some widths and not
-        others, a list, a blockquote and paragraphs reflowing from two lines to
-        nine. One stylesheet, nothing to regenerate when the copy changes.
-      </p>
-    </div>
-
-    <div class="tablewrap tight">
-      <table class="compact">
-        <caption>Measured in Chromium and WebKit. Two controls run beside it, the same page with the design's own spacing and the same page without the trim, and both have to fall below 75%. Both do.</caption>
-        <thead><tr><th scope="col">Width</th><th scope="col">320</th><th scope="col">414</th><th scope="col">600</th><th scope="col">768</th><th scope="col">1024</th><th scope="col">1280</th><th scope="col">1440</th></tr></thead>
-        <tbody>
-          <tr><th scope="row">On the grid</th><td class="ok">9/9</td><td class="ok">9/9</td><td class="ok">9/9</td><td class="ok">9/9</td><td class="ok">9/9</td><td class="ok">9/9</td><td class="ok">9/9</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="column">
-      <h3>Fluid type as well, which this site used to say was impossible</h3>
-      <p>
-        A <code>clamp()</code> size varies continuously, so its phase does too,
-        and it lands on the grid only where it happens to. That was the argument
-        and it was right as far as it went. What it missed is that the space does
-        not have to be a number: CSS has <code>mod()</code>, so the browser can
-        do at layout time what the fitter does at build time.
-      </p>
-      <p class="formula"><code>margin-top: calc(6 &times; var(--pitch) &minus; mod(var(--cap), var(--pitch)))</code></p>
-      <p>
-        Eleven widths from 320 to 1440: a clamped heading goes from on the grid
-        at <strong>no width</strong> to on the grid at <strong>every one</strong>.
-        The only thing that cannot be fluid is the leading, because it has to be
-        a whole number of rows and there is no continuum of whole numbers.
-      </p>
-    </div>
-
-    <div class="column">
-      <h3>What it costs the rest of the web</h3>
-      <p>
-        Every site in the survey had its design read off its own page and fitted.
-        <strong>The median would move 15.6px of leading across 8 sizes</strong>,
-        which is under two pixels a size, and no size ever changes. The largest
-        single change anywhere in 175 sites is about four pixels.
-      </p>
-      <p>
-        The interesting half is what makes a site expensive. Rollup could be
-        fitted for nothing at all and Deno would cost sixty-seven pixels, and
-        that is not because Deno's typography is worse. Deno sets twenty-nine
-        distinct size-and-leading combinations on one page and Rollup sets five.
-        Every one of Deno's changes is under four pixels, like everybody else's.
-        There are simply twenty-nine of them.
-      </p>
-      <p class="pull">
-        The grid is not asking you to accept type that looks different. It is
-        asking how many sizes you actually needed.
-      </p>
-      <h3>And it checks the font actually loaded</h3>
-      <p>
-        A fit solved against a font that did not render describes a typeface
-        nobody is going to set in, and the obvious check does not work:
-        <code>ctx.font</code> reads back the family you <em>asked for</em>, so a
-        font nobody has installed hands its own name straight back while the
-        measurement comes off the fallback. It probes widths against two
-        different fallbacks and warns in the stylesheet rather than quietly
-        lying.
-      </p>
-    </div>
-  </div>
-</section>
-
-<!-- ============================================================
-     Findings
-     ============================================================ -->
-<section class="findings">
-  <div class="shell">
-    <div class="column">
-      <h2>Three things found by building it</h2>
-      <p>
-        A tool that measures browsers ends up measuring browsers. All three are
-        reproducible from the repository, and the raw output is committed.
-      </p>
-    </div>
-
-    <div class="cards">
-      <article>
-        <p class="cardkick">Cap height travels now</p>
+    <!-- PLATE V -->
+    <header class="platehead">
+      <span class="platehead__num platehead__num--y">V</span>
+      <h2 class="platehead__title">FOUND BY BUILDING IT</h2>
+      <span class="platehead__fig">all three reproducible &middot; raw output committed</span>
+    </header>
+    <section class="findings">
+      <article data-reveal>
+        <p class="f-kick">Cap height travels now</p>
         <h3>Both readings are called cap height and only one of them is portable</h3>
-        <p>
-          Canvas reports the drawn glyph: Chromium and WebKit hinted onto the
-          pixel grid, Firefox as a scaled outline. CSS
-          <code>text-box-edge: cap</code> reports the font's own
-          <code>sCapHeight</code>.
-        </p>
-        <dl class="figures">
-          <div><dt>font table</dt><dd class="ok">130 / 130</dd><dd class="dim">spread 0.022px</dd></div>
-          <div><dt>canvas</dt><dd class="bad">90 / 130</dd><dd class="dim">spread 0.864px</dd></div>
+        <p class="f-body">Canvas reports the drawn glyph: Chromium and WebKit hinted onto the pixel grid, Firefox as a scaled outline. CSS text-box-edge: cap reports the font's own sCapHeight.</p>
+        <dl class="f-figs">
+          <div><dt>font table</dt><dd>130 / 130</dd></div>
+          <div><dt>canvas</dt><dd>90 / 130</dd></div>
         </dl>
-        <p class="cardnote">
-          Proving <em>why</em> needed a font that lies. Every real font sets
-          <code>sCapHeight</code> to the height of its own H, so 21 real fonts
-          could not tell "reads the table" from "measures the glyph". A
-          manufactured Space Mono declaring 600 where its H is 700 reports
-          10.797px in all three engines. They read the table.
-        </p>
       </article>
-
-      <article>
-        <p class="cardkick">A generic keyword is not a font</p>
+      <article data-reveal>
+        <p class="f-kick">A generic keyword is not a font</p>
         <h3>fontBoundingBox agrees exactly, and the exceptions are not exceptions</h3>
-        <p>
-          Across three engines it agreed to the pixel for every font loaded from
-          the same bytes. It disagreed on <code>monospace</code> and
-          <code>system-ui</code>, which are the two rows where the engines
-          resolved different typefaces.
-        </p>
-        <dl class="figures">
-          <div><dt>same font</dt><dd class="ok">0.04px</dd></div>
-          <div><dt>monospace</dt><dd class="bad">27.16px</dd></div>
-          <div><dt>system-ui</dt><dd class="bad">14.14px</dd></div>
+        <p class="f-body">Across three engines it agreed to the pixel for every font loaded from the same bytes. It disagreed on monospace and system-ui, which are the two rows where the engines resolved different typefaces.</p>
+        <dl class="f-figs">
+          <div><dt>same font</dt><dd>0.04px</dd></div>
+          <div><dt>monospace</dt><dd>27.16px</dd></div>
+          <div><dt>system-ui</dt><dd>14.14px</dd></div>
         </dl>
-        <p class="cardnote">
-          <code>system-ui</code> is a promise, not a typeface. So, it turns out,
-          is <code>monospace</code>.
-        </p>
       </article>
-
-      <article>
-        <p class="cardkick">Found in the discard pile</p>
+      <article data-reveal>
+        <p class="f-kick">Found in the discard pile</p>
         <h3>WebKit does not apply automatic optical sizing</h3>
-        <p>
-          Two fonts kept failing a validity check, and they were the only two in
-          the corpus with an <code>opsz</code> axis. At 48px with
-          <code>font-optical-sizing: auto</code>, which is the default:
-        </p>
-        <dl class="figures">
+        <p class="f-body">Two fonts kept failing a validity check, and they were the only two in the corpus with an opsz axis. Set font-optical-sizing: none and all three agree to 0.03px.</p>
+        <dl class="f-figs">
           <div><dt>Inter, Chromium &amp; Firefox</dt><dd>460.88</dd></div>
-          <div><dt>Inter, WebKit</dt><dd class="bad">483.59</dd></div>
+          <div><dt>Inter, WebKit</dt><dd>483.59</dd></div>
         </dl>
-        <p class="cardnote">
-          Set <code>font-optical-sizing: none</code> and all three agree to
-          0.03px. A variable font with an <code>opsz</code> axis is a different
-          instance in WebKit at display sizes. Not a measurement problem. A
-          different font.
-        </p>
       </article>
-    </div>
-  </div>
-</section>
+    </section>
 
-<!-- ============================================================
-     Get it
-     ============================================================ -->
-<section class="get">
-  <div class="shell">
-    <div class="column">
-      <h2>Six ways in</h2>
-      <p>
-        The library has no dependencies. Fitting from font files needs nothing at
-        all; everything that measures a rendered page drives a real browser, so it
-        needs Playwright and says so plainly if you have not got it.
-      </p>
-    </div>
-
-    <div class="ways">
+    <!-- PLATE VI -->
+    <header class="platehead">
+      <span class="platehead__num platehead__num--c">VI</span>
+      <h2 class="platehead__title">SIX WAYS IN</h2>
+      <span class="platehead__fig">no dependencies &middot; Playwright only where a browser is driven</span>
+    </header>
+    <section class="ways">
       <article>
         <h3>Fit a design</h3>
         <pre><code>npx quoin fit --design design.json</code></pre>
-        <p>
-          Keeps every size, snaps the leading, solves the spacing. Name each
-          family's font file and it never opens a browser: three families in
-          <strong>76ms</strong>, which is what makes it usable in a build.
-        </p>
+        <p>Keeps every size, snaps the leading, solves the spacing. Name each family's font file and it never opens a browser: three families in 76ms, which is what makes it usable in a build.</p>
       </article>
-
       <article>
         <h3>Fit a site you already have</h3>
-        <pre><code>npx quoin fit --from https://example.com</code></pre>
-        <p>
-          Reads the design off the rendered page, groups every block by what it
-          actually resolved to, and fits that. Most people have a site rather
-          than a design file.
-        </p>
+        <pre><code>npx quoin fit \
+  --from https://example.com</code></pre>
+        <p>Reads the design off the rendered page, groups every block by what it actually resolved to, and fits that. Most people have a site rather than a design file.</p>
       </article>
-
       <article>
         <h3>Measure and correct</h3>
-        <pre><code>npx quoin check https://example.com
-npx quoin rhythm https://example.com
-npx quoin seat https://example.com -o baseline.css</code></pre>
-        <p>
-          For a page that cannot be rebuilt. <code>--min 90</code> exits
-          non-zero, and the GitHub Action gates on a committed baseline.
-        </p>
+        <pre><code>npx quoin check \
+  https://example.com
+npx quoin seat \
+  https://example.com \
+  -o baseline.css</code></pre>
+        <p>For a page that cannot be rebuilt. <code>--min 90</code> exits non-zero, and the GitHub Action gates on a committed baseline.</p>
       </article>
-
       <article>
         <h3>On the page in front of you</h3>
         <pre><code>quoin.check()
 quoin.seat()
 quoin.css()</code></pre>
-        <p>
-          Paste the bundle into any console, or install the extension and press
-          a button. Both reach pages a hosted service cannot.
-        </p>
+        <p>Paste the bundle into any console, or install the extension and press a button. Both reach pages a hosted service cannot.</p>
       </article>
-
       <article>
         <h3>In your build</h3>
         <pre><code>npm install quoin</code></pre>
-        <p>
-          <code>fitScale</code>, <code>inferDesign</code>,
-          <code>verifyGrid</code>, <code>verifyRhythm</code>,
-          <code>seatPage</code>. ESM, CJS and types, no dependencies.
-        </p>
+        <p><code>fitScale</code>, <code>inferDesign</code>, <code>verifyGrid</code>, <code>verifyRhythm</code>, <code>seatPage</code>. ESM, CJS and types, no dependencies.</p>
       </article>
-
       <article>
         <h3>For an agent</h3>
         <pre><code>cat design.json | npx quoin fit --design - --json</code></pre>
-        <p>
-          Takes the shape you already have, whether that is a Figma export or a
-          flat token file. Every error names the entry it is about, because an
-          agent cannot ask a follow-up question.
-        </p>
+        <p>Takes the shape you already have, whether that is a Figma export or a flat token file. Every error names the entry it is about, because an agent cannot ask a follow-up question.</p>
       </article>
-    </div>
+    </section>
 
+  </main>
 
-    <div class="column">
-      <h3>Where a correction holds, and where a fit is the answer instead</h3>
-      <p>
-        This page is corrected at build time, once per breakpoint, and the
-        stylesheet is 5&nbsp;kB. That arrangement predates the fitter and it is
-        the clearest demonstration of why the fitter exists.
-      </p>
-      <p>
-        Measured properly, a correction survives more than it was given credit
-        for. A stylesheet seated at 1280 and carried to 375 held at
-        <strong>100%</strong> when only the line breaks had moved, because
-        snapping every leading to whole rows means an extra line adds a whole
-        number of rows and nothing shifts. It fell to <strong>0%</strong> when a
-        media query changed a container's padding by thirteen pixels.
-      </p>
-      <p>
-        <strong>Corrections survive reflow and do not survive a layout change</strong>,
-        and every real site has one. This page changes its layout at six ranges
-        rather than merely its line breaks, so a correction taken in one range is
-        describing a different page in the next.
-      </p>
-      <p>
-        A fitted design needs none of it, because there is nothing to carry.
-        Rebuilding this page on a fit is the obvious next thing and is not done
-        yet, so that is a description of this site rather than a recommendation.
-        The score in the footer is measured live, which means it tells you what
-        you are actually looking at rather than what the author hoped for.
-      </p>
+  <!-- colophon -->
+  <footer class="colo">
+    <p class="colo__cell">Locked up in Archivo, Source Serif 4 and Courier Prime. Pitch 8px. Cyan, magenta, yellow, key.</p>
+    <p class="colo__cell">Snap your headlines? No. Display type is a shape, not a line of reading. Claim a correction it did not make? No. Tell you your site is fine? No.</p>
+    <ul class="colo__links">
+      <li><a href="https://github.com/hawkbass/quoin">github.com/hawkbass/quoin</a></li>
+      <li><a href="https://www.npmjs.com/package/quoin">npmjs.com/package/quoin</a></li>
+      <li><a href="https://craighawkes.dev">craighawkes.dev</a></li>
+    </ul>
+    <p class="colo__score" data-score>measuring&hellip;</p>
+  </footer>
 
-      <h3>Why an extension and not a paste-your-URL box</h3>
-      <p>
-        A page's Content-Security-Policy governs script tags injected from
-        outside, and a hosted service has no other way in. The two most famous
-        URLs anyone would paste are the two it could not measure.
-      </p>
-      <div class="tablewrap tight">
-        <table class="compact">
-          <thead><tr><th scope="col">Route in</th><th scope="col">Stripe</th><th scope="col">GitHub</th><th scope="col">Klim</th><th scope="col">Linear</th></tr></thead>
-          <tbody>
-            <tr><th scope="row">A <code>&lt;script&gt;</code> tag, which a hosted service must use</th><td class="bad">no</td><td class="bad">no</td><td class="ok">yes</td><td class="ok">yes</td></tr>
-            <tr><th scope="row"><code>chrome.scripting</code>, which the extension uses</th><td class="ok">yes</td><td class="ok">yes</td><td class="ok">yes</td><td class="ok">yes</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ============================================================
-     Footer
-     ============================================================ -->
-<footer>
-  <div class="shell">
-    <div class="footgrid">
-      <div>
-        <p class="footkick">This page</p>
-        <p class="live" id="liveScore">measuring&hellip;</p>
-        <p class="footnote" id="liveNote">
-          Measured in your browser, on the fonts your browser resolved. It is
-          the number it is, including on the days it drops.
-        </p>
-        <p class="footnote" id="liveWhere"></p>
-        <p class="footnote">
-          <button type="button" class="link" id="footGrid">Show the grid on this page</button>
-          <button type="button" class="link" id="footColumns">Show the columns</button>
-        </p>
-      </div>
-      <div>
-        <p class="footkick">Elsewhere</p>
-        <ul>
-          <li><a href="https://github.com/hawkbass/quoin">Source on GitHub</a></li>
-          <li><a href="https://www.npmjs.com/package/quoin">The package</a></li>
-          <li><a href="https://github.com/hawkbass/quoin#readme">The findings, in full</a></li>
-          <li><a href="https://craighawkes.dev">Craig Hawkes</a></li>
-        </ul>
-      </div>
-      <div>
-        <p class="footkick">What it will not do</p>
-        <ul class="plain">
-          <li>Snap your headlines. Display type is a shape, not a line of reading.</li>
-          <li>Claim a correction it did not make.</li>
-          <li>Pretend it saw everything. Closed shadow roots and frames are counted and named.</li>
-          <li>Tell you your site is fine.</li>
-        </ul>
-      </div>
-    </div>
-    <p class="colophon">
-      Set in EB Garamond and JetBrains Mono on an 8px grid, and seated by Quoin
-      at build time. MIT.
-    </p>
-  </div>
-</footer>
+</div>
 
 <script src="/quoin.global.js"></script>
 <script src="/main.js"></script>

@@ -1,644 +1,667 @@
-/* The site
+/*
+   Quoin — the site for a baseline grid.
 
-   Ink on warm paper, one oxidised-brass accent, no border radius anywhere. EB
-   Garamond for the argument, JetBrains Mono for every number.
-
-   Everything vertical is a multiple of eight, and that gets the page its
-   rhythm. It does not get it phase, which is the entire point of the tool, so
-   the build runs Quoin against this page and writes the phase corrections to
-   baseline.css. If that file is missing the page is merely rhythmic, which is
-   where most well-made sites stop.
-
-   Single visual world on purpose: this is a letterpress page and it is the same
-   letterpress page in a dark room. Every colour is declared rather than
-   inherited, so it holds whatever ground it lands on. */
+   Locked up like a printing forme: one 8px pitch, four inks (cyan, magenta,
+   yellow, key) on paper, three typefaces — Archivo for display, Source Serif 4
+   for reading, Courier Prime for measurement. Every distance below is a whole
+   number of rows; the page argues for what it practises.
+*/
 
 :root {
   --pitch: 8px;
-
-  --paper:      #EFE9DC;
-  --paper-lift: #F7F3EA;
-  --paper-sunk: #E5DECE;
-  --ink:        #191512;
-  --ink-soft:   #4A4034;
-  --ink-faint:  #7C7264;
-  --rule:       #D3C9B4;
-  --rule-hard:  #191512;
-  --brass:      #7A4A20;
-  --good:       #3D6B37;
-  --bad:        #A33418;
-
-  --serif: "EB Garamond", Georgia, "Times New Roman", serif;
-  --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Consolas, monospace;
-
-  /*
-     33rem, not 36, and the grid picked it rather than the other way round.
-
-     576px is twelve modules of 48 and no gutter, which is a column start rather
-     than a column end, so a paragraph filling it stops halfway across a gutter.
-     528 is six columns and five gutters exactly. It is also 67 characters of EB
-     Garamond at 18px against 73 at the old width, which is the better of the two
-     measures anyway: the grid asked for the change and typography had no
-     objection.
-  */
-  /* The column grid this page is set on, named so the overlay can draw the
-     same one the layout uses rather than a picture of one. */
-  --gutter: 48px;
-  --column: 144px;
-  --measure: 33rem;
-  --shell: 72rem;
+  /* inks */
+  --k: #0F0F0E;          /* key */
+  --paper: #F2F0E8;
+  --white: #FFFFFF;
+  --c: #00A6E0;          /* cyan */
+  --m: #E5007D;          /* magenta */
+  --y: #FFE400;          /* yellow */
+  /* supporting neutrals */
+  --faint: #8B897F;
+  --rule: #C9C6BA;
+  /* type */
+  --s: "Source Serif 4", Georgia, serif;
+  --m2: "Archivo", ui-sans-serif, sans-serif;
+  --t: "Courier Prime", ui-monospace, monospace;
 }
 
-*, *::before, *::after { box-sizing: border-box; }
+* { box-sizing: border-box; }
 
 html { -webkit-text-size-adjust: 100%; }
+/* No element may drag the sheet wider than the viewport. Tables scroll inside
+   their own boxes instead of pushing the whole page off canvas. */
+html, body { overflow-x: hidden; }
 
 body {
   margin: 0;
   background: var(--paper);
-  color: var(--ink);
-  font-family: var(--serif);
-  /* 18/32: four grid rows of leading, and Garamond needs the room. */
-  font-size: 18px;
-  line-height: 32px;
-  font-kerning: normal;
-  font-variant-ligatures: common-ligatures;
-  -webkit-font-smoothing: antialiased;
+  color: var(--k);
+  font-family: var(--s);
+  font-size: 16px;
+  line-height: 24px;
 }
 
-/* The grid, drawn over everything, off until asked for. */
-body::after {
-  content: "";
-  position: fixed;
+.page { position: relative; }
+
+/* The two overlays live inside .page so their grid stays anchored to the
+   document, not the viewport — a grid that scrolls with the page is not the
+   grid the page is set on. */
+.grid-overlay {
+  position: absolute;
   inset: 0;
-  z-index: 90;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 140ms linear;
-  background-image: repeating-linear-gradient(
-    to bottom, rgba(122, 74, 32, 0.28) 0 1px, transparent 1px var(--pitch));
-}
-body.grid-on::after { opacity: 1; }
-
-/*
-   The other axis, drawn the same way.
-
-   A baseline grid is a vertical rhythm inside a column grid and this page only
-   ever showed you the vertical half. The columns are real: 1104px of shell,
-   48px gutters, six columns of 144px, and 48 is six rows so the two axes are
-   measured in the same unit rather than in two conventions that happen to sit
-   next to each other.
-
-   Drawn as the columns themselves rather than as lines, because a column grid
-   is bands and a baseline grid is rules, and showing both as rules would make
-   two different things look like one.
-*/
-body::before {
-  content: "";
-  position: fixed;
-  top: 0;
-  bottom: 0;
-  left: 50%;
-  width: min(100% - 48px, var(--shell) - 48px);
-  transform: translateX(-50%);
   z-index: 89;
   pointer-events: none;
   opacity: 0;
   transition: opacity 140ms linear;
   background-image: repeating-linear-gradient(
-    to right,
-    rgba(122, 74, 32, 0.10) 0 var(--column),
-    transparent var(--column) calc(var(--column) + var(--gutter)));
+    to bottom,
+    rgba(229, 0, 125, .35) 0 1px,
+    transparent 1px var(--pitch)
+  );
 }
-body.columns-on::before { opacity: 1; }
+body.grid-on .grid-overlay { opacity: 1; }
 
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { transition: none !important; animation: none !important; }
+.cursor-rule {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 1px;
+  z-index: 90;
+  pointer-events: none;
+  background: var(--c);
+  opacity: 0;
+  transition: opacity 200ms linear;
+}
+body.rule-live .cursor-rule { opacity: .5; }
+
+/* ---------------------------------------------------------------- *
+   Colour bar, trim marks, registration
+* ---------------------------------------------------------------- */
+.bar {
+  display: flex;
+  align-items: stretch;
+  background: var(--white);
+  border-bottom: 1px solid var(--k);
+}
+.sw { width: 24px; flex: none; }
+.sw-c  { background: var(--c); }
+.sw-m  { background: var(--m); }
+.sw-y  { background: var(--y); }
+.sw-k  { background: var(--k); }
+.sw-c2 { background: rgba(0, 166, 224, .5); }
+.sw-m2 { background: rgba(229, 0, 125, .5); }
+.sw-y2 { background: rgba(255, 228, 0, .5); }
+.sw-k2 { background: rgba(15, 15, 14, .5); }
+.sw-ov1 { background: var(--c); mix-blend-mode: multiply; }
+.sw-ov2 { background: var(--m); mix-blend-mode: multiply; margin-left: -12px; }
+.bar__fill { flex: 1; }
+.bar__label {
+  padding: 2px 12px;
+  font-family: var(--t);
+  font-size: 10px;
+  line-height: 20px;
+  color: var(--faint);
+  letter-spacing: .1em;
+  white-space: nowrap;
+}
+.bar__reg { position: relative; width: 24px; flex: none; border-left: 1px solid var(--k); }
+.bar__reg i { position: absolute; background: var(--k); }
+.bar__reg i:nth-child(1) { left: 50%; top: 0; bottom: 0; width: 1px; }
+.bar__reg i:nth-child(2) { top: 50%; left: 0; right: 0; height: 1px; }
+.bar__reg i:nth-child(3) {
+  left: 50%; top: 50%;
+  width: 12px; height: 12px;
+  margin: -6px 0 0 -6px;
+  border: 1px solid var(--k);
+  border-radius: 50%;
+  background: transparent;
 }
 
+/* ---------------------------------------------------------------- *
+   Docket
+* ---------------------------------------------------------------- */
+.docket {
+  display: flex;
+  align-items: stretch;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  overflow-x: auto;
+  background: var(--k);
+  color: var(--paper);
+  font-family: var(--t);
+  font-size: 11px;
+  line-height: 24px;
+}
+.docket__brand {
+  padding: 4px 16px;
+  background: var(--y);
+  color: var(--k);
+  font-family: var(--m2);
+  font-weight: 900;
+  letter-spacing: .02em;
+  font-size: 13px;
+}
+.docket__cell { padding: 4px 16px; border-right: 1px solid #333; }
+.docket__pitch { color: var(--c); }
+.docket__mit { color: var(--m); }
+.docket__actions { display: flex; margin-left: auto; }
+.docket__actions button {
+  font-family: var(--t);
+  font-size: 11px;
+  line-height: 24px;
+  padding: 4px 16px;
+  border: 0;
+  border-left: 1px solid #333;
+  background: transparent;
+  color: var(--paper);
+  cursor: pointer;
+}
+.docket__actions button:hover { background: rgba(255, 255, 255, .08); }
+.docket__score { padding: 4px 16px; background: var(--m); color: #fff; }
+
+/* ---------------------------------------------------------------- *
+   The working specimen
+* ---------------------------------------------------------------- */
+.spec {
+  display: grid;
+  grid-template-columns: 1fr 456px;
+  border-bottom: 8px solid var(--k);
+}
+.spec__sheet {
+  position: relative;
+  background: var(--white);
+  border-right: 8px solid var(--k);
+  padding: 32px 40px 40px;
+}
+.spec__grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 120ms linear;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 166, 224, .5) 0 1px,
+    transparent 1px 8px
+  );
+}
+.spec__grid.on { opacity: 1; }
+.spec__kicker {
+  position: relative;
+  margin: 0 0 24px;
+  font-family: var(--t);
+  font-size: 11px;
+  line-height: 16px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+.spec__sheet [data-seat] { position: relative; margin: 0 0 20px; font-size: 17px; line-height: 1.47; }
+.spec__sheet [data-seat]:last-child { margin-bottom: 0; }
+.spec__title {
+  font-family: var(--m2);
+  font-size: 31px;
+  line-height: 1.47;
+  font-weight: 800;
+  letter-spacing: -.02em;
+}
+.spec__panel {
+  background: var(--k);
+  color: var(--paper);
+  padding: 32px 32px 40px;
+  display: flex;
+  flex-direction: column;
+}
+.spec__eyebrow {
+  margin: 0 0 8px;
+  font-family: var(--t);
+  font-size: 11px;
+  line-height: 16px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--y);
+}
+.bigscore {
+  margin: 0;
+  font-family: var(--m2);
+  font-size: 152px;
+  line-height: 144px;
+  font-weight: 900;
+  letter-spacing: -.05em;
+  color: var(--c);
+}
+.spec__note { margin: 0 0 24px; font-family: var(--t); font-size: 12px; line-height: 24px; color: #9A988E; }
+.spec__controls { display: grid; gap: 8px; margin-bottom: 24px; }
+.btn-seat {
+  font-family: var(--m2);
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: .02em;
+  padding: 12px 16px;
+  border: 0;
+  background: var(--m);
+  color: #fff;
+  cursor: pointer;
+  text-align: left;
+}
+.btn-seat:hover { background: #F23D97; }
+.spec__duo { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.spec__duo button {
+  font-family: var(--t);
+  font-size: 12px;
+  padding: 8px 12px;
+  border: 1px solid #444;
+  background: transparent;
+  color: var(--paper);
+  cursor: pointer;
+}
+.spec__duo button:hover { border-color: var(--paper); }
+.spec__foot { margin: auto 0 0; font-family: var(--t); font-size: 11px; line-height: 20px; color: #7E7C73; }
+
+/* ---------------------------------------------------------------- *
+   Masthead, cropped
+* ---------------------------------------------------------------- */
+.mast { position: relative; background: var(--y); border-bottom: 8px solid var(--k); overflow: hidden; container-type: inline-size; }
+.mast__title {
+  margin: 0;
+  padding: 24px 0 16px 24px;
+  font-family: var(--m2);
+  font-weight: 900;
+  /* Sized to the sheet, not the viewport. The widest line ("ON A BASELINE GRID")
+     measures ~10.6em in Archivo Black, so dividing the available width by 11
+     leaves headroom and both rows sit fully on canvas from a phone up to a wall,
+     never cropped by the sheet's overflow. */
+  font-size: min(130px, calc((100cqw - 24px) / 11));
+  line-height: .95;
+  letter-spacing: -.04em;
+  white-space: nowrap;
+  color: var(--k);
+  /* out of register by default — a decision, not an accident */
+  text-shadow: 3px -2px 0 var(--c), -3px 2px 0 var(--m);
+}
+body.reg-in .mast__title { text-shadow: none; }
+.mast__strip { display: grid; grid-template-columns: 1fr 1fr 456px; border-top: 2px solid var(--k); }
+.mast__strip p { margin: 0; padding: 16px 24px; border-right: 2px solid var(--k); font-size: 17px; line-height: 24px; }
+.mast__fine { font-family: var(--t); font-size: 12px; line-height: 24px; border-right: 0; }
+
+/* ---------------------------------------------------------------- *
+   Plate headers
+* ---------------------------------------------------------------- */
+.platehead {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  background: var(--k);
+  color: var(--paper);
+  padding: 8px 24px;
+}
+.platehead__num { font-family: var(--m2); font-weight: 900; font-size: 40px; line-height: 40px; }
+.platehead__num--c { color: var(--c); }
+.platehead__num--m { color: var(--m); }
+.platehead__num--y { color: var(--y); }
+.platehead__title { margin: 0; font-family: var(--m2); font-weight: 800; font-size: 20px; letter-spacing: .08em; }
+.platehead__fig { margin-left: auto; font-family: var(--t); font-size: 11px; color: #8B897F; white-space: nowrap; }
+
+/* Inline measurement chips */
+.chip { font-family: var(--t); font-size: .85em; line-height: 0; background: var(--y); padding: 1px 3px; }
+.chip--plain { background: none; }
+.chip--m { background: none; color: var(--m); }
+
+/* Tables scroll inside their own box, never the page. */
+.tscroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.fit__side, .holds__cell, .survey__tablewrap { min-width: 0; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+/* ---------------------------------------------------------------- *
+   Plate I — the defect
+* ---------------------------------------------------------------- */
+.defect { display: grid; grid-template-columns: 640px 1fr; border-bottom: 8px solid var(--k); }
+.defect__figcell { position: relative; background: var(--white); border-right: 2px solid var(--k); padding: 40px 32px 32px; }
+.linebox { margin: 0; }
+.linebox__box {
+  position: relative;
+  height: 160px;
+  border-top: 1px dashed var(--c);
+  border-bottom: 1px dashed var(--c);
+  background: rgba(0, 166, 224, .07);
+}
+.linebox__cap { position: absolute; left: 0; right: 0; top: 40px; height: 1px; background: var(--m); }
+.linebox__base { position: absolute; left: 0; right: 0; top: 120px; height: 2px; background: var(--k); }
+.linebox__glyph { position: absolute; left: 24px; top: 24px; margin: 0; font-family: var(--s); font-size: 96px; line-height: 96px; }
+.linebox__tag { position: absolute; right: 8px; margin: 0; font-family: var(--t); font-size: 10px; white-space: nowrap; }
+.linebox__tag--top { top: 2px; color: var(--c); }
+.linebox__tag--cap { top: 42px; color: var(--m); }
+.linebox__tag--base { top: 122px; font-weight: 700; }
+.linebox__dims { display: flex; justify-content: space-between; gap: 8px; padding-top: 8px; margin: 0; font-family: var(--t); font-size: 11px; color: var(--faint); }
+.defect__caption { margin: 24px 0 0; font-family: var(--t); font-size: 12px; line-height: 20px; color: var(--faint); }
+.defect__side { display: grid; grid-template-columns: 1fr 1fr; background: var(--paper); }
+.defect__lead { margin: 0; padding: 24px; border-right: 1px solid var(--rule); font-size: 16px; line-height: 24px; }
+.defect__cells { padding: 24px; }
+.kick { margin: 0 0 8px; font-family: var(--m2); font-size: 12px; font-weight: 800; letter-spacing: .12em; }
+.kick--c { color: var(--c); }
+.kick--m { color: var(--m); }
+.defect__cells p { margin: 0 0 24px; font-size: 15px; line-height: 24px; }
+.defect__cells p:last-child { margin-bottom: 0; }
+.defect__banner {
+  grid-column: span 2;
+  margin: 0;
+  padding: 16px 24px;
+  border-top: 2px solid var(--k);
+  background: var(--c);
+  color: #fff;
+  font-family: var(--m2);
+  font-weight: 800;
+  font-size: 32px;
+  line-height: 40px;
+  letter-spacing: -.01em;
+}
+
+/* ---------------------------------------------------------------- *
+   Plate II — the survey
+* ---------------------------------------------------------------- */
+.survey { background: var(--y); border-bottom: 8px solid var(--k); display: grid; grid-template-columns: 1fr 480px; }
+.survey__tablewrap { padding: 24px; border-right: 2px solid var(--k); overflow-x: auto; }
+.t-survey, .t-fit {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-family: var(--t);
+  font-size: 12px;
+  line-height: 24px;
+  font-variant-numeric: tabular-nums;
+}
+.t-survey thead th {
+  font-family: var(--m2);
+  font-weight: 800;
+  font-size: 10px;
+  letter-spacing: .12em;
+  color: var(--k);
+  border-bottom: 3px solid var(--k);
+  padding: 2px 0 3px 16px;
+  line-height: 16px;
+  text-align: right;
+}
+.t-survey thead th.l, .t-fit thead th.l { text-align: left; }
+.t-survey thead th:first-child { padding-left: 0; }
+.t-survey thead th.wide { width: 300px; }
+.t-survey tbody th[scope="row"] {
+  text-align: left;
+  font-family: var(--m2);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 24px;
+  padding: 3.5px 16px 4px 0;
+  border-bottom: 1px solid rgba(15, 15, 14, .25);
+}
+.t-survey tbody td { text-align: right; line-height: 24px; padding: 3.5px 0 4px 16px; border-bottom: 1px solid rgba(15, 15, 14, .25); }
+.t-survey tbody td.l { text-align: left; }
+.t-survey tbody tr:last-child th, .t-survey tbody tr:last-child td { border-bottom: 0; }
+.barcell { display: flex; align-items: center; gap: 12px; }
+.track { flex: none; width: 200px; height: 10px; background: rgba(15, 15, 14, .14); }
+.fill { display: block; height: 10px; background: var(--m); mix-blend-mode: multiply; }
+.barcell b { font-weight: 700; }
+.survey__big {
+  margin: 0;
+  padding: 24px;
+  background: var(--m);
+  color: #fff;
+  font-family: var(--m2);
+  font-weight: 900;
+  font-size: 56px;
+  line-height: 56px;
+  letter-spacing: -.03em;
+}
+.survey__note { margin: 0; padding: 16px 24px; border-bottom: 2px solid var(--k); font-family: var(--t); font-size: 13px; line-height: 24px; }
+.survey__finding { margin: 0; padding: 16px 24px; border-bottom: 2px solid var(--k); font-size: 15px; line-height: 24px; }
+.survey__finding--last { border-bottom: 0; }
+
+/* ---------------------------------------------------------------- *
+   Plate III — the fit
+* ---------------------------------------------------------------- */
+.fit { border-bottom: 8px solid var(--k); }
+.fit__body { display: grid; grid-template-columns: 1fr 520px; background: var(--white); }
+.fit__text { padding: 24px; border-right: 2px solid var(--k); }
+.fit__text p { margin: 0 0 16px; font-size: 15px; line-height: 24px; }
+.fit__lead { font-size: 19px; line-height: 28px; }
+.formula { padding: 12px 16px; background: var(--c); color: #fff; font-family: var(--t); font-size: 15px; line-height: 24px; }
+.t-fit caption {
+  text-align: left;
+  padding: 12px 24px;
+  background: var(--k);
+  color: #8B897F;
+  font-family: var(--t);
+  font-size: 11px;
+  line-height: 16px;
+}
+.t-fit thead th {
+  font-family: var(--m2);
+  font-weight: 800;
+  font-size: 10px;
+  letter-spacing: .12em;
+  border-bottom: 3px solid var(--k);
+  padding: 4px 12px 5px;
+  line-height: 16px;
+  text-align: right;
+}
+.t-fit thead th.l { text-align: left; }
+.t-fit thead th:first-child { padding-left: 24px; }
+.t-fit thead th:last-child { padding-right: 24px; }
+.t-fit tbody th[scope="row"] {
+  text-align: left;
+  font-family: var(--m2);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 24px;
+  padding: 3.5px 12px 4px 24px;
+  border-bottom: 1px solid var(--rule);
+}
+.t-fit tbody td { text-align: right; padding: 3.5px 0 4px 12px; border-bottom: 1px solid var(--rule); }
+.t-fit tbody td:last-child { padding-right: 24px; }
+.t-fit tbody tr:hover { background: var(--y); }
+.t-fit .strong { font-weight: 700; }
+.t-fit .faint { color: var(--faint); }
+.t-fit .moved { color: var(--m); }
+.fit__mod { margin: 0; padding: 16px 24px; font-family: var(--t); font-size: 12px; line-height: 20px; color: var(--faint); }
+.fit__banner {
+  margin: 0;
+  padding: 24px;
+  background: var(--m);
+  color: #fff;
+  font-family: var(--m2);
+  font-weight: 900;
+  font-size: 64px;
+  line-height: 64px;
+  letter-spacing: -.035em;
+  text-wrap: balance;
+}
+
+/* ---------------------------------------------------------------- *
+   Plate IV — where a correction holds
+* ---------------------------------------------------------------- */
+.holds { display: grid; grid-template-columns: 1fr 1fr 1fr; background: var(--paper); border-bottom: 8px solid var(--k); }
+.holds__cell { padding: 24px; border-right: 1px solid var(--rule); }
+.holds__cell:last-child { border-right: 0; }
+.stat { margin: 0 0 16px; display: flex; align-items: baseline; gap: 12px; }
+.stat__num { font-family: var(--m2); font-weight: 900; font-size: 72px; line-height: 64px; }
+.stat__num--c { color: var(--c); }
+.stat__num--m { color: var(--m); }
+.stat__label { font-family: var(--t); font-size: 11px; line-height: 16px; color: var(--faint); }
+.holds__body { margin: 0 0 16px; font-size: 15px; line-height: 24px; }
+.holds__body--last { margin-bottom: 0; }
+.t-csp { width: 100%; border-collapse: separate; border-spacing: 0; font-family: var(--t); font-size: 11px; line-height: 20px; }
+.t-csp thead th {
+  font-family: var(--m2);
+  font-size: 9px;
+  letter-spacing: .1em;
+  font-weight: 800;
+  border-bottom: 2px solid var(--k);
+  padding: 2px 8px 3px;
+  text-align: right;
+}
+.t-csp thead th.l { text-align: left; }
+.t-csp tbody th[scope="row"] { text-align: left; font-weight: 400; padding: 3px 8px 4px 0; border-bottom: 1px solid var(--rule); }
+.t-csp tbody td { text-align: right; padding: 3px 0 4px 8px; border-bottom: 1px solid var(--rule); font-weight: 700; }
+.t-csp .ok { color: var(--c); }
+.t-csp .bad { color: var(--m); }
+
+/* ---------------------------------------------------------------- *
+   Plate V — found by building it
+* ---------------------------------------------------------------- */
+.findings { background: var(--k); color: var(--paper); display: grid; grid-template-columns: repeat(3, 1fr); }
+.findings article { padding: 24px; border-right: 1px solid #2C2C29; }
+.findings article:last-child { border-right: 0; }
+[data-reveal] { opacity: 0; transform: translateY(10px); }
+[data-reveal].is-in { transition: opacity 700ms cubic-bezier(.2, .6, .2, 1), transform 700ms cubic-bezier(.2, .6, .2, 1); opacity: 1; transform: translateY(0); }
+.f-kick { margin: 0 0 12px; font-family: var(--m2); font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--y); }
+.findings h3 { margin: 0 0 16px; font-family: var(--m2); font-size: 22px; line-height: 28px; font-weight: 800; letter-spacing: -.01em; color: #fff; }
+.f-body { margin: 0 0 16px; font-family: var(--t); font-size: 12px; line-height: 20px; color: #A9A79D; }
+.f-figs { margin: 0; border-top: 2px solid var(--c); }
+.f-figs div { display: flex; align-items: baseline; gap: 8px; line-height: 24px; border-bottom: 1px solid #2C2C29; }
+.f-figs dt { font-family: var(--t); font-size: 11px; color: #8B897F; flex: 1 1 auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.f-figs dd { margin: 0; flex: none; font-family: var(--m2); font-weight: 700; font-size: 15px; font-variant-numeric: tabular-nums; color: var(--c); }
+
+/* ---------------------------------------------------------------- *
+   Plate VI — six ways in
+* ---------------------------------------------------------------- */
+.ways { display: grid; grid-template-columns: repeat(3, 1fr); border-bottom: 8px solid var(--k); background: var(--white); }
+.ways article { padding: 24px; border-right: 1px solid var(--rule); }
+.ways article:nth-child(3n) { border-right: 0; }
+.ways h3 { margin: 0 0 12px; font-family: var(--m2); font-size: 15px; line-height: 24px; font-weight: 800; letter-spacing: .02em; }
+.ways pre { margin: 0 0 12px; padding: 12px; background: var(--k); overflow-x: auto; }
+.ways code { font-family: var(--t); font-size: 11px; line-height: 20px; color: var(--y); white-space: pre; }
+.ways p { margin: 0; font-size: 15px; line-height: 24px; }
+.ways p code { white-space: normal; background: var(--y); color: var(--k); padding: 1px 3px; font-size: .85em; line-height: 0; }
+
+/* ---------------------------------------------------------------- *
+   Colophon
+* ---------------------------------------------------------------- */
+.colo { display: grid; grid-template-columns: 1fr 1fr 1fr 320px; background: var(--k); color: var(--paper); }
+.colo__cell, .colo__links {
+  margin: 0;
+  padding: 16px 24px;
+  list-style: none;
+  font-family: var(--t);
+  font-size: 11px;
+  line-height: 20px;
+  color: #8B897F;
+}
+.colo__links { display: grid; gap: 4px; align-content: start; }
+.colo a { color: var(--y); text-decoration: none; }
+.colo a:hover { text-decoration: underline; }
+.colo__score {
+  margin: 0;
+  padding: 16px 24px;
+  background: var(--c);
+  color: var(--k);
+  font-family: var(--m2);
+  font-weight: 800;
+  font-size: 15px;
+  line-height: 20px;
+}
+
+/* ---------------------------------------------------------------- *
+   Skip link, focus
+* ---------------------------------------------------------------- */
 .skip {
   position: absolute;
   left: -9999px;
-  background: var(--ink);
-  color: var(--paper);
-  padding: 8px 16px;
-  font-family: var(--mono);
-  font-size: 13px;
-}
-.skip:focus { left: 8px; top: 8px; z-index: 100; }
-
-:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
-
-.shell { max-width: var(--shell); margin: 0 auto; padding: 0 24px; }
-.column { max-width: var(--measure); }
-
-/* ---------- type ---------- */
-
-h1 {
-  font-size: clamp(40px, 7vw, 72px);
-  line-height: 72px;
-  font-weight: 400;
-  letter-spacing: -0.015em;
-  margin: 0 0 24px;
-  text-wrap: balance;
-  max-width: 20ch;
-}
-h1 em { font-style: italic; color: var(--brass); }
-
-h2 {
-  font-size: 34px;
-  line-height: 40px;
-  font-weight: 400;
-  letter-spacing: -0.01em;
-  margin: 0 0 16px;
-  text-wrap: balance;
-  max-width: 22ch;
-}
-
-h3 {
-  font-family: var(--mono);
-  font-size: 13px;
-  line-height: 24px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--brass);
-  margin: 32px 0 8px;
-  text-wrap: balance;
-}
-
-p { margin: 0 0 24px; }
-p:last-child { margin-bottom: 0; }
-
-strong { font-weight: 600; }
-em { font-style: italic; }
-
-code {
-  font-family: var(--mono);
-  font-size: 0.82em;
-  background: var(--paper-sunk);
-  padding: 1px 4px;
-  /*
-     Zero, so the code does not make its line taller than the line-height says.
-
-     An inline element at a different font-size sits its baseline differently
-     inside the same line box: the half-leading is (line-height minus content
-     height) over two, and a smaller font has a smaller content height, so its
-     baseline lands lower in its own box. Align the two baselines and the union
-     of the boxes is more than either line-height.
-
-     One pixel, on this page. It was eighteen of the nineteen paragraphs that
-     were off the rhythm, against two of the forty-six that were on it, and
-     nothing about the CSS looks wrong. A zero line-height on an inline
-     contributes no box of its own, so the parent's strut governs the line and
-     the glyphs draw exactly where they did.
-  */
-  line-height: 0;
-}
-
-a { color: var(--brass); text-decoration-thickness: 1px; text-underline-offset: 3px; }
-a:hover { color: var(--ink); }
-
-.kicker {
-  font-family: var(--mono);
-  font-size: 11px;
-  line-height: 16px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--brass);
-  margin: 0 0 24px;
-}
-
-.standfirst {
-  font-size: 22px;
-  line-height: 32px;
-  color: var(--ink-soft);
-  max-width: 44ch;
-  margin: 0 0 40px;
-}
-
-.pull {
-  font-size: 22px;
-  line-height: 32px;
-  border-left: 3px solid var(--brass);
-  padding-left: 24px;
-  margin: 32px 0;
-  color: var(--ink);
-}
-
-.dim { color: var(--ink-faint); font-family: var(--mono); font-size: 11px; }
-
-/* ---------- borders are layout ---------- */
-
-/*
-   Every rule on this page is a hairline in the vertical flow, and a hairline is
-   a pixel. Six section borders plus seventeen table rows is twenty-three pixels
-   of accumulated offset, and the page below them drifts by exactly that.
-
-   This is the failure the README already documents on craighawkes.dev, where
-   twenty-one 1px hairlines were one of three causes of ninety distinct drift
-   values. It is also the reason the first build of this site reported itself
-   seated and measured 69% on a fresh load: the corrections were computed for a
-   layout one pixel taller than the one that shipped.
-
-   So every bordered box below subtracts its border from its own padding. The
-   rule stays, the box stays a whole number of grid rows, and nothing downstream
-   moves. Quantise what CSS can quantise; leave the tool to do phase.
-*/
-
-.hero {
-  /* 64 + content + 53 + 3px border = a whole number of rows */
-  padding: 64px 0 53px;
-  border-bottom: 3px solid var(--rule-hard);
-}
-
-/* ---------- the specimen demo ---------- */
-
-/* A 1px rule on all four sides is 2px of height, so the box needs 6px of its
-   own to reach the next row. Split evenly, because the panel is a frame around
-   something rather than a block of text, and it should stay centred in it. */
-.demo {
-  border: 1px solid var(--rule-hard);
-  padding: 3px 0;
-  background: var(--paper-lift);
-}
-
-.demo-bar {
-  display: flex;
-  flex-wrap: wrap;
-  /* 8px of row gap, so wrapping costs a whole number of rows rather than
-     whatever the buttons happen to be tall. */
-  gap: 8px 24px;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px 11px;
-  border-bottom: 1px solid var(--rule-hard);
-  background: var(--paper-sunk);
-}
-.demo-readout {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-family: var(--mono);
-  font-size: 13px;
-  line-height: 24px;
-  color: var(--ink-soft);
-}
-.demo-readout .dot {
-  width: 8px; height: 8px; flex: none;
-  background: var(--ink-faint);
-}
-.demo-readout .dot[data-state="bad"] { background: var(--bad); }
-.demo-readout .dot[data-state="good"] { background: var(--good); }
-#demoScore b { color: var(--ink); font-weight: 700; }
-
-.demo-buttons { display: flex; gap: 8px; }
-.demo-buttons button {
-  font-family: var(--mono);
-  font-size: 13px;
-  /* 22 + 4 + 4 + two 1px borders = 32 */
-  line-height: 22px;
+  top: 0;
+  z-index: 100;
   padding: 4px 16px;
-  border: 1px solid var(--rule-hard);
-  background: var(--paper-lift);
-  color: var(--ink);
-  cursor: pointer;
-}
-.demo-buttons button:hover { background: var(--paper); }
-.demo-buttons button[aria-pressed="true"] { background: var(--brass); border-color: var(--brass); color: var(--paper-lift); }
-.demo-buttons .primary { background: var(--ink); border-color: var(--ink); color: var(--paper-lift); }
-.demo-buttons .primary:hover { background: var(--brass); border-color: var(--brass); }
-
-#specimen {
-  display: block;
-  width: 100%;
-  height: 640px;
-  border: 0;
-  background: var(--paper-lift);
-}
-
-.demo-foot {
-  margin: 0;
-  padding: 11px 16px 12px;
-  border-top: 1px solid var(--rule);
-  font-family: var(--mono);
+  background: var(--k);
+  color: var(--paper);
+  font-family: var(--t);
   font-size: 12px;
-  line-height: 24px;
-  color: var(--ink-faint);
+}
+.skip:focus { left: 0; }
+:focus-visible { outline: 2px solid var(--k); outline-offset: 2px; }
+.docket :focus-visible, .spec__panel :focus-visible, .findings :focus-visible { outline-color: var(--y); }
+
+/* ---------------------------------------------------------------- *
+   Narrower than the forme: the sheet stacks, the inks stay
+* ---------------------------------------------------------------- */
+@media (max-width: 1080px) {
+  .docket { flex-wrap: wrap; white-space: normal; overflow-x: visible; }
+  .docket__actions { margin-left: 0; width: 100%; justify-content: flex-start; }
+
+  .spec { grid-template-columns: 1fr; }
+  .spec__sheet { border-right: 0; border-bottom: 8px solid var(--k); padding: 32px 24px 32px; }
+  .bigscore { font-size: 96px; line-height: 88px; }
+
+  .mast__strip { grid-template-columns: 1fr; }
+  .mast__strip p { border-right: 0; border-bottom: 2px solid var(--k); }
+  .mast__strip p:last-child { border-bottom: 0; }
+
+  .platehead { flex-wrap: wrap; gap: 8px 16px; }
+  .platehead__fig { margin-left: 0; width: 100%; white-space: normal; }
+
+  .defect { grid-template-columns: 1fr; }
+  .defect__figcell { border-right: 0; border-bottom: 2px solid var(--k); padding: 32px 24px 24px; }
+  .defect__side { grid-template-columns: 1fr; }
+  .defect__lead { border-right: 0; border-bottom: 1px solid var(--rule); }
+  .defect__banner { grid-column: span 1; font-size: 28px; line-height: 40px; }
+
+  .survey { grid-template-columns: 1fr; }
+  .survey__tablewrap { border-right: 0; border-bottom: 2px solid var(--k); }
+  .survey__big { font-size: 40px; line-height: 48px; }
+
+  .fit__body { grid-template-columns: 1fr; }
+  .fit__text { border-right: 0; border-bottom: 2px solid var(--k); }
+  .fit__banner { font-size: 40px; line-height: 48px; }
+
+  .holds { grid-template-columns: 1fr; }
+  .holds__cell { border-right: 0; border-bottom: 1px solid var(--rule); }
+  .holds__cell:last-child { border-bottom: 0; }
+
+  .findings { grid-template-columns: 1fr; }
+  .findings article { border-right: 0; border-bottom: 1px solid #2C2C29; }
+  .findings article:last-child { border-bottom: 0; }
+
+  .ways { grid-template-columns: 1fr; }
+  .ways article { border-right: 0; border-bottom: 1px solid var(--rule); }
+  .ways article:last-child { border-bottom: 0; }
+
+  .colo { grid-template-columns: 1fr 1fr; }
 }
 
-/* ---------- sections ---------- */
+@media (max-width: 640px) {
+  .spec__sheet [data-seat] { font-size: 16px; }
+  .spec__title { font-size: 26px; }
+  /* density strip: drop the caption so swatches fit the screen */
+  .bar__label { display: none; }
+  /* masthead fallback: if container queries are unsupported, wrap instead of clip */
+  .mast { overflow: visible; }
+  .mast__title { white-space: normal; font-size: clamp(28px, 9.5vw, 44px); }
+  .stat__num { font-size: 56px; line-height: 56px; }
+  .survey__big { font-size: 32px; line-height: 40px; }
+  .fit__banner { font-size: 32px; line-height: 40px; }
+  .defect__banner { font-size: 24px; line-height: 32px; }
+  .linebox__glyph { font-size: 64px; line-height: 64px; top: 40px; }
 
-/* 56 + content + 55 + 1px border = 112 */
-section { padding: 56px 0 55px; border-bottom: 1px solid var(--rule); }
-.survey, .get { background: var(--paper-lift); }
-.solve { background: var(--paper); }
-.formula {
-  font-family: var(--mono);
-  font-size: 15px;
-  line-height: 32px;
-  padding: 0 0 0 24px;
-  border-left: 3px solid var(--brass);
-  margin: 24px 0;
-}
-.formula code { background: none; padding: 0; font-size: inherit; }
-.findings { background: var(--ink); color: var(--paper-lift); }
+  /* Tables: shrink to sit on canvas, and scroll inside their box if they still can't */
+  .t-survey { font-size: 11px; }
+  .t-survey thead th.wide { width: auto; }
+  .t-survey thead th { padding-left: 8px; padding-right: 0; }
+  .t-survey thead th:first-child { padding-left: 0; }
+  .t-survey tbody td { padding-left: 8px; padding-right: 0; }
+  .t-survey tbody th[scope="row"] { padding-left: 0; padding-right: 8px; }
+  .track { width: 88px; }
+  .barcell { gap: 8px; }
 
-.split {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
-  gap: 24px 40px;
-  margin: 32px 0;
-  padding-top: 7px;
-  border-top: 1px solid var(--rule);
-}
-.split h3 { margin-top: 8px; }
-.split p { margin-bottom: 0; }
+  .t-fit { font-size: 11px; }
+  .t-fit thead th, .t-fit tbody td { padding-left: 8px; padding-right: 8px; }
+  .t-fit thead th:first-child, .t-fit tbody th[scope="row"] { padding-left: 12px; }
+  .t-fit thead th:last-child, .t-fit tbody td:last-child { padding-right: 12px; }
+  .t-fit .moved { white-space: normal; }
 
-/* ---------- tables ---------- */
+  .t-csp { font-size: 10px; }
+  .t-csp thead th, .t-csp tbody td { padding-left: 6px; padding-right: 6px; }
+  .t-csp tbody th[scope="row"] { white-space: normal; }
 
-.tablewrap { overflow-x: auto; margin: 32px 0; }
-.tablewrap.tight { margin: 24px 0; }
-
-table {
-  width: 100%;
-  /*
-     Separate, not collapse, and it is the grid that decides it.
-
-     Under `border-collapse: collapse` a border is centred on the edge between
-     two cells, half inside each, so a cell with 24px of line, 7px of padding and
-     a 1px rule renders 32.5px rather than 32. The box height stops being the sum
-     of its parts, which means no arithmetic about it is safe and no tool can
-     check it. Separate borders with no spacing look the same here, because only
-     border-bottom is set, and they add up.
-  */
-  border-collapse: separate;
-  border-spacing: 0;
-  font-family: var(--mono);
-  font-size: 13px;
-  line-height: 32px;
-  font-variant-numeric: tabular-nums;
-  min-width: 34rem;
-}
-caption {
-  text-align: left;
-  font-family: var(--mono);
-  font-size: 11px;
-  line-height: 24px;
-  color: var(--ink-faint);
-  padding-bottom: 8px;
-}
-thead th {
-  text-align: right;
-  font-weight: 500;
-  font-size: 10px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--ink-faint);
-  border-bottom: 2px solid var(--rule-hard);
-  /* 16 + 3 + 3 + 2px border = 24.
-
-     It was 22 + 2, which is also 24, and the row was right while none of its
-     parts were: a 22px leading is not a whole number of rows and neither is a
-     2px border, so the tool could only say the box was correct by accident.
-     Moving six pixels out of the leading and into symmetric padding leaves the
-     text in exactly the same place, to the pixel, and puts every part of the
-     box on the grid rather than only their total. */
-  padding: 3px 16px 3px 0;
-  line-height: 16px;
-}
-thead th:first-child { text-align: left; }
-/* 24 + 3.5 + 3.5 + 1px border = 32, so seventeen rows are 544 rather than 561.
-
-   It was 31 + 1, which is also 32. The row was a whole number of rows and not
-   one part of it was, so it held by arithmetic that no tool could confirm and
-   no edit could safely touch. The seven pixels are in the padding now, split
-   evenly, which leaves the text where it was: centred 15.5px down either way. */
-tbody th {
-  text-align: left;
-  font-family: var(--serif);
-  font-size: 17px;
-  font-weight: 400;
-  line-height: 24px;
-  padding: 3.5px 16px 3.5px 0;
-  border-bottom: 1px solid var(--rule);
-}
-td {
-  text-align: right;
-  line-height: 24px;
-  padding: 3.5px 16px 3.5px 0;
-  border-bottom: 1px solid var(--rule);
-  white-space: nowrap;
-}
-/*
-   The bar is drawn, not laid out.
-
-   As an inline-block with `vertical-align: middle` it grew the line box of
-   every cell it sat in: rows measured 35px against a 32px line, so every table
-   put three pixels into the flow per row and the page below moved. Absolute
-   positioning takes it out of the line entirely, and the cell keeps its height.
-*/
-td { position: relative; }
-td i {
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  height: 6px;
-  background: var(--brass);
-  opacity: 0.45;
-  min-width: 2px;
-  pointer-events: none;
-}
-.ok { color: var(--good); font-weight: 700; }
-.bad { color: var(--bad); font-weight: 700; }
-/* 16 + 3.5 + 3.5 + 1px border = 24, the same total the 23 + 1 came to and the
-   same centre, with every part of it on the grid instead of only the sum. */
-table.compact tbody th, table.compact td {
-  line-height: 16px;
-  padding: 3.5px 16px 3.5px 0;
-}
-table.compact tbody th { font-size: 15px; }
-
-/* ---------- findings, on ink ---------- */
-
-.findings h2, .findings h3 { color: var(--paper-lift); }
-.findings p { color: #C9BFB0; }
-.findings code { background: rgba(247, 243, 234, 0.10); color: var(--paper-lift); }
-
-/*
-   48, not 40, and it is the horizontal half of the same argument.
-
-   The shell is 1104px of content. Divided by a 40px gutter it comes to 341.33px
-   at three columns and 150.67 at six, so every division after the first sits on
-   a fraction and nothing downstream can recover it. A 48px gutter divides it
-   whole at two, three, four and six: 528, 336, 240, 144.
-
-   It is also six rows, which is the point. The vertical rhythm and the
-   horizontal module were two separate conventions in this stylesheet and there
-   was no reason for them to be.
-*/
-.cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
-  gap: 48px;
-  margin-top: 40px;
-}
-.cards article { border-top: 2px solid var(--brass); padding-top: 14px; }
-.cardkick {
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: #C08B54 !important;
-  margin: 0 0 8px;
-  line-height: 16px;
-}
-.cards h3 {
-  font-family: var(--serif);
-  font-size: 22px;
-  line-height: 32px;
-  font-weight: 400;
-  text-transform: none;
-  letter-spacing: 0;
-  color: var(--paper-lift);
-  margin: 0 0 16px;
-}
-.cards p { font-size: 16px; line-height: 24px; }
-.cardnote { font-size: 14px !important; line-height: 24px; color: #9A9084 !important; }
-
-.figures {
-  margin: 16px 0;
-  /* 7 + 7 + two 1px borders = 16 */
-  padding: 7px 0;
-  border-top: 1px solid rgba(247, 243, 234, 0.14);
-  border-bottom: 1px solid rgba(247, 243, 234, 0.14);
-}
-/*
-   These rows rewrapped between one viewport and the next, which changed their
-   height and moved everything under them. Held on one line, with the label
-   allowed to shrink, so the block is the same number of rows at every width.
-*/
-.figures div {
-  display: flex;
-  flex-wrap: nowrap;
-  align-items: baseline;
-  gap: 8px;
-  line-height: 24px;
-}
-.figures dt {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: #9A9084;
-  flex: 1 1 auto;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.figures dd { flex: none; }
-.figures dd {
-  margin: 0;
-  font-family: var(--mono);
-  font-size: 15px;
-  font-variant-numeric: tabular-nums;
-  color: var(--paper-lift);
-}
-.figures dd.dim { font-size: 11px; color: #7F776C; }
-.findings .ok { color: #7FBF74; }
-.findings .bad { color: #E07A5F; }
-
-/* ---------- ways in ---------- */
-
-.ways {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
-  gap: 48px;
-  margin: 32px 0 40px;
-}
-.ways article { border-top: 2px solid var(--rule-hard); padding-top: 14px; }
-.ways h3 { margin-top: 0; }
-.ways p { font-size: 16px; line-height: 24px; margin-bottom: 0; }
-pre {
-  margin: 0 0 16px;
-  padding: 12px 16px;
-  background: var(--ink);
-  color: var(--paper-lift);
-  overflow-x: auto;
-}
-pre code {
-  font-family: var(--mono);
-  font-size: 12px;
-  line-height: 24px;
-  background: none;
-  padding: 0;
-  color: inherit;
-  white-space: pre;
+  .colo { grid-template-columns: 1fr; }
 }
 
-/* ---------- footer ---------- */
-
-footer { padding: 56px 0 64px; background: var(--paper); }
-.footgrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
-  gap: 48px;
-  padding-top: 5px;
-  border-top: 3px solid var(--rule-hard);
-}
-.footkick {
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ink-faint);
-  margin: 0 0 8px;
-  line-height: 24px;
-}
-.live {
-  font-family: var(--mono);
-  font-size: 24px;
-  line-height: 32px;
-  color: var(--brass);
-  margin: 0 0 8px;
-  font-variant-numeric: tabular-nums;
-}
-.footnote { font-size: 14px; line-height: 24px; color: var(--ink-faint); margin: 0 0 8px; }
-footer ul { margin: 0; padding: 0; list-style: none; }
-footer li { font-size: 16px; line-height: 32px; }
-footer ul.plain li {
-  font-size: 14px;
-  line-height: 24px;
-  color: var(--ink-faint);
-  margin-bottom: 8px;
-}
-.link {
-  font: inherit;
-  font-size: 14px;
-  background: none;
-  border: 0;
-  padding: 0;
-  color: var(--brass);
-  border-bottom: 1px solid currentColor;
-  cursor: pointer;
-}
-.link:hover { color: var(--ink); }
-.colophon {
-  margin: 40px 0 0;
-  padding-top: 7px;
-  border-top: 1px solid var(--rule);
-  font-family: var(--mono);
-  font-size: 11px;
-  line-height: 24px;
-  color: var(--ink-faint);
-}
-
-/* ---------- narrow ---------- */
-
-@media (max-width: 40rem) {
-  body { font-size: 17px; line-height: 32px; }
-  .hero { padding: 40px 0 32px; }
-  h1 { line-height: 48px; }
-  #specimen { height: 520px; }
-  .standfirst { font-size: 19px; }
+@media (prefers-reduced-motion: reduce) {
+  .grid-overlay, .cursor-rule, .spec__grid, [data-reveal] { transition: none; }
+  [data-reveal] { opacity: 1; transform: none; }
 }
