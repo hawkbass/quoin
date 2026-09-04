@@ -21,3 +21,6 @@ dist-extension-test/
 # Written by `node action/run.mjs` when the action is exercised locally.
 quoin-results.json
 .quoin-ci-baseline.json
+
+.vercel
+.env*

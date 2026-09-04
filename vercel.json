@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "npm run build:site",
+  "buildCommand": "dnf install -y nss nspr atk at-spi2-atk cups-libs libdrm libXcomposite libXdamage libXext libXfixes libXrandr mesa-libgbm libxcb libxkbcommon pango alsa-lib && npx playwright install chromium && npm run build:site",
   "outputDirectory": "site/dist",
   "framework": null,
   "cleanUrls": true,
