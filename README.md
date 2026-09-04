@@ -2240,8 +2240,19 @@ Solving a design:
 ```bash
 --design <file|->     a design as JSON. Use - for stdin
 --from <url>          read the design off a page instead
---font <family>       the family to solve for, for scale
+--font <family>       the family to solve for, for scale. Repeatable, and a
+                      leading weight is understood: --font "600 Archivo".
+                      Give it every face the page sets, because a shared
+                      phase belongs to a face and a page that passes one
+                      family at a time can still not be on the grid
 --sizes <a,b,c>       the sizes to solve, for scale
+--basis <line-box|cap>  which edge the phase is measured from, for scale.
+                      line-box is the untrimmed box: spaces come out as
+                      whole rows, no text-box-trim is needed anywhere, and
+                      size and leading are coupled so you take the sizes the
+                      grid offers. cap is the trimmed box: the phase is the
+                      cap height alone, any leading works with any size, and
+                      it needs text-box-trim. Default line-box
 --near <px>           how far from those is acceptable (default 3)
 --vertical            fit for vertical-rl, which needs no font
 --parity <even|odd>   force the vertical parity. Solved when omitted

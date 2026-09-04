@@ -31,7 +31,14 @@ import { test, expect } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-const BUNDLE = readFileSync(resolve("dist/quoin.global.js"), "utf8");
+/* Two bundles, because the solver is design-time work and lives in the one
+   without a console size budget. Both are injected everywhere in this file
+   rather than only where a scale is solved, so a test that starts using one
+   later does not fail for a reason that has nothing to do with what it checks. */
+const BUNDLE =
+  readFileSync(resolve("dist/quoin.global.js"), "utf8") +
+  "\n" +
+  readFileSync(resolve("dist/quoin.fit.js"), "utf8");
 
 /* Deliberately awkward. Round numbers hide fractional cap heights, and a set of
    widths that are all wide hides the case where a heading wraps for the first
@@ -65,7 +72,7 @@ test("a cap-solved page is on the grid at every width, with one stylesheet", asy
 
   const scale = await setup.evaluate(
     ({ pitch }) =>
-      window.quoin.gridNativeScale("serif", {
+      window.quoinFit.gridNativeScale("serif", {
         pitch,
         targets: [16, 30, 44],
         basis: "cap",

@@ -65,13 +65,14 @@ export {
   type RhythmOptions,
 } from "./rhythm.ts";
 
-export {
-  gridNativeScale,
-  scaleToCss,
-  type GridScale,
-  type ScaleStep,
-  type ScaleOptions,
-} from "./scale.ts";
+/* The scale solver is deliberately absent.
+
+   It answers "what sizes would this design need", which is a question you ask
+   once at the start of a project, not while poking at a page in devtools. It
+   costs the console bundle about half a kilobyte of a 28 kB budget that exists
+   because this file gets pasted into somebody else's site. Same reasoning as
+   the fitter, so it lives in the same place: `fit-global.ts`, injected by the
+   CLI for `quoin scale`. The package entry still exports it. */
 
 export {
   seatPage,

@@ -16,6 +16,7 @@
 import * as library from "./page.ts";
 import { fitScale, fittedScaleToCss, inferDesign } from "./fit.ts";
 import { fitVertical, fittedVerticalToCss } from "./fit-core.ts";
+import { gridNativeScale, scaleToCss } from "./scale.ts";
 import { verifyVertical } from "./verify-vertical.ts";
 
 const global = globalThis as unknown as Record<string, unknown>;
@@ -30,4 +31,9 @@ global.quoinFit = {
   /* And the checker for what it emits. A fitter whose output the tool
      cannot verify is half a feature. */
   verifyVertical,
+  /* Solving a scale is the same kind of question as fitting a design, asked
+     before the CSS exists rather than after, so it belongs here rather than in
+     a bundle meant for a console. */
+  gridNativeScale,
+  scaleToCss,
 };

@@ -13,6 +13,7 @@ import type { TextNodeResult } from "../../src/verify.ts";
 import type { SeatResult, SeatOptions, ExportOptions } from "../../src/seat.ts";
 
 const BUNDLE = resolve("dist/quoin.global.js");
+const FIT_BUNDLE = resolve("dist/quoin.fit.js");
 
 export interface InPage {
   verifyGrid: (o?: unknown) => {
@@ -61,18 +62,6 @@ export interface InPage {
       detail: string; fix: string; below: number;
     }[];
   };
-  gridNativeScale: (font: string, o?: unknown) => {
-    font: string;
-    resolved: boolean;
-    phase: number;
-    spacing: number;
-    steps: { size: number; leading: number; ratio: number; rows: number; wanted: number; off: number; space: number }[];
-    missed: number[];
-    available: number[];
-    basis: "line-box" | "cap";
-    basisUnavailable: boolean;
-  };
-  scaleToCss: (scale: unknown, names?: string[]) => string;
   measureFont: (font: string, size?: number) => Record<string, number | string>;
   measureFontWithCap: (font: string, size?: number) => Record<string, number | string>;
   capOvershootFromFontTable: (font: string, lh: number) => number | null;
@@ -88,9 +77,30 @@ export interface InPage {
   version: string;
 }
 
+/* The solver ships in the design-time bundle, not the console one, because the
+   console bundle has a size budget and a scale is something you ask for once
+   before the CSS exists. Both bundles are injected here for the same reason the
+   rest of this file exercises the built artefact rather than the source: what
+   ships is what should be tested. */
+interface InPageFit {
+  gridNativeScale: (font: string, o?: unknown) => {
+    font: string;
+    resolved: boolean;
+    phase: number;
+    spacing: number;
+    steps: { size: number; leading: number; ratio: number; rows: number; wanted: number; off: number; space: number }[];
+    missed: number[];
+    available: number[];
+    basis: "line-box" | "cap";
+    basisUnavailable: boolean;
+  };
+  scaleToCss: (scale: unknown, names?: string[]) => string;
+}
+
 declare global {
   interface Window {
     quoin: InPage;
+    quoinFit: InPageFit;
   }
 }
 
@@ -100,6 +110,7 @@ export async function load(page: Page, fixture: string): Promise<void> {
   await page.goto(`/${fixture}`);
   await page.evaluate(() => document.fonts?.ready);
   await page.addScriptTag({ content: readFileSync(BUNDLE, "utf8") });
+  await page.addScriptTag({ content: readFileSync(FIT_BUNDLE, "utf8") });
   await page.waitForFunction(() => Boolean(window.quoin?.verifyGrid));
 }
 

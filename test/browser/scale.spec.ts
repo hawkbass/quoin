@@ -35,7 +35,7 @@ test("a solved scale puts every size on the same phase", async ({ page }) => {
   await load(page, "prose.html");
 
   const scale = await page.evaluate(({ pitch, family }) => {
-    const solved = window.quoin.gridNativeScale(family, {
+    const solved = window.quoinFit.gridNativeScale(family, {
       pitch,
       targets: [16, 28, 40],
       near: 3,
@@ -85,7 +85,7 @@ test("steps are distinct and ascending, and a target it cannot meet is reported"
   await load(page, "prose.html");
 
   const solved = await page.evaluate(({ pitch, family }) =>
-    window.quoin.gridNativeScale(family, {
+    window.quoinFit.gridNativeScale(family, {
       pitch,
       targets: [16, 20, 28, 40],
       near: 3,
@@ -112,7 +112,7 @@ test("a page built from a solved scale needs no corrections at all", async ({ pa
   await load(page, "prose.html");
 
   const result = await page.evaluate(({ pitch, family }) => {
-    const solved = window.quoin.gridNativeScale(family, {
+    const solved = window.quoinFit.gridNativeScale(family, {
       pitch,
       targets: [16, 28, 40],
       near: 3,
@@ -177,8 +177,8 @@ test("the CSS it emits carries the origin the scale needs", async ({ page }) => 
   await load(page, "prose.html");
 
   const css = await page.evaluate(({ pitch, family }) => {
-    const solved = window.quoin.gridNativeScale(family, { pitch, targets: [16, 28, 40] });
-    return window.quoin.scaleToCss(solved);
+    const solved = window.quoinFit.gridNativeScale(family, { pitch, targets: [16, 28, 40] });
+    return window.quoinFit.scaleToCss(solved);
   }, { pitch: PITCH, family: FAMILY });
 
   expect(css).toContain("--grid-origin");
@@ -209,7 +209,7 @@ test("an unavailable font is solved against the fallback, and says so", async ({
   await load(page, "prose.html");
 
   const solved = await page.evaluate(({ pitch }) =>
-    window.quoin.gridNativeScale('"Definitely Not Installed 12345"', {
+    window.quoinFit.gridNativeScale('"Definitely Not Installed 12345"', {
       pitch,
       targets: [16, 28],
     }),
@@ -218,7 +218,7 @@ test("an unavailable font is solved against the fallback, and says so", async ({
   expect(solved.resolved, "a font nobody has installed is reported unresolved").toBe(false);
   expect(solved.steps.length, "and it still solves against whatever rendered").toBeGreaterThan(0);
 
-  const css = await page.evaluate((s) => window.quoin.scaleToCss(s), solved as never);
+  const css = await page.evaluate((s) => window.quoinFit.scaleToCss(s), solved as never);
   expect(css, "and the stylesheet warns rather than quietly lying").toContain("did not render");
 });
 
@@ -228,10 +228,10 @@ test("a generic keyword always resolves, and a name nobody has does not", async 
   await load(page, "prose.html");
 
   const result = await page.evaluate(({ pitch }) => ({
-    serif: window.quoin.gridNativeScale("serif", { pitch, targets: [16, 28] }).resolved,
-    mono: window.quoin.gridNativeScale("monospace", { pitch, targets: [16, 28] }).resolved,
-    quoted: window.quoin.gridNativeScale('"sans-serif"', { pitch, targets: [16, 28] }).resolved,
-    absent: window.quoin.gridNativeScale("Definitely Not Installed 98765", {
+    serif: window.quoinFit.gridNativeScale("serif", { pitch, targets: [16, 28] }).resolved,
+    mono: window.quoinFit.gridNativeScale("monospace", { pitch, targets: [16, 28] }).resolved,
+    quoted: window.quoinFit.gridNativeScale('"sans-serif"', { pitch, targets: [16, 28] }).resolved,
+    absent: window.quoinFit.gridNativeScale("Definitely Not Installed 98765", {
       pitch, targets: [16, 28],
     }).resolved,
   }), { pitch: PITCH });

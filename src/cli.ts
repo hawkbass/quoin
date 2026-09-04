@@ -42,9 +42,11 @@ Options
   --min <percent>            exit non-zero below this         (check only)
   -o, --out <file>           write the CSS here                (seat only)
   --important                add !important to every rule      (seat only)
-  --font <stack>             CSS font family                 (scale only)
+  --font <stack>             CSS font family, repeatable     (scale only)
   --sizes <a,b,c>            the sizes you want              (scale only)
-  --basis <line-box|cap>     phase from the line box, or from a trimmed cap
+  --basis <line-box|cap>     line-box needs no trim and couples size to
+                             leading; cap needs text-box-trim and frees
+                             them. Default line-box.            (scale only)
   --design <file|->          a design as JSON, for fit. Use - for stdin
   --edge <text-box-edge>     default "cap alphabetic"; ex and text also work
   --space <margin|padding>   which property carries the space (default margin)
@@ -91,7 +93,35 @@ interface Options {
   mode: "full" | "first-line";
   min: number | null;
   out: string | null;
-  font: string;
+  /*
+     The families to solve against, in the order they were asked for.
+
+     A list rather than one, because a shared phase belongs to a face, and a
+     weight and an optical size are both different faces. Solving them one at a
+     time and printing "nothing then needs correcting" after each is true of
+     every face and says nothing about the page they are set on together.
+
+     A leading weight is split off here rather than passed through, because
+     `fontIsAvailable` puts whatever it is handed inside quotes and asks for a
+     family by that literal name. "600 Source Serif 4" is not a family, so it
+     resolves to nothing and the scale comes off a fallback. That is not
+     hypothetical: it is how this project measured "Source Serif 4 at 600",
+     read a different phase from it, and believed the difference. The
+     did-not-render warning fired both times and was right both times.
+  */
+  fonts: { font: string; weight: string }[];
+  /*
+     Which edge the phase is measured from.
+
+     `line-box` is the untrimmed box, where the baseline sits at half-leading
+     plus ascent. Spaces come out as whole rows and no `text-box-trim` is
+     needed anywhere, which is every engine going back a decade. The cost is
+     that size and leading are coupled, so you take the sizes the grid offers.
+
+     `cap` is the trimmed box, where the phase is the cap height alone and any
+     leading works with any size. The cost is `text-box-trim` support.
+  */
+  basis: "line-box" | "cap";
   sizes: number[];
   near: number;
   important: boolean;
@@ -143,7 +173,8 @@ function parseArgs(argv: string[]): { command: string; url: string | null; optio
     mode: "full",
     min: null,
     out: null,
-    font: "serif",
+    fonts: [],
+    basis: "line-box",
     sizes: [16, 20, 28, 40],
     near: 3,
     important: false,
@@ -226,7 +257,27 @@ function parseArgs(argv: string[]): { command: string; url: string | null; optio
         options.mode = value;
         break;
       }
-      case "--font": options.font = next(); break;
+      /* Repeatable. Each one is solved separately and the phases compared. */
+      case "--font": {
+        const raw = next().trim();
+        /* Weights, and the keywords standing in for them. Anything else at the
+           front belongs to the family: plenty of families begin with a word. */
+        const lead = raw.match(/^(bold|bolder|lighter|normal|[1-9]00)\s+(?=\S)/i);
+        options.fonts.push(
+          lead?.[1]
+            ? { font: raw.slice(lead[0].length).trim(), weight: lead[1] }
+            : { font: raw, weight: "400" }
+        );
+        break;
+      }
+      case "--basis": {
+        const value = next();
+        if (value !== "line-box" && value !== "cap") {
+          fail(`--basis takes line-box or cap, not "${value}"`);
+        }
+        options.basis = value;
+        break;
+      }
       case "--near": options.near = number(); break;
       case "--design": options.design = next(); break;
       case "--from": options.from = next(); break;
@@ -407,8 +458,22 @@ interface InPage {
       detail: string; fix: string; height: number;
     }[];
   };
+  canReadFontTableCapHeight: () => boolean;
+  measureFont: (font: string, size?: number) => Record<string, unknown>;
+  version: string;
+}
+
+interface InPageFit {
   gridNativeScale: (font: string, o: unknown) => {
     font: string;
+    /* Whether the family actually rendered. False means every figure
+       below it describes a fallback, which is the failure this project
+       has already shipped once. */
+    resolved: boolean;
+    basis: string;
+    /* True when the cap basis was asked for and this engine has no
+       text-box-trim, so the answer came off the line box instead. */
+    basisUnavailable: boolean;
     phase: number;
     spacing: number;
     steps: { size: number; leading: number; ratio: number; rows: number; wanted: number; off: number }[];
@@ -416,12 +481,6 @@ interface InPage {
     available: number[];
   };
   scaleToCss: (scale: unknown) => string;
-  canReadFontTableCapHeight: () => boolean;
-  measureFont: (font: string, size?: number) => Record<string, unknown>;
-  version: string;
-}
-
-interface InPageFit {
   inferDesign: (options: unknown) => {
     families: { role: string; font: string; steps: { name?: string; size: number; leading?: number; space?: number }[] }[];
     rare: { font: string; size: number; leading: number; blocks: number }[];
@@ -451,8 +510,15 @@ interface InPageFit {
 declare global {
   // eslint-disable-next-line no-var
   var quoin: InPage;
-  interface Window { quoinFit: InPageFit }
 }
+
+/* A local alias rather than a `Window` augmentation.
+
+   The browser test harness declares the same property against its own
+   interface, and two global augmentations of one name have to be structurally
+   identical or neither compiles. They describe the same runtime object from two
+   places that have no reason to share a type, so each keeps its own. */
+declare const window: { quoinFit: InPageFit } & Window;
 
 function percent(part: number, whole: number): number {
   return whole === 0 ? 0 : Math.round((part / whole) * 1000) / 10;
@@ -1630,57 +1696,138 @@ switch (command) {
     const target = url ?? "about:blank";
     const { browser, page } = await open(target, options);
 
+    /* Solving a scale is design-time work, so it rides in the design-time
+       bundle rather than the one with a console budget. */
+    await page.addScriptTag({ content: bundle("quoin.fit.js") });
+
+    /* One family unless asked for more, so the old single-font call still
+       reads exactly as it did. */
+    const families =
+      options.fonts.length > 0 ? options.fonts : [{ font: "serif", weight: "400" }];
+
     /* The family has to be loadable in that page. A local file or a webfont
        the page does not link is a request for a fallback, and a scale solved
        against a fallback describes the wrong typeface. */
-    const solved = await page.evaluate(
-      ({ font, sizes, near, pitch }) => {
-        const scale = quoin.gridNativeScale(font, {
-          pitch,
-          targets: sizes,
-          near,
-        });
-        return { scale, css: quoin.scaleToCss(scale) };
-      },
-      { font: options.font, sizes: options.sizes, near: options.near, pitch: options.pitch }
+    const solvedAll = await page.evaluate(
+      ({ fonts, sizes, near, pitch, basis }) =>
+        fonts.map(({ font, weight }) => {
+          const scale = window.quoinFit.gridNativeScale(font, {
+            pitch,
+            targets: sizes,
+            near,
+            basis,
+            weight,
+          });
+          return { scale, css: window.quoinFit.scaleToCss(scale), weight };
+        }),
+      {
+        fonts: families,
+        sizes: options.sizes,
+        near: options.near,
+        pitch: options.pitch,
+        basis: options.basis,
+      }
     );
 
     await browser.close();
 
-    if (options.out) writeFileSync(options.out, solved.css, "utf8");
-
     if (options.json) {
-      console.log(JSON.stringify(solved.scale, null, 2));
+      console.log(JSON.stringify(solvedAll.map((x) => x.scale), null, 2));
       break;
     }
 
-    const s = solved.scale;
-    console.log(`\n  ${s.font}`);
-    console.log(
-      `  ${options.pitch}px grid, shared phase ${s.phase}px, ` +
-      `solved sizes about ${s.spacing}px apart`
-    );
-    console.log("");
-    console.log("  wanted    size      leading   ratio   rows   off by");
-    for (const step of s.steps) {
+    const css = solvedAll.map((x) => x.css).join("\n\n");
+    if (options.out) writeFileSync(options.out, css, "utf8");
+
+    /* Two weights of one family are two faces, and would otherwise print under
+       the same name, which makes the verdict below unreadable. */
+    const label = (x: { scale: { font: string }; weight: string }) =>
+      x.weight === "400" ? x.scale.font : `${x.scale.font} ${x.weight}`;
+
+    for (const solved of solvedAll) {
+      const s = solved.scale;
+      console.log("\n  " + label(solved));
+      if (!s.resolved) {
+        console.log("  WARNING: this family did not render, so every figure below");
+        console.log("  describes whatever the browser fell back to.");
+      }
+      /* Asked for one basis and given the other is a scale that does not do
+         what the caller thinks, so it is said rather than absorbed. */
+      if (s.basisUnavailable) {
+        console.log("  WARNING: --basis cap needs text-box-trim and this engine has none,");
+        console.log("  so the phase below came off the line box instead. Try --browser chromium.");
+      }
       console.log(
-        "  " + String(step.wanted + "px").padEnd(10) +
-        String(step.size + "px").padEnd(10) +
-        String(step.leading + "px").padEnd(10) +
-        String(step.ratio).padEnd(8) +
-        String(step.rows).padEnd(7) +
-        (step.off === 0 ? "exact" : (step.off > 0 ? "+" : "") + step.off)
+        `  ${options.pitch}px grid, ${options.basis} basis, shared phase ${s.phase}px, ` +
+        `solved sizes about ${s.spacing}px apart`
       );
+      console.log("");
+      console.log("  wanted    size      leading   ratio   rows   off by");
+      for (const step of s.steps) {
+        console.log(
+          "  " + String(step.wanted + "px").padEnd(10) +
+          String(step.size + "px").padEnd(10) +
+          String(step.leading + "px").padEnd(10) +
+          String(step.ratio).padEnd(8) +
+          String(step.rows).padEnd(7) +
+          (step.off === 0 ? "exact" : (step.off > 0 ? "+" : "") + step.off)
+        );
+      }
+      if (s.missed.length) {
+        console.log(`\n  no solved size within ${options.near}px of: ${s.missed.join(", ")}`);
+      }
     }
-    if (s.missed.length) {
-      console.log(`\n  no solved size within ${options.near}px of: ${s.missed.join(", ")}`);
+
+    /*
+       The verdict across faces, which is the thing a single-font run cannot
+       give you.
+
+       A page is seated by putting its grid origin at the shared phase, and that
+       is one number. Two faces with two phases need two, so one of them is out
+       by the difference on every block it sets, and a run that solved each face
+       on its own will have said "nothing then needs correcting" about both.
+
+       Measured on this project's own site: Source Serif 4 at weight 400 shares
+       a phase of 1px and the same family at 600 shares 0.5px. A page setting
+       body in one and headings in the other seated four of its seven blocks,
+       identically in all three engines, and every single-font run passed.
+    */
+    const phases = [...new Set(solvedAll.map((x) => x.scale.phase))];
+
+    if (phases.length === 1) {
+      console.log(
+        `\n  Set the grid origin to ${phases[0]}px and keep every vertical distance a` +
+        `\n  whole number of ${options.pitch}px rows. Nothing then needs correcting.`
+      );
+      if (families.length > 1) {
+        console.log(
+          `  All ${families.length} faces share that phase, so one origin covers the page.`
+        );
+      }
+    } else {
+      console.log("\n  These faces do not share a phase, so no single grid origin seats");
+      console.log("  all of them:");
+      for (const solved of solvedAll) {
+        console.log("    " + String(solved.scale.phase + "px").padEnd(9) + label(solved));
+      }
+      const spread = Math.max(...phases) - Math.min(...phases);
+      console.log(
+        `\n  Whichever origin you pick, the rest are out by up to ${spread.toFixed(2)}px on` +
+        "\n  every block they set. A weight is a different face, and so is an optical" +
+        "\n  size, which is how a page passes this one family at a time and is still" +
+        "\n  not on the grid."
+      );
+      if (options.basis === "line-box") {
+        console.log(
+          "\n  --basis cap measures the phase from a trimmed cap height instead, which" +
+          "\n  takes the leading out of the sum and lets the faces differ. It needs" +
+          "\n  text-box-trim in the browser."
+        );
+      }
     }
-    console.log(
-      `\n  Set the grid origin to ${s.phase}px and keep every vertical distance a` +
-      `\n  whole number of ${options.pitch}px rows. Nothing then needs correcting.`
-    );
+
     if (options.out) console.log(`\n  CSS written to ${options.out}\n`);
-    else console.log("\n" + solved.css + "\n");
+    else console.log("\n" + css + "\n");
     break;
   }
 

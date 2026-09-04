@@ -167,6 +167,15 @@ export interface GridScale {
 }
 
 export interface ScaleOptions extends Partial<GridConfig> {
+  /**
+   * The weight to measure at, as a CSS weight. Defaults to 400.
+   *
+   * Separate from `font` because a weight is not part of a family name.
+   * Passing "600 Source Serif 4" as the family asks the engine for a family
+   * called that, finds none, and solves the whole scale against a fallback.
+   * The CLI splits its own argument and passes the two halves here.
+   */
+  weight?: string;
   /** The sizes you actually want, in px. */
   targets?: number[];
   /**
@@ -229,6 +238,49 @@ export interface Candidate {
 */
 const PHASE_RESOLUTION = 4;
 
+
+/*
+   Quote the family before it goes into a font shorthand.
+
+   Both `measureFont` and `capHeightFromFontTable` build a CSS `font` shorthand
+   and hand it to the engine, one through `ctx.font` and one through
+   `style.font`. Both parsers reject the whole declaration if any part of it is
+   invalid, and both reject it silently: the canvas keeps the font it had, the
+   probe element keeps the one it inherited, and the measurement that follows is
+   of a typeface nobody asked for.
+
+   An unquoted family has to be a sequence of CSS identifiers, and an identifier
+   cannot begin with a digit. So `Source Serif 4` is invalid unquoted, and
+   `400 400px Source Serif 4` is thrown away entire. Archivo is fine, Georgia is
+   fine, and every family whose name ends in a number or a version is not.
+
+   The failure was well hidden, because `fontIsAvailable` builds its own probe
+   and quotes it. So availability reported true, the shorthand was rejected, and
+   the scale came off whatever the probe had inherited. Measured: Source Serif 4
+   solved to 298.54px between sizes on the cap basis against Archivo's 11.66,
+   which is the 16px the probe inherited being normalised as though it were the
+   400px the code asked for.
+
+   Generic keywords are left alone, because quoting one turns a promise that
+   something will be found into a request for a family called "serif".
+*/
+const GENERIC_FAMILY =
+  /^(serif|sans-serif|monospace|cursive|fantasy|system-ui|ui-serif|ui-sans-serif|ui-monospace|ui-rounded|math|emoji|fangsong|inherit|initial|unset)$/i;
+
+function quoteFamily(stack: string): string {
+  return stack
+    .split(",")
+    .map((part) => {
+      const name = part.trim();
+      if (name === "") return name;
+      if (/^["']/.test(name)) return name;
+      if (GENERIC_FAMILY.test(name)) return name;
+      return `"${name}"`;
+    })
+    .filter((part) => part !== "")
+    .join(", ");
+}
+
 /**
  * Every readable size-and-leading pair for one family, with the phase each
  * produces.
@@ -246,6 +298,7 @@ export function candidatesFor(
     ratio?: [number, number];
     range?: [number, number];
     step?: number;
+    weight?: string;
   } = {}
 ): { candidates: Candidate[]; spacing: number; resolved: boolean; unavailable: boolean } {
   const [minRatio, maxRatio] = options.ratio ?? [1.2, 1.75];
@@ -255,7 +308,14 @@ export function candidatesFor(
   /* A generic keyword is a promise that something will be found rather than a
      statement about what, so it is never "unresolved" and never worth probing. */
   const generic = /^\s*(serif|sans-serif|monospace|cursive|fantasy|system-ui|ui-\w+|math|emoji)\s*$/i;
-  const bare = font.replace(/^["']|["']$/g, "").trim();
+  const weight = options.weight ?? "400";
+  const quoted = quoteFamily(font);
+  /* The first name in the stack, not the stack. `fontIsAvailable` puts what it
+     is given inside quotes, so a probe for "Georgia, serif" asks whether a
+     family literally called `Georgia, serif` exists, nothing is, and every
+     realistic design came back marked as a fallback. `fit.ts` had already met
+     this and fixed it there; scale had not. */
+  const bare = (font.split(",")[0] ?? font).replace(/^["']|["']$/g, "").trim();
   const resolved = generic.test(bare) ? true : fontIsAvailable(bare);
 
   /*
@@ -265,7 +325,7 @@ export function candidatesFor(
      which is the rounding talking rather than the fonts. At 400px the rounding
      is under a tenth of a percent.
   */
-  const large = measureFont(`400 400px ${font}`, 400);
+  const large = measureFont(`${weight} 400px ${quoted}`, 400);
   let perEm = (large.ascent - large.descent) / 400;
   let unavailable = false;
 
@@ -273,7 +333,9 @@ export function candidatesFor(
     /* The trimmed box's height is the cap height, so the cap height is the
        phase. Read from the font table through a trim probe, which is the
        measurement that travels. */
-    const cap = canReadFontTableCapHeight() ? capHeightFromFontTable(`400px ${font}`) : null;
+    const cap = canReadFontTableCapHeight()
+      ? capHeightFromFontTable(`${weight} 400px ${quoted}`)
+      : null;
     if (cap === null || cap <= 0) {
       unavailable = true;
       perEm = 0;
@@ -288,7 +350,7 @@ export function candidatesFor(
   if (!unavailable) {
     for (let size = minSize; size <= maxSize + 1e-9; size += step) {
       const rounded = Math.round(size * 100) / 100;
-      const metrics = measureFont(`400 ${rounded}px ${font}`, rounded);
+      const metrics = measureFont(`${weight} ${rounded}px ${quoted}`, rounded);
 
       for (let rows = 1; rows <= 16; rows++) {
         const leading = rows * grid.pitch;
@@ -354,6 +416,7 @@ export function gridNativeScale(
     ratio: options.ratio,
     range: options.range,
     step: options.step,
+    weight: options.weight,
   });
 
   const bare = font.replace(/^["']|["']$/g, "").trim();

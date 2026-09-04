@@ -9,6 +9,17 @@
 
 export * from "./page.ts";
 
+/* Not in `page.ts`, because the console bundle has a size budget and a scale
+   solver is design-time work. Still part of the package. */
+export {
+  gridNativeScale,
+  scaleToCss,
+  type GridScale,
+  type ScaleStep,
+  type ScaleOptions,
+  type ScaleBasis,
+} from "./scale.ts";
+
 export {
   fitScale,
   inferDesign,

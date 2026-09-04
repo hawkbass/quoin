@@ -113,7 +113,7 @@ test("a cap-solved scale is solved, and says which basis it used", async ({ page
   await load(page, "prose.html");
 
   const scale = await page.evaluate(() =>
-    window.quoin.gridNativeScale("serif", {
+    window.quoinFit.gridNativeScale("serif", {
       pitch: 8,
       targets: [16, 28, 44],
       basis: "cap",
@@ -162,7 +162,7 @@ test("a page built from a cap-solved scale seats at one origin with no correctio
   }
 
   const result = await page.evaluate(() => {
-    const scale = window.quoin.gridNativeScale("serif", {
+    const scale = window.quoinFit.gridNativeScale("serif", {
       pitch: 8,
       targets: [16, 28, 44],
       basis: "cap",
@@ -221,7 +221,7 @@ test("the same sizes seat at a leading the solver never picked", async ({ page }
   }
 
   const result = await page.evaluate(() => {
-    const scale = window.quoin.gridNativeScale("serif", {
+    const scale = window.quoinFit.gridNativeScale("serif", {
       pitch: 8,
       targets: [16, 28],
       basis: "cap",
@@ -262,8 +262,8 @@ test("the emitted CSS carries the trim, because without it the scale is wrong", 
   await load(page, "prose.html");
 
   const css = await page.evaluate(() =>
-    window.quoin.scaleToCss(
-      window.quoin.gridNativeScale("serif", { pitch: 8, targets: [16, 28], basis: "cap" })
+    window.quoinFit.scaleToCss(
+      window.quoinFit.gridNativeScale("serif", { pitch: 8, targets: [16, 28], basis: "cap" })
     )
   );
 
@@ -278,7 +278,7 @@ test("the line-box basis is untouched by any of this", async ({ page }) => {
   await load(page, "prose.html");
 
   const scale = await page.evaluate(() =>
-    window.quoin.gridNativeScale("serif", { pitch: 8, targets: [16, 28, 44] })
+    window.quoinFit.gridNativeScale("serif", { pitch: 8, targets: [16, 28, 44] })
   );
 
   expect(scale.basis).toBe("line-box");
