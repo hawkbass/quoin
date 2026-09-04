@@ -10,7 +10,7 @@
     ],
     "builds": {
       "chromium": "Playwright Chromium 151.0.7922.34",
-      "firefox": "system Firefox 154.0.1",
+      "firefox": "system Firefox 155.0",
       "webkit": "Playwright WebKit 26.5"
     },
     "tolerance": 0.5,
